@@ -3,18 +3,20 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Menu, ShoppingBag, X } from "lucide-react";
 import { useCart } from "@/lib/cart";
+import { useI18n } from "@/lib/i18n";
 
 const NAV = [
-  { to: "/", label: "Home" },
-  { to: "/artworks", label: "Artworks" },
-  { to: "/exhibitions", label: "Exhibitions" },
-  { to: "/community", label: "Community" },
+  { to: "/", key: "nav.home" },
+  { to: "/artworks", key: "nav.artworks" },
+  { to: "/exhibitions", key: "nav.exhibitions" },
+  { to: "/community", key: "nav.community" },
 ] as const;
 
 export function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { count, setOpen: setCartOpen } = useCart();
+  const { lang, setLang, t } = useI18n();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => { setOpen(false); }, [pathname]);
@@ -42,12 +44,13 @@ export function Header() {
               className="link-underline text-muted-foreground hover:text-foreground transition-colors data-[status=active]:text-gold"
               activeOptions={{ exact: n.to === "/" }}
             >
-              {n.label}
+              {t(n.key)}
             </Link>
           ))}
         </nav>
 
         <div className="flex items-center gap-2">
+          <LangToggle lang={lang} setLang={setLang} />
           <button
             onClick={() => setCartOpen(true)}
             aria-label="Cart"
@@ -95,7 +98,7 @@ export function Header() {
                     className="block py-4 font-display text-3xl text-foreground/90 hover:text-gold transition-colors"
                     activeOptions={{ exact: n.to === "/" }}
                   >
-                    {n.label}
+                    {t(n.key)}
                   </Link>
                 </motion.div>
               ))}
@@ -104,5 +107,31 @@ export function Header() {
         )}
       </AnimatePresence>
     </header>
+  );
+}
+
+function LangToggle({ lang, setLang }: { lang: "en" | "fr"; setLang: (l: "en" | "fr") => void }) {
+  return (
+    <div className="relative flex h-10 items-center rounded-full border border-border p-0.5 text-[10px] uppercase tracking-[0.2em]">
+      {(["en", "fr"] as const).map((l) => (
+        <button
+          key={l}
+          onClick={() => setLang(l)}
+          className="relative grid h-8 w-9 place-items-center"
+          aria-pressed={lang === l}
+        >
+          {lang === l && (
+            <motion.span
+              layoutId="lang-pill"
+              className="absolute inset-0 rounded-full bg-gradient-gold"
+              transition={{ type: "spring", stiffness: 350, damping: 28 }}
+            />
+          )}
+          <span className={`relative z-10 ${lang === l ? "text-primary-foreground font-semibold" : "text-muted-foreground"}`}>
+            {l}
+          </span>
+        </button>
+      ))}
+    </div>
   );
 }
