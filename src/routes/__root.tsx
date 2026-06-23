@@ -16,6 +16,9 @@ import { Footer } from "@/components/site/Footer";
 import { CartProvider } from "@/lib/cart";
 import { CartSheet } from "@/components/site/CartSheet";
 import { Toaster } from "@/components/ui/sonner";
+import { I18nProvider } from "@/lib/i18n";
+import { SmoothScroll } from "@/components/site/SmoothScroll";
+import { Spotlight } from "@/components/site/Spotlight";
 
 function NotFoundComponent() {
   return (
@@ -90,15 +93,19 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <Header />
-        <main className="min-h-screen">
-          <Outlet />
-        </main>
-        <Footer />
-        <CartSheet />
-        <Toaster />
-      </CartProvider>
+      <I18nProvider>
+        <CartProvider>
+          <SmoothScroll />
+          <Spotlight />
+          <Header />
+          <main className="min-h-screen">
+            <Outlet />
+          </main>
+          <Footer />
+          <CartSheet />
+          <Toaster />
+        </CartProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }
