@@ -1,0 +1,182 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { motion } from "motion/react";
+import { z } from "zod";
+import { Mail, MessageCircle, Send } from "lucide-react";
+import { toast } from "sonner";
+
+export const Route = createFileRoute("/community")({
+  head: () => ({
+    meta: [
+      { title: "Community — art by KIYARI" },
+      { name: "description", content: "Connect with Kiyari — newsletter, contact form, and supporters." },
+      { property: "og:title", content: "Community — art by KIYARI" },
+      { property: "og:description", content: "Join the network. Connect with the artist." },
+    ],
+  }),
+  component: CommunityPage,
+});
+
+const schema = z.object({
+  name: z.string().trim().min(1, "Please share your name").max(80),
+  email: z.string().trim().email("Please enter a valid email").max(160),
+  message: z.string().trim().min(5, "A few more words…").max(1500),
+  subscribe: z.boolean().optional(),
+});
+
+function CommunityPage() {
+  const [form, setForm] = useState({ name: "", email: "", message: "", subscribe: true });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [sending, setSending] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const r = schema.safeParse(form);
+    if (!r.success) {
+      const errs: Record<string, string> = {};
+      r.error.issues.forEach((i) => { errs[i.path[0] as string] = i.message; });
+      setErrors(errs);
+      return;
+    }
+    setErrors({});
+    setSending(true);
+    await new Promise((r) => setTimeout(r, 800));
+    setSending(false);
+    toast.success("Message sent", { description: "Kiyari will be in touch soon." });
+    setForm({ name: "", email: "", message: "", subscribe: true });
+  };
+
+  return (
+    <div className="pt-32 pb-20">
+      <div className="container-page">
+        <div className="max-w-3xl">
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">Community</div>
+          <h1 className="font-display text-6xl md:text-8xl leading-[0.95]">
+            Let's<br />
+            <span className="italic text-gradient-gold">connect.</span>
+          </h1>
+          <p className="mt-6 text-lg text-muted-foreground max-w-xl">
+            Commissions, collaborations, press, or simply to say hello — Kiyari reads every message.
+          </p>
+        </div>
+
+        <div className="mt-20 grid lg:grid-cols-12 gap-12">
+          {/* Form */}
+          <motion.form
+            onSubmit={submit}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="lg:col-span-7 space-y-6"
+          >
+            <Field label="Name" error={errors.name}>
+              <input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="w-full bg-transparent border-b border-border focus:border-gold outline-none py-3 text-lg transition-colors"
+                placeholder="Your full name"
+              />
+            </Field>
+            <Field label="Email" error={errors.email}>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className="w-full bg-transparent border-b border-border focus:border-gold outline-none py-3 text-lg transition-colors"
+                placeholder="you@somewhere.com"
+              />
+            </Field>
+            <Field label="Message" error={errors.message}>
+              <textarea
+                value={form.message}
+                onChange={(e) => setForm({ ...form, message: e.target.value })}
+                rows={5}
+                className="w-full bg-transparent border-b border-border focus:border-gold outline-none py-3 text-lg resize-none transition-colors"
+                placeholder="Tell Kiyari what's on your mind…"
+              />
+            </Field>
+            <label className="flex items-center gap-3 text-sm text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.subscribe}
+                onChange={(e) => setForm({ ...form, subscribe: e.target.checked })}
+                className="h-4 w-4 accent-[var(--gold)]"
+              />
+              Subscribe to studio updates & exhibition invites
+            </label>
+            <button
+              type="submit"
+              disabled={sending}
+              className="group inline-flex items-center gap-3 bg-gradient-gold px-8 py-4 text-sm uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition disabled:opacity-50"
+            >
+              {sending ? "Sending…" : <>Send message <Send className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>}
+            </button>
+          </motion.form>
+
+          {/* Side info */}
+          <div className="lg:col-span-5 space-y-6">
+            <ContactCard
+              icon={<MessageCircle className="h-5 w-5" />}
+              title="WhatsApp"
+              detail="+1 778 233 1921"
+              href="https://wa.me/17782331921"
+            />
+            <ContactCard
+              icon={<Mail className="h-5 w-5" />}
+              title="Email"
+              detail="hello@kiyari.ca"
+              href="mailto:hello@kiyari.ca"
+            />
+            <div className="border border-border p-8">
+              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">Studio</div>
+              <div className="font-display text-2xl">Vancouver, BC</div>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Visits by appointment. Mention your favourite piece when you write.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Supporters strip */}
+        <section className="mt-32 text-center">
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">With gratitude to</div>
+          <h2 className="font-display text-4xl md:text-5xl">Our supporters</h2>
+          <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
+            Communities, organizations, and collectors who help carry this work forward.
+          </p>
+          <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6">
+            {["Sisters in Canada Wellness Society", "Afro World Expo", "Lupus BC", "Vancouver Black Library"].map((s) => (
+              <div key={s} className="border border-border p-6 hover:border-gold transition">
+                <div className="text-sm uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground">
+                  {s}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-1">{label}</div>
+      {children}
+      {error && <div className="mt-1 text-xs text-accent">{error}</div>}
+    </div>
+  );
+}
+
+function ContactCard({ icon, title, detail, href }: { icon: React.ReactNode; title: string; detail: string; href: string }) {
+  return (
+    <a href={href} className="group flex items-center gap-5 border border-border p-6 hover:border-gold transition">
+      <div className="grid h-12 w-12 place-items-center border border-border text-gold group-hover:border-gold transition">{icon}</div>
+      <div>
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{title}</div>
+        <div className="font-display text-xl mt-0.5 group-hover:text-gold transition">{detail}</div>
+      </div>
+    </a>
+  );
+}

@@ -1,0 +1,170 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { Calendar, MapPin, X } from "lucide-react";
+
+export const Route = createFileRoute("/exhibitions")({
+  head: () => ({
+    meta: [
+      { title: "Exhibitions — art by KIYARI" },
+      { name: "description", content: "Upcoming exhibitions, past shows, and a gallery of moments from art by KIYARI." },
+      { property: "og:title", content: "Exhibitions — art by KIYARI" },
+      { property: "og:description", content: "Where to see Kiyari's work live." },
+    ],
+  }),
+  component: ExhibitionsPage,
+});
+
+const UPCOMING = [
+  {
+    date: "June 16, 2024",
+    title: "Wordsmith — A Night of Poetry",
+    time: "6PM – 9PM",
+    venue: "Vancouver Convention Centre",
+    blurb: "A night of Black excellence experienced through the arts. Storytelling from some of Vancouver's most talented voices, alongside a live painting reveal.",
+  },
+];
+
+const GALLERY = [
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE7.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE20.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE10.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE8.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE2.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE13.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE14.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE12.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE16.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE6.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE4.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE11.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE19.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE17.jpg/:/rs=w:1200",
+  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE15.jpg/:/rs=w:1200",
+];
+
+function ExhibitionsPage() {
+  const [active, setActive] = useState<number | null>(null);
+
+  return (
+    <div className="pt-32 pb-20">
+      <div className="container-page">
+        <div className="max-w-3xl">
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">Live shows & moments</div>
+          <h1 className="font-display text-6xl md:text-8xl leading-[0.95]">
+            See it<br />
+            <span className="italic text-gradient-gold">in person.</span>
+          </h1>
+        </div>
+
+        {/* Upcoming */}
+        <section className="mt-20">
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">Upcoming</div>
+          <div className="space-y-6">
+            {UPCOMING.map((e, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="group relative border border-border p-8 md:p-12 hover:border-gold transition-colors"
+              >
+                <div className="grid md:grid-cols-12 gap-8 items-start">
+                  <div className="md:col-span-3">
+                    <div className="font-display text-5xl text-gold leading-none">JUN<br />16</div>
+                    <div className="mt-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">2024</div>
+                  </div>
+                  <div className="md:col-span-9">
+                    <h3 className="font-display text-4xl">{e.title}</h3>
+                    <div className="mt-3 flex flex-wrap gap-5 text-sm text-muted-foreground">
+                      <span className="inline-flex items-center gap-2"><Calendar className="h-4 w-4 text-gold" /> {e.time}</span>
+                      <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-gold" /> {e.venue}</span>
+                    </div>
+                    <p className="mt-5 text-muted-foreground max-w-2xl leading-relaxed">{e.blurb}</p>
+                    <button className="mt-6 inline-flex items-center gap-2 text-sm link-underline text-gold">Event details →</button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* Past collections */}
+        <section className="mt-24">
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">Past collections</div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {["Afro World Expo 2024", "Our Essence — Beautiful in Black", "Essence of a Butterfly — Lupus Fundraiser"].map((t) => (
+              <div key={t} className="border border-border p-8 hover:border-gold transition group">
+                <div className="font-display text-2xl group-hover:text-gold transition">{t}</div>
+                <div className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">Vancouver, BC</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Masonry gallery */}
+        <section className="mt-24">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">Gallery</div>
+              <h2 className="font-display text-5xl">Afro World Expo · 2024</h2>
+            </div>
+          </div>
+
+          <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4">
+            {GALLERY.map((src, i) => (
+              <motion.button
+                key={src + i}
+                onClick={() => setActive(i)}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: (i % 8) * 0.05 }}
+                className="block w-full break-inside-avoid overflow-hidden group relative cursor-zoom-in"
+              >
+                <img
+                  src={src}
+                  alt={`Exhibition moment ${i + 1}`}
+                  loading="lazy"
+                  className="w-full h-auto transition-transform duration-[1.2s] ease-out group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-background/0 group-hover:bg-background/30 transition" />
+              </motion.button>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {active !== null && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setActive(null)}
+            className="fixed inset-0 z-[80] bg-background/95 backdrop-blur-xl flex items-center justify-center p-4"
+          >
+            <button
+              onClick={() => setActive(null)}
+              className="absolute top-6 right-6 grid h-12 w-12 place-items-center rounded-full border border-border hover:border-gold"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <motion.img
+              key={active}
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              src={GALLERY[active]}
+              alt=""
+              onClick={(e) => e.stopPropagation()}
+              className="max-h-[90vh] max-w-[90vw] object-contain shadow-elegant"
+            />
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+              <button onClick={(e) => { e.stopPropagation(); setActive((active - 1 + GALLERY.length) % GALLERY.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">Prev</button>
+              <button onClick={(e) => { e.stopPropagation(); setActive((active + 1) % GALLERY.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">Next</button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
