@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ExportRouteImport } from './routes/export'
 import { Route as ExhibitionsRouteImport } from './routes/exhibitions'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ArtworksRouteImport } from './routes/artworks'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ExportRoute = ExportRouteImport.update({
+  id: '/export',
+  path: '/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExhibitionsRoute = ExhibitionsRouteImport.update({
   id: '/exhibitions',
   path: '/exhibitions',
@@ -40,12 +46,14 @@ export interface FileRoutesByFullPath {
   '/artworks': typeof ArtworksRoute
   '/community': typeof CommunityRoute
   '/exhibitions': typeof ExhibitionsRoute
+  '/export': typeof ExportRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/artworks': typeof ArtworksRoute
   '/community': typeof CommunityRoute
   '/exhibitions': typeof ExhibitionsRoute
+  '/export': typeof ExportRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/artworks': typeof ArtworksRoute
   '/community': typeof CommunityRoute
   '/exhibitions': typeof ExhibitionsRoute
+  '/export': typeof ExportRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/artworks' | '/community' | '/exhibitions'
+  fullPaths: '/' | '/artworks' | '/community' | '/exhibitions' | '/export'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/artworks' | '/community' | '/exhibitions'
-  id: '__root__' | '/' | '/artworks' | '/community' | '/exhibitions'
+  to: '/' | '/artworks' | '/community' | '/exhibitions' | '/export'
+  id: '__root__' | '/' | '/artworks' | '/community' | '/exhibitions' | '/export'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,10 +76,18 @@ export interface RootRouteChildren {
   ArtworksRoute: typeof ArtworksRoute
   CommunityRoute: typeof CommunityRoute
   ExhibitionsRoute: typeof ExhibitionsRoute
+  ExportRoute: typeof ExportRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/export': {
+      id: '/export'
+      path: '/export'
+      fullPath: '/export'
+      preLoaderRoute: typeof ExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/exhibitions': {
       id: '/exhibitions'
       path: '/exhibitions'
@@ -107,6 +124,7 @@ const rootRouteChildren: RootRouteChildren = {
   ArtworksRoute: ArtworksRoute,
   CommunityRoute: CommunityRoute,
   ExhibitionsRoute: ExhibitionsRoute,
+  ExportRoute: ExportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
