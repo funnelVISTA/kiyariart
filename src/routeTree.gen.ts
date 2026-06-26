@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as ExportRouteImport } from './routes/export'
 import { Route as ExhibitionsRouteImport } from './routes/exhibitions'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -24,6 +25,11 @@ import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lova
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExportRoute = ExportRouteImport.update({
   id: '/export',
   path: '/export',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/setup-admin': typeof ApiPublicSetupAdminRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/setup-admin': typeof ApiPublicSetupAdminRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/setup-admin': typeof ApiPublicSetupAdminRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/exhibitions'
     | '/export'
+    | '/unsubscribe'
     | '/admin'
     | '/email/unsubscribe'
     | '/api/public/setup-admin'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/exhibitions'
     | '/export'
+    | '/unsubscribe'
     | '/admin'
     | '/email/unsubscribe'
     | '/api/public/setup-admin'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/exhibitions'
     | '/export'
+    | '/unsubscribe'
     | '/_authenticated/admin'
     | '/email/unsubscribe'
     | '/api/public/setup-admin'
@@ -201,6 +213,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   ExhibitionsRoute: typeof ExhibitionsRoute
   ExportRoute: typeof ExportRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   ApiPublicSetupAdminRoute: typeof ApiPublicSetupAdminRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -211,6 +224,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/export': {
       id: '/export'
       path: '/export'
@@ -331,6 +351,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   ExhibitionsRoute: ExhibitionsRoute,
   ExportRoute: ExportRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   ApiPublicSetupAdminRoute: ApiPublicSetupAdminRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
