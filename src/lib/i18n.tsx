@@ -61,7 +61,7 @@ export const DICT: Dict = {
   "art.priceOnRequest": { en: "Price on request", fr: "Prix sur demande" },
   "art.addToCart": { en: "Add to cart", fr: "Ajouter au panier" },
   "art.addedToast": { en: "added", fr: "ajouté" },
-  "art.addedDesc": { en: "Open cart to request an invoice.", fr: "Ouvrez le panier pour demander une facture." },
+  "art.addedDesc": { en: "Open cart to checkout securely.", fr: "Ouvrez le panier pour passer à la caisse." },
   "art.soldToast": { en: "This piece is sold", fr: "Cette œuvre est vendue" },
   "art.soldDesc": { en: "Reach out to commission something similar.", fr: "Contactez-nous pour une commande similaire." },
 
