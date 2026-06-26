@@ -138,6 +138,23 @@ function CommunityPage() {
           </div>
         </div>
 
+        {/* Supporters strip */}
+        <section className="mt-32 text-center">
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">With gratitude to</div>
+          <h2 className="font-display text-4xl md:text-5xl">Our supporters</h2>
+          <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
+            Communities, organizations, and collectors who help carry this work forward.
+          </p>
+          <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6">
+            {["Sisters in Canada Wellness Society", "Afro World Expo", "Lupus BC", "Vancouver Black Library"].map((s) => (
+              <div key={s} className="border border-border p-6 hover:border-gold transition">
+                <div className="text-sm uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground">
+                  {s}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );
@@ -179,30 +196,8 @@ function SubscribeCard() {
       </div>
     </form>
   );
-          </div>
-        </div>
-
-        {/* Supporters strip */}
-        <section className="mt-32 text-center">
-          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">With gratitude to</div>
-          <h2 className="font-display text-4xl md:text-5xl">Our supporters</h2>
-          <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-            Communities, organizations, and collectors who help carry this work forward.
-          </p>
-          <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6">
-            {["Sisters in Canada Wellness Society", "Afro World Expo", "Lupus BC", "Vancouver Black Library"].map((s) => (
-              <div key={s} className="border border-border p-6 hover:border-gold transition">
-                <div className="text-sm uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground">
-                  {s}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-    </div>
-  );
 }
+
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
