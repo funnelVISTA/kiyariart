@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +11,9 @@ import {
   Truck,
   Send,
   ExternalLink,
+  KeyRound,
 } from "lucide-react";
+
 import { sendTransactionalEmail } from "@/lib/email/send";
 import { adminUpdateOrder, adminResendReceipt } from "@/lib/admin.functions";
 
@@ -228,12 +230,19 @@ function AdminOrdersPage() {
             >
               <RefreshCw className={`h-3.5 w-3.5 ${ordersQ.isFetching ? "animate-spin" : ""}`} /> Refresh
             </button>
+            <Link
+              to="/account"
+              className="inline-flex items-center gap-2 border border-border px-4 py-2.5 text-xs uppercase tracking-[0.2em] hover:border-gold transition"
+            >
+              <KeyRound className="h-3.5 w-3.5" /> Account
+            </Link>
             <button
               onClick={signOut}
               className="inline-flex items-center gap-2 border border-border px-4 py-2.5 text-xs uppercase tracking-[0.2em] hover:border-gold transition"
             >
               <LogOut className="h-3.5 w-3.5" /> Sign out
             </button>
+
           </div>
         </div>
 
