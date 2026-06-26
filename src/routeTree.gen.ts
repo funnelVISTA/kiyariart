@@ -18,6 +18,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ArtworksRouteImport } from './routes/artworks'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -69,6 +70,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrdersOrderIdRoute = OrdersOrderIdRouteImport.update({
+  id: '/orders/$orderId',
+  path: '/orders/$orderId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/orders/$orderId': typeof OrdersOrderIdRoute
   '/api/public/setup-admin': typeof ApiPublicSetupAdminRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/orders/$orderId': typeof OrdersOrderIdRoute
   '/api/public/setup-admin': typeof ApiPublicSetupAdminRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/orders/$orderId': typeof OrdersOrderIdRoute
   '/api/public/setup-admin': typeof ApiPublicSetupAdminRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/orders/$orderId'
     | '/api/public/setup-admin'
     | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/orders/$orderId'
     | '/api/public/setup-admin'
     | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/checkout/return'
     | '/email/unsubscribe'
+    | '/orders/$orderId'
     | '/api/public/setup-admin'
     | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
@@ -240,6 +252,7 @@ export interface RootRouteChildren {
   ExportRoute: typeof ExportRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  OrdersOrderIdRoute: typeof OrdersOrderIdRoute
   ApiPublicSetupAdminRoute: typeof ApiPublicSetupAdminRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -310,6 +323,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orders/$orderId': {
+      id: '/orders/$orderId'
+      path: '/orders/$orderId'
+      fullPath: '/orders/$orderId'
+      preLoaderRoute: typeof OrdersOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -405,6 +425,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExportRoute: ExportRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  OrdersOrderIdRoute: OrdersOrderIdRoute,
   ApiPublicSetupAdminRoute: ApiPublicSetupAdminRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,

@@ -152,6 +152,32 @@ export type Database = {
         }
         Relationships: []
       }
+      sold_artworks: {
+        Row: {
+          artwork_id: string
+          order_id: string | null
+          sold_at: string
+        }
+        Insert: {
+          artwork_id: string
+          order_id?: string | null
+          sold_at?: string
+        }
+        Update: {
+          artwork_id?: string
+          order_id?: string | null
+          sold_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sold_artworks_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscribers: {
         Row: {
           confirmed: boolean
