@@ -13,11 +13,13 @@ import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as ExportRouteImport } from './routes/export'
 import { Route as ExhibitionsRouteImport } from './routes/exhibitions'
 import { Route as CommunityRouteImport } from './routes/community'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ArtworksRouteImport } from './routes/artworks'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicSetupAdminRouteImport } from './routes/api/public/setup-admin'
@@ -45,6 +47,11 @@ const CommunityRoute = CommunityRouteImport.update({
   path: '/community',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -68,6 +75,11 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
+  id: '/return',
+  path: '/return',
+  getParentRoute: () => CheckoutRoute,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
@@ -107,11 +119,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/artworks': typeof ArtworksRoute
   '/auth': typeof AuthRoute
+  '/checkout': typeof CheckoutRouteWithChildren
   '/community': typeof CommunityRoute
   '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/setup-admin': typeof ApiPublicSetupAdminRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -123,11 +137,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/artworks': typeof ArtworksRoute
   '/auth': typeof AuthRoute
+  '/checkout': typeof CheckoutRouteWithChildren
   '/community': typeof CommunityRoute
   '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/setup-admin': typeof ApiPublicSetupAdminRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -141,11 +157,13 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/artworks': typeof ArtworksRoute
   '/auth': typeof AuthRoute
+  '/checkout': typeof CheckoutRouteWithChildren
   '/community': typeof CommunityRoute
   '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/setup-admin': typeof ApiPublicSetupAdminRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -159,11 +177,13 @@ export interface FileRouteTypes {
     | '/'
     | '/artworks'
     | '/auth'
+    | '/checkout'
     | '/community'
     | '/exhibitions'
     | '/export'
     | '/unsubscribe'
     | '/admin'
+    | '/checkout/return'
     | '/email/unsubscribe'
     | '/api/public/setup-admin'
     | '/lovable/email/suppression'
@@ -175,11 +195,13 @@ export interface FileRouteTypes {
     | '/'
     | '/artworks'
     | '/auth'
+    | '/checkout'
     | '/community'
     | '/exhibitions'
     | '/export'
     | '/unsubscribe'
     | '/admin'
+    | '/checkout/return'
     | '/email/unsubscribe'
     | '/api/public/setup-admin'
     | '/lovable/email/suppression'
@@ -192,11 +214,13 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/artworks'
     | '/auth'
+    | '/checkout'
     | '/community'
     | '/exhibitions'
     | '/export'
     | '/unsubscribe'
     | '/_authenticated/admin'
+    | '/checkout/return'
     | '/email/unsubscribe'
     | '/api/public/setup-admin'
     | '/lovable/email/suppression'
@@ -210,6 +234,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ArtworksRoute: typeof ArtworksRoute
   AuthRoute: typeof AuthRoute
+  CheckoutRoute: typeof CheckoutRouteWithChildren
   CommunityRoute: typeof CommunityRoute
   ExhibitionsRoute: typeof ExhibitionsRoute
   ExportRoute: typeof ExportRoute
@@ -252,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -286,6 +318,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/checkout/return': {
+      id: '/checkout/return'
+      path: '/return'
+      fullPath: '/checkout/return'
+      preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof CheckoutRoute
     }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
@@ -343,11 +382,24 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface CheckoutRouteChildren {
+  CheckoutReturnRoute: typeof CheckoutReturnRoute
+}
+
+const CheckoutRouteChildren: CheckoutRouteChildren = {
+  CheckoutReturnRoute: CheckoutReturnRoute,
+}
+
+const CheckoutRouteWithChildren = CheckoutRoute._addFileChildren(
+  CheckoutRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ArtworksRoute: ArtworksRoute,
   AuthRoute: AuthRoute,
+  CheckoutRoute: CheckoutRouteWithChildren,
   CommunityRoute: CommunityRoute,
   ExhibitionsRoute: ExhibitionsRoute,
   ExportRoute: ExportRoute,
