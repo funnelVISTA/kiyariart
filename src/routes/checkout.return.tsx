@@ -96,7 +96,17 @@ function ReturnPage() {
                 Order reference: <span className="font-mono">{state.orderId.slice(0, 8)}</span>
               </div>
             )}
-            <div className="mt-10 flex gap-3 justify-center">
+            <div className="mt-10 flex flex-wrap gap-3 justify-center">
+              {state.orderId && (
+                <Link
+                  to="/orders/$orderId"
+                  params={{ orderId: state.orderId }}
+                  search={{ email: state.email ?? undefined }}
+                  className="border border-gold text-gold px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-gold/10 transition"
+                >
+                  View order status
+                </Link>
+              )}
               <Link to="/artworks" className="border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] hover:border-gold transition">
                 Keep browsing
               </Link>
@@ -104,6 +114,7 @@ function ReturnPage() {
                 Back home
               </Link>
             </div>
+
           </>
         )}
 
