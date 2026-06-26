@@ -6,6 +6,7 @@ import { ARTWORKS, type Artwork } from "@/lib/artworks";
 import { useCart } from "@/lib/cart";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/artworks")({
   head: () => ({
@@ -21,18 +22,17 @@ export const Route = createFileRoute("/artworks")({
 
 type Filter = "all" | "available" | "sold" | "essence" | "legends";
 
-function blurb(a: Artwork) {
-  if (a.description) return a.description;
-  if (a.collection === "The Legends") {
-    return `${a.title} honours an icon — rendered in acrylic, oil & mixed media with hand-built texture.`;
-  }
-  return `${a.title} — from Our Essence. Layered acrylic, oil & mixed media on canvas, signed by the artist.`;
-}
-
 function ArtworksPage() {
+  const { t } = useI18n();
   const [filter, setFilter] = useState<Filter>("all");
   const [active, setActive] = useState<Artwork | null>(null);
   const { add } = useCart();
+
+  const blurb = (a: Artwork) => {
+    if (a.description) return a.description;
+    if (a.collection === "The Legends") return `${a.title} ${t("artworks.blurb.legend")}`;
+    return `${a.title} — ${t("artworks.blurb.essence")}`;
+  };
 
   const items = useMemo(() => {
     return ARTWORKS.filter((a) => {
@@ -46,37 +46,33 @@ function ArtworksPage() {
 
   const handleAdd = (a: Artwork) => {
     if (a.sold) {
-      toast.error("This piece is sold", { description: "Reach out to commission something similar." });
+      toast.error(t("art.soldToast"), { description: t("art.soldDesc") });
       return;
     }
     add(a);
-    toast.success(`${a.title} added`, { description: "Open cart to request an invoice." });
+    toast.success(`${a.title} ${t("art.addedToast")}`, { description: t("art.addedDesc") });
   };
 
   const filters: { id: Filter; label: string }[] = [
-    { id: "all", label: "All" },
-    { id: "available", label: "Available" },
-    { id: "essence", label: "Our Essence" },
-    { id: "legends", label: "Legends" },
-    { id: "sold", label: "Archive" },
+    { id: "all", label: t("artworks.filter.all") },
+    { id: "available", label: t("artworks.filter.available") },
+    { id: "essence", label: t("artworks.filter.essence") },
+    { id: "legends", label: t("artworks.filter.legends") },
+    { id: "sold", label: t("artworks.filter.sold") },
   ];
 
   return (
     <div className="pt-32 pb-20">
       <div className="container-page">
         <div className="max-w-3xl">
-          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">The collection</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">{t("artworks.kicker")}</div>
           <h1 className="font-display text-6xl md:text-8xl leading-[0.95]">
-            Originals,<br />
-            <span className="italic text-gradient-gold">one of one.</span>
+            {t("artworks.title1")}<br />
+            <span className="italic text-gradient-gold">{t("artworks.title2")}</span>
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground max-w-xl">
-            Each piece is hand-made with acrylic, oil, and a wandering palette of textures.
-            Add a painting to your cart to request an invoice — Kiyari personally confirms each sale.
-          </p>
+          <p className="mt-6 text-lg text-muted-foreground max-w-xl">{t("artworks.lede")}</p>
         </div>
 
-        {/* Filters */}
         <div className="mt-12 flex flex-wrap gap-2 border-b border-border pb-6">
           {filters.map((f) => (
             <button
@@ -93,7 +89,6 @@ function ArtworksPage() {
           ))}
         </div>
 
-        {/* Grid */}
         <motion.div layout className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 [perspective:1500px]">
           <AnimatePresence mode="popLayout">
             {items.map((a, i) => (
@@ -118,18 +113,16 @@ function ArtworksPage() {
                       className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
                       style={{ transform: "translateZ(0)" }}
                     />
-                    {/* Status badge */}
                     {a.sold ? (
                       <div className="absolute top-3 left-3 px-3 py-1 text-[10px] uppercase tracking-[0.2em] bg-background/80 backdrop-blur border border-border z-10" style={{ transform: "translateZ(40px)" }}>
-                        Sold
+                        {t("art.sold")}
                       </div>
                     ) : (
                       <div className="absolute top-3 left-3 px-3 py-1 text-[10px] uppercase tracking-[0.2em] bg-gold/90 text-primary-foreground z-10" style={{ transform: "translateZ(40px)" }}>
-                        Available
+                        {t("art.available")}
                       </div>
                     )}
 
-                    {/* Zoom icon */}
                     <button
                       aria-label="Zoom"
                       onClick={(e) => { e.stopPropagation(); setActive(a); }}
@@ -139,7 +132,6 @@ function ArtworksPage() {
                       <Search className="h-4 w-4" />
                     </button>
 
-                    {/* Description reveal panel */}
                     <div
                       className="absolute inset-x-0 bottom-0 p-4 md:p-5 bg-gradient-to-t from-background via-background/90 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"
                       style={{ transform: "translateZ(60px)" }}
@@ -150,7 +142,7 @@ function ArtworksPage() {
                       </p>
                       <div className="mt-3 flex items-center justify-between gap-2">
                         <div className={`text-xs ${a.sold ? "text-muted-foreground line-through" : "text-gold"}`}>
-                          {a.price > 0 ? `$${a.price.toLocaleString()} CAD` : "Inquire"}
+                          {a.price > 0 ? `$${a.price.toLocaleString()} CAD` : t("art.inquire")}
                         </div>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleAdd(a); }}
@@ -161,14 +153,13 @@ function ArtworksPage() {
                               : "border-gold text-gold hover:bg-gold hover:text-primary-foreground"
                           }`}
                         >
-                          {a.sold ? <><Check className="h-3 w-3" /> Sold</> : <><Plus className="h-3 w-3" /> Add</>}
+                          {a.sold ? <><Check className="h-3 w-3" /> {t("art.sold")}</> : <><Plus className="h-3 w-3" /> {t("feat.add")}</>}
                         </button>
                       </div>
                     </div>
                   </div>
                 </TiltCard>
 
-                {/* Static caption below tilt card */}
                 <div className="mt-3 flex items-start justify-between gap-3">
                   <div>
                     <div className="font-display text-lg leading-tight">{a.title}</div>
@@ -177,7 +168,7 @@ function ArtworksPage() {
                     </div>
                   </div>
                   <div className={`text-sm shrink-0 ${a.sold ? "text-muted-foreground line-through" : "text-gold"}`}>
-                    {a.price > 0 ? `$${a.price.toLocaleString()}` : "Inquire"}
+                    {a.price > 0 ? `$${a.price.toLocaleString()}` : t("art.inquire")}
                   </div>
                 </div>
               </motion.article>
@@ -186,7 +177,6 @@ function ArtworksPage() {
         </motion.div>
       </div>
 
-      {/* Lightbox */}
       <AnimatePresence>
         {active && (
           <motion.div
@@ -210,13 +200,10 @@ function ArtworksPage() {
                 <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{active.collection}</div>
                 <h2 className="font-display text-5xl md:text-6xl">{active.title}</h2>
                 <div className="mt-4 text-2xl text-gold">
-                  {active.price > 0 ? `$${active.price.toLocaleString()} CAD` : "Price on request"}
+                  {active.price > 0 ? `$${active.price.toLocaleString()} CAD` : t("art.priceOnRequest")}
                 </div>
                 <p className="mt-6 text-muted-foreground">{blurb(active)}</p>
-                <p className="mt-6 text-sm text-muted-foreground leading-relaxed">
-                  Acrylic, oil & mixed media on canvas. Signed by the artist.
-                  Each piece is unique and ships fully insured from Vancouver, BC.
-                </p>
+                <p className="mt-6 text-sm text-muted-foreground leading-relaxed">{t("artworks.details")}</p>
                 <button
                   onClick={() => { handleAdd(active); setActive(null); }}
                   disabled={active.sold}
@@ -226,7 +213,7 @@ function ArtworksPage() {
                       : "bg-gradient-gold text-primary-foreground hover:shadow-glow"
                   }`}
                 >
-                  {active.sold ? "Sold" : "Add to cart"}
+                  {active.sold ? t("art.sold") : t("art.addToCart")}
                 </button>
               </div>
             </motion.div>

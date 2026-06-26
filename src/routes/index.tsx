@@ -205,11 +205,11 @@ function Home() {
                         onClick={(e) => {
                           e.preventDefault();
                           add(a);
-                          toast.success(`${a.title} added to cart`);
+                          toast.success(`${a.title} ${t("art.addedToast")}`);
                         }}
                         className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] border border-border px-3 py-2 hover:border-gold hover:text-gold transition"
                       >
-                        <Plus className="h-3 w-3" /> Add
+                        <Plus className="h-3 w-3" /> {t("feat.add")}
                       </button>
                     </div>
                   </div>

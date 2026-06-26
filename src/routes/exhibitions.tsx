@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Calendar, MapPin, X } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/exhibitions")({
   head: () => ({
@@ -14,16 +15,6 @@ export const Route = createFileRoute("/exhibitions")({
   }),
   component: ExhibitionsPage,
 });
-
-const UPCOMING = [
-  {
-    date: "June 16, 2024",
-    title: "Wordsmith — A Night of Poetry",
-    time: "6PM – 9PM",
-    venue: "Vancouver Convention Centre",
-    blurb: "A night of Black excellence experienced through the arts. Storytelling from some of Vancouver's most talented voices, alongside a live painting reveal.",
-  },
-];
 
 const GALLERY = [
   "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE7.jpg/:/rs=w:1200",
@@ -44,22 +35,40 @@ const GALLERY = [
 ];
 
 function ExhibitionsPage() {
+  const { t, lang } = useI18n();
   const [active, setActive] = useState<number | null>(null);
+
+  const UPCOMING = [
+    {
+      title: t("ex.event1.title"),
+      time: "6PM – 9PM",
+      venue: lang === "fr" ? "Centre des congrès de Vancouver" : "Vancouver Convention Centre",
+      blurb: t("ex.event1.blurb"),
+      monthShort: lang === "fr" ? "JUIN" : "JUN",
+      day: "16",
+      year: "2024",
+    },
+  ];
+
+  const PAST = [
+    { en: "Afro World Expo 2024", fr: "Afro World Expo 2024" },
+    { en: "Our Essence — Beautiful in Black", fr: "Notre Essence — Beauté en Noir" },
+    { en: "Essence of a Butterfly — Lupus Fundraiser", fr: "Essence d'un papillon — Collecte Lupus" },
+  ];
 
   return (
     <div className="pt-32 pb-20">
       <div className="container-page">
         <div className="max-w-3xl">
-          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">Live shows & moments</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">{t("ex.kicker")}</div>
           <h1 className="font-display text-6xl md:text-8xl leading-[0.95]">
-            See it<br />
-            <span className="italic text-gradient-gold">in person.</span>
+            {t("ex.title1")}<br />
+            <span className="italic text-gradient-gold">{t("ex.title2")}</span>
           </h1>
         </div>
 
-        {/* Upcoming */}
         <section className="mt-20">
-          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">Upcoming</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">{t("ex.upcoming")}</div>
           <div className="space-y-6">
             {UPCOMING.map((e, i) => (
               <motion.div
@@ -72,8 +81,8 @@ function ExhibitionsPage() {
               >
                 <div className="grid md:grid-cols-12 gap-8 items-start">
                   <div className="md:col-span-3">
-                    <div className="font-display text-5xl text-gold leading-none">JUN<br />16</div>
-                    <div className="mt-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">2024</div>
+                    <div className="font-display text-5xl text-gold leading-none">{e.monthShort}<br />{e.day}</div>
+                    <div className="mt-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">{e.year}</div>
                   </div>
                   <div className="md:col-span-9">
                     <h3 className="font-display text-4xl">{e.title}</h3>
@@ -82,7 +91,7 @@ function ExhibitionsPage() {
                       <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-gold" /> {e.venue}</span>
                     </div>
                     <p className="mt-5 text-muted-foreground max-w-2xl leading-relaxed">{e.blurb}</p>
-                    <button className="mt-6 inline-flex items-center gap-2 text-sm link-underline text-gold">Event details →</button>
+                    <button className="mt-6 inline-flex items-center gap-2 text-sm link-underline text-gold">{t("ex.details")}</button>
                   </div>
                 </div>
               </motion.div>
@@ -90,24 +99,22 @@ function ExhibitionsPage() {
           </div>
         </section>
 
-        {/* Past collections */}
         <section className="mt-24">
-          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">Past collections</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">{t("ex.past")}</div>
           <div className="grid md:grid-cols-3 gap-6">
-            {["Afro World Expo 2024", "Our Essence — Beautiful in Black", "Essence of a Butterfly — Lupus Fundraiser"].map((t) => (
-              <div key={t} className="border border-border p-8 hover:border-gold transition group">
-                <div className="font-display text-2xl group-hover:text-gold transition">{t}</div>
+            {PAST.map((p) => (
+              <div key={p.en} className="border border-border p-8 hover:border-gold transition group">
+                <div className="font-display text-2xl group-hover:text-gold transition">{p[lang]}</div>
                 <div className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">Vancouver, BC</div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Masonry gallery */}
         <section className="mt-24">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">Gallery</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("ex.gallery")}</div>
               <h2 className="font-display text-5xl">Afro World Expo · 2024</h2>
             </div>
           </div>
@@ -136,7 +143,6 @@ function ExhibitionsPage() {
         </section>
       </div>
 
-      {/* Lightbox */}
       <AnimatePresence>
         {active !== null && (
           <motion.div
@@ -159,8 +165,8 @@ function ExhibitionsPage() {
               className="max-h-[90vh] max-w-[90vw] object-contain shadow-elegant"
             />
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-              <button onClick={(e) => { e.stopPropagation(); setActive((active - 1 + GALLERY.length) % GALLERY.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">Prev</button>
-              <button onClick={(e) => { e.stopPropagation(); setActive((active + 1) % GALLERY.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">Next</button>
+              <button onClick={(e) => { e.stopPropagation(); setActive((active - 1 + GALLERY.length) % GALLERY.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.prev")}</button>
+              <button onClick={(e) => { e.stopPropagation(); setActive((active + 1) % GALLERY.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.next")}</button>
             </div>
           </motion.div>
         )}
