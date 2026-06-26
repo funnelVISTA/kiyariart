@@ -46,11 +46,12 @@ function AuthPage() {
       return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) toast.error(error.message);
-    else toast.success("Reset link sent", { description: "Check your inbox." });
+    else toast.success("Reset link sent", { description: "Check your inbox for the link to set a new password." });
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 pt-24 pb-12 bg-gradient-hero">
