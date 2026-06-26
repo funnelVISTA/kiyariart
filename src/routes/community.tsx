@@ -129,11 +129,12 @@ function CommunityPage() {
             />
             <div className="border border-border p-8">
               <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">Studio</div>
-              <div className="font-display text-2xl">Vancouver, BC</div>
+              <div className="font-display text-2xl">Calgary, AB</div>
               <p className="mt-3 text-sm text-muted-foreground">
                 Visits by appointment. Mention your favourite piece when you write.
               </p>
             </div>
+            <SubscribeCard />
           </div>
         </div>
 
@@ -158,6 +159,45 @@ function CommunityPage() {
     </div>
   );
 }
+
+function SubscribeCard() {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setBusy(true);
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase.from("subscribers").insert({ email: email.trim(), name: name.trim() || null, source: "community" });
+    setBusy(false);
+    if (error && !/duplicate/i.test(error.message)) {
+      toast.error(error.message);
+      return;
+    }
+    setDone(true);
+    toast.success("Subscribed", { description: "You'll hear about new artworks & exhibitions." });
+    setEmail(""); setName("");
+  };
+
+  return (
+    <form onSubmit={submit} className="border border-gold/40 bg-card/40 p-8">
+      <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">Newsletter</div>
+      <div className="font-display text-2xl">Stay in the loop</div>
+      <p className="mt-2 text-sm text-muted-foreground">New artworks, exhibitions, studio dispatches.</p>
+      <div className="mt-5 space-y-3">
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name (optional)" className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:border-gold outline-none" />
+        <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:border-gold outline-none" />
+        <button disabled={busy} className="w-full bg-gradient-gold py-3 text-[11px] uppercase tracking-[0.25em] text-primary-foreground font-medium hover:shadow-glow transition disabled:opacity-50">
+          {busy ? "Subscribing…" : done ? "Subscribed ✓" : "Subscribe"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (

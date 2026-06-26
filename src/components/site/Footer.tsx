@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Instagram, Mail } from "lucide-react";
+import { Facebook, Instagram, Mail } from "lucide-react";
 
 export function Footer() {
   return (
@@ -23,7 +23,8 @@ export function Footer() {
           <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-4">Connect</div>
           <div className="flex gap-3">
             <a href="https://wa.me/17782331921" className="grid h-10 w-10 place-items-center rounded-full border border-border hover:border-gold hover:text-gold transition" aria-label="WhatsApp"><Mail className="h-4 w-4" /></a>
-            <a href="#" className="grid h-10 w-10 place-items-center rounded-full border border-border hover:border-gold hover:text-gold transition" aria-label="Instagram"><Instagram className="h-4 w-4" /></a>
+            <a href="https://instagram.com/artbykiyari" target="_blank" rel="noreferrer" className="grid h-10 w-10 place-items-center rounded-full border border-border hover:border-gold hover:text-gold transition" aria-label="Instagram"><Instagram className="h-4 w-4" /></a>
+            <a href="https://facebook.com/artbykiyari" target="_blank" rel="noreferrer" className="grid h-10 w-10 place-items-center rounded-full border border-border hover:border-gold hover:text-gold transition" aria-label="Facebook"><Facebook className="h-4 w-4" /></a>
           </div>
         </div>
       </div>
@@ -32,8 +33,19 @@ export function Footer() {
           <span>© {new Date().getFullYear()} Kiyari — All rights reserved.</span>
           <span className="flex items-center gap-4">
             <Link to="/admin" className="hover:text-gold transition">Studio</Link>
-            <span>Vancouver, BC · Canada</span>
+            <span>Calgary, AB · Canada</span>
           </span>
+        </div>
+        <div className="container-page pb-6 text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70">
+          Site designed by{" "}
+          <a
+            href="https://funnelvistamarketing.com"
+            target="_blank"
+            rel="noreferrer"
+            className="text-gold hover:text-foreground transition"
+          >
+            Funnel Vista Marketing
+          </a>
         </div>
       </div>
     </footer>

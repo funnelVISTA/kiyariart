@@ -15,7 +15,6 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -30,37 +29,35 @@ function AuthPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("Welcome back");
-        navigate({ to: "/admin" });
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email, password,
-          options: { emailRedirectTo: `${window.location.origin}/admin` },
-        });
-        if (error) throw error;
-        toast.success("Account created", { description: "You can sign in now." });
-        setMode("signin");
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("Welcome back");
+      navigate({ to: "/admin" });
     } catch (err: any) {
-      toast.error(err.message ?? "Authentication failed");
+      toast.error(err.message ?? "Sign in failed");
     } finally {
       setBusy(false);
     }
+  };
+
+  const resetPassword = async () => {
+    if (!email) {
+      toast.error("Enter your email above first");
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    if (error) toast.error(error.message);
+    else toast.success("Reset link sent", { description: "Check your inbox." });
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 pt-24 pb-12 bg-gradient-hero">
       <div className="w-full max-w-md bg-card/60 backdrop-blur border border-border p-8 md:p-10">
         <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Studio</div>
-        <h1 className="font-display text-4xl md:text-5xl">
-          {mode === "signin" ? "Sign in" : "Create account"}
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          For the artist & studio team only.
-        </p>
+        <h1 className="font-display text-4xl md:text-5xl">Sign in</h1>
+        <p className="mt-2 text-sm text-muted-foreground">For the artist & studio team only.</p>
 
         <form onSubmit={submit} className="mt-8 space-y-4">
           <label className="block">
@@ -81,15 +78,15 @@ function AuthPage() {
             type="submit" disabled={busy}
             className="w-full bg-gradient-gold text-primary-foreground py-3 text-xs tracking-[0.25em] uppercase font-medium hover:opacity-90 transition disabled:opacity-50"
           >
-            {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
+            {busy ? "Please wait…" : "Sign in"}
           </button>
         </form>
 
         <button
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+          onClick={resetPassword}
           className="mt-6 w-full text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-gold transition"
         >
-          {mode === "signin" ? "Need an account? Create one" : "Have an account? Sign in"}
+          Forgot password?
         </button>
       </div>
     </div>
