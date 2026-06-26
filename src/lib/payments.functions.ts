@@ -34,7 +34,7 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
-        ui_mode: "embedded_page",
+        ui_mode: "embedded",
         return_url: data.returnUrl,
         line_items: data.items.map((i) => ({
           quantity: i.quantity,
