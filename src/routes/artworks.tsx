@@ -2,11 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, Plus, X, Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { ARTWORKS, type Artwork } from "@/lib/artworks";
 import { useCart } from "@/lib/cart";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
+import { listSoldArtworkIds } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/artworks")({
   head: () => ({
@@ -28,6 +30,19 @@ function ArtworksPage() {
   const [active, setActive] = useState<Artwork | null>(null);
   const { add } = useCart();
 
+  // Overlay live "sold" state from the database on top of the static catalog
+  // so artworks paid for via Stripe automatically appear as Sold.
+  const { data: soldIds } = useQuery({
+    queryKey: ["sold-artworks"],
+    queryFn: () => listSoldArtworkIds(),
+    staleTime: 60_000,
+  });
+  const soldSet = useMemo(() => new Set(soldIds ?? []), [soldIds]);
+  const catalog = useMemo<Artwork[]>(
+    () => ARTWORKS.map((a) => (soldSet.has(a.id) ? { ...a, sold: true } : a)),
+    [soldSet],
+  );
+
   const blurb = (a: Artwork) => {
     if (a.description) return a.description;
     if (a.collection === "The Legends") return `${a.title} ${t("artworks.blurb.legend")}`;
@@ -35,14 +50,15 @@ function ArtworksPage() {
   };
 
   const items = useMemo(() => {
-    return ARTWORKS.filter((a) => {
+    return catalog.filter((a) => {
       if (filter === "available") return !a.sold;
       if (filter === "sold") return a.sold;
       if (filter === "essence") return a.collection === "Our Essence";
       if (filter === "legends") return a.collection === "The Legends";
       return true;
     });
-  }, [filter]);
+  }, [filter, catalog]);
+
 
   const handleAdd = (a: Artwork) => {
     if (a.sold) {
