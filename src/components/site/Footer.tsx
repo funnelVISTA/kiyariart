@@ -41,7 +41,7 @@ export function Footer() {
         <div className="container-page pb-6 text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70">
           {t("footer.designedBy")}{" "}
           <a
-            href="https://funnelvistamarketing.com"
+            href="https://funnelvista.com"
             target="_blank"
             rel="noreferrer"
             className="text-gold hover:text-foreground transition"
