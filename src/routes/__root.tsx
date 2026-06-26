@@ -18,7 +18,6 @@ import { CartSheet } from "@/components/site/CartSheet";
 import { Toaster } from "@/components/ui/sonner";
 import { I18nProvider } from "@/lib/i18n";
 import { SmoothScroll } from "@/components/site/SmoothScroll";
-import { Spotlight } from "@/components/site/Spotlight";
 
 function NotFoundComponent() {
   return (
@@ -96,7 +95,6 @@ function RootComponent() {
       <I18nProvider>
         <CartProvider>
           <SmoothScroll />
-          <Spotlight />
           <Header />
           <main className="min-h-screen">
             <Outlet />
