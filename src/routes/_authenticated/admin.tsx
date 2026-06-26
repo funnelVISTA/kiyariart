@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, RefreshCw, Search } from "lucide-react";
+import { LogOut, Mail, RefreshCw, Search } from "lucide-react";
+import { sendTransactionalEmail } from "@/lib/email/send";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -110,6 +111,27 @@ function AdminPage() {
     navigate({ to: "/auth" });
   };
 
+  const [sendingTest, setSendingTest] = useState(false);
+  const sendTest = async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    const to = userData.user?.email;
+    if (!to) { toast.error("No email on your account"); return; }
+    setSendingTest(true);
+    try {
+      await sendTransactionalEmail({
+        templateName: "test-email",
+        recipientEmail: to,
+        idempotencyKey: `test-${Date.now()}`,
+        templateData: { recipientName: userData.user?.user_metadata?.name || "" },
+      });
+      toast.success(`Test email queued to ${to}`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to send");
+    } finally {
+      setSendingTest(false);
+    }
+  };
+
   if (isAdmin === null) {
     return <div className="pt-32 pb-20 text-center text-muted-foreground">Verifying access…</div>;
   }
@@ -141,6 +163,9 @@ function AdminPage() {
             <h1 className="font-display text-5xl md:text-6xl">Orders</h1>
           </div>
           <div className="flex gap-2">
+            <button onClick={sendTest} disabled={sendingTest} className="inline-flex items-center gap-2 border border-gold/40 text-gold px-4 py-2.5 text-xs uppercase tracking-[0.2em] hover:bg-gold/10 transition disabled:opacity-60">
+              <Mail className="h-3.5 w-3.5" /> {sendingTest ? "Sending…" : "Send test email"}
+            </button>
             <button onClick={() => ordersQ.refetch()} className="inline-flex items-center gap-2 border border-border px-4 py-2.5 text-xs uppercase tracking-[0.2em] hover:border-gold transition">
               <RefreshCw className={`h-3.5 w-3.5 ${ordersQ.isFetching ? "animate-spin" : ""}`} /> Refresh
             </button>
