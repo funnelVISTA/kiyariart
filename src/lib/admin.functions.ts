@@ -40,7 +40,14 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
       .eq("id", data.orderId)
       .maybeSingle();
 
-    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    const patch: {
+      updated_at: string;
+      status?: UpdateInput["status"];
+      tracking_carrier?: string | null;
+      tracking_number?: string | null;
+      tracking_url?: string | null;
+      notes?: string | null;
+    } = { updated_at: new Date().toISOString() };
     if (data.status !== undefined) patch.status = data.status;
     if (data.tracking_carrier !== undefined) patch.tracking_carrier = data.tracking_carrier;
     if (data.tracking_number !== undefined) patch.tracking_number = data.tracking_number;
