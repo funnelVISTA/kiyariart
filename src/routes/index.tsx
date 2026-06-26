@@ -91,11 +91,11 @@ function Home() {
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.7 }}
               className="mt-10 flex flex-wrap gap-4"
             >
-              <Link as={Link} to="/artworks" className="group inline-flex items-center gap-3 bg-gradient-gold px-8 py-4 text-sm uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition">
+              <Link to="/artworks" className="group inline-flex items-center gap-3 bg-gradient-gold px-8 py-4 text-sm uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition">
                 {t("hero.cta1")}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
-              <Link as={Link} to="/exhibitions" className="inline-flex items-center gap-3 border border-border px-8 py-4 text-sm uppercase tracking-[0.2em] hover:border-gold hover:text-gold transition">
+              <Link to="/exhibitions" className="inline-flex items-center gap-3 border border-border px-8 py-4 text-sm uppercase tracking-[0.2em] hover:border-gold hover:text-gold transition">
                 {t("hero.cta2")}
               </Link>
             </motion.div>
@@ -232,7 +232,7 @@ function Home() {
             <p className="mt-6 text-muted-foreground max-w-xl mx-auto">{t("cta.lede")}</p>
           </Reveal>
           <Reveal delay={0.3}>
-            <Link as={Link} to="/community" className="mt-10 inline-flex items-center gap-3 bg-gradient-gold px-8 py-4 text-sm uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition">
+            <Link to="/community" className="mt-10 inline-flex items-center gap-3 bg-gradient-gold px-8 py-4 text-sm uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition">
               {t("cta.btn")} <ArrowRight className="h-4 w-4" />
             </Link>
           </Reveal>
