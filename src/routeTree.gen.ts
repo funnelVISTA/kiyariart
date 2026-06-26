@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ExportRouteImport } from './routes/export'
 import { Route as ExhibitionsRouteImport } from './routes/exhibitions'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -22,6 +23,7 @@ import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicSetupAdminRouteImport } from './routes/api/public/setup-admin'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
@@ -33,6 +35,11 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExportRoute = ExportRouteImport.update({
@@ -94,6 +101,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -143,7 +155,9 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -164,7 +178,9 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -187,7 +203,9 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -210,7 +228,9 @@ export interface FileRouteTypes {
     | '/community'
     | '/exhibitions'
     | '/export'
+    | '/reset-password'
     | '/unsubscribe'
+    | '/account'
     | '/admin'
     | '/checkout/return'
     | '/email/unsubscribe'
@@ -231,7 +251,9 @@ export interface FileRouteTypes {
     | '/community'
     | '/exhibitions'
     | '/export'
+    | '/reset-password'
     | '/unsubscribe'
+    | '/account'
     | '/admin'
     | '/checkout/return'
     | '/email/unsubscribe'
@@ -253,7 +275,9 @@ export interface FileRouteTypes {
     | '/community'
     | '/exhibitions'
     | '/export'
+    | '/reset-password'
     | '/unsubscribe'
+    | '/_authenticated/account'
     | '/_authenticated/admin'
     | '/checkout/return'
     | '/email/unsubscribe'
@@ -276,6 +300,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   ExhibitionsRoute: typeof ExhibitionsRoute
   ExportRoute: typeof ExportRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
@@ -294,6 +319,13 @@ declare module '@tanstack/react-router' {
       path: '/unsubscribe'
       fullPath: '/unsubscribe'
       preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/export': {
@@ -380,6 +412,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/account': {
+      id: '/_authenticated/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AuthenticatedAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -444,10 +483,12 @@ const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
 }
 
@@ -475,6 +516,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   ExhibitionsRoute: ExhibitionsRoute,
   ExportRoute: ExportRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   OrdersOrderIdRoute: OrdersOrderIdRoute,
