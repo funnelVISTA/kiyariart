@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { ArrowRight, Plus, Search } from "lucide-react";
 import { ARTWORKS, HERO_IMAGE, type Artwork } from "@/lib/artworks";
 import { useI18n } from "@/lib/i18n";
-import { MagneticButton } from "@/components/ui/MagneticButton";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { Reveal, RevealText } from "@/components/ui/Reveal";
 import { Lightbox } from "@/components/site/Lightbox";
