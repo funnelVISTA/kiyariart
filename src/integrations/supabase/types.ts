@@ -108,14 +108,19 @@ export type Database = {
           customer_email: string | null
           customer_name: string | null
           customer_phone: string | null
+          delivered_at: string | null
           id: string
           items: Json
           notes: string | null
           payment_intent_id: string | null
+          shipped_at: string | null
           shipping_address: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_session_id: string | null
           total_cad: number
+          tracking_carrier: string | null
+          tracking_number: string | null
+          tracking_url: string | null
           updated_at: string
         }
         Insert: {
@@ -124,14 +129,19 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          delivered_at?: string | null
           id?: string
           items?: Json
           notes?: string | null
           payment_intent_id?: string | null
+          shipped_at?: string | null
           shipping_address?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_session_id?: string | null
           total_cad?: number
+          tracking_carrier?: string | null
+          tracking_number?: string | null
+          tracking_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -140,14 +150,19 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          delivered_at?: string | null
           id?: string
           items?: Json
           notes?: string | null
           payment_intent_id?: string | null
+          shipped_at?: string | null
           shipping_address?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_session_id?: string | null
           total_cad?: number
+          tracking_carrier?: string | null
+          tracking_number?: string | null
+          tracking_url?: string | null
           updated_at?: string
         }
         Relationships: []
