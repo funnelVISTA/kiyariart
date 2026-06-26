@@ -103,41 +103,50 @@ export type Database = {
       }
       orders: {
         Row: {
+          amount_total_cad: number | null
           created_at: string
-          customer_email: string
-          customer_name: string
+          customer_email: string | null
+          customer_name: string | null
           customer_phone: string | null
           id: string
           items: Json
           notes: string | null
+          payment_intent_id: string | null
           shipping_address: string | null
           status: Database["public"]["Enums"]["order_status"]
+          stripe_session_id: string | null
           total_cad: number
           updated_at: string
         }
         Insert: {
+          amount_total_cad?: number | null
           created_at?: string
-          customer_email: string
-          customer_name: string
+          customer_email?: string | null
+          customer_name?: string | null
           customer_phone?: string | null
           id?: string
           items?: Json
           notes?: string | null
+          payment_intent_id?: string | null
           shipping_address?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_session_id?: string | null
           total_cad?: number
           updated_at?: string
         }
         Update: {
+          amount_total_cad?: number | null
           created_at?: string
-          customer_email?: string
-          customer_name?: string
+          customer_email?: string | null
+          customer_name?: string | null
           customer_phone?: string | null
           id?: string
           items?: Json
           notes?: string | null
+          payment_intent_id?: string | null
           shipping_address?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_session_id?: string | null
           total_cad?: number
           updated_at?: string
         }
