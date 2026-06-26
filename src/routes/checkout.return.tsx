@@ -1,0 +1,133 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { confirmCheckout } from "@/lib/payments.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
+import { useCart } from "@/lib/cart";
+
+export const Route = createFileRoute("/checkout/return")({
+  ssr: false,
+  validateSearch: (s: Record<string, unknown>): { session_id?: string } => ({
+    session_id: typeof s.session_id === "string" ? s.session_id : undefined,
+  }),
+  head: () => ({ meta: [{ title: "Order Confirmation — art by KIYARI" }] }),
+  component: ReturnPage,
+});
+
+type State =
+  | { kind: "loading" }
+  | { kind: "paid"; orderId?: string; email?: string | null; amount?: number; items?: Array<{ title: string; quantity: number }> }
+  | { kind: "pending" }
+  | { kind: "error"; message: string };
+
+function ReturnPage() {
+  const { session_id } = Route.useSearch();
+  const { clear } = useCart();
+  const [state, setState] = useState<State>({ kind: "loading" });
+
+  useEffect(() => {
+    if (!session_id) {
+      setState({ kind: "error", message: "Missing session id" });
+      return;
+    }
+    (async () => {
+      try {
+        const res = await confirmCheckout({
+          data: { sessionId: session_id, environment: getStripeEnvironment() },
+        });
+        if ("error" in res) {
+          setState({ kind: "error", message: res.error });
+          return;
+        }
+        if (res.status === "paid") {
+          clear();
+          setState({
+            kind: "paid",
+            orderId: res.orderId,
+            email: res.customer_email,
+            amount: res.amount_total_cad,
+            items: res.items,
+          });
+        } else {
+          setState({ kind: res.status === "pending" ? "pending" : "error", message: "Payment not completed" } as State);
+        }
+      } catch (e) {
+        setState({ kind: "error", message: e instanceof Error ? e.message : "Unknown error" });
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session_id]);
+
+  return (
+    <div className="min-h-screen grid place-items-center px-4 py-32">
+      <div className="max-w-xl w-full text-center">
+        {state.kind === "loading" && (
+          <>
+            <Loader2 className="h-10 w-10 animate-spin text-gold mx-auto" />
+            <div className="mt-6 font-display text-3xl">Confirming your order…</div>
+          </>
+        )}
+
+        {state.kind === "paid" && (
+          <>
+            <CheckCircle2 className="h-14 w-14 text-gold mx-auto" />
+            <div className="text-xs uppercase tracking-[0.3em] text-gold mt-6">Order confirmed</div>
+            <h1 className="font-display text-5xl md:text-6xl mt-3">Thank you</h1>
+            <p className="mt-4 text-muted-foreground">
+              Your payment was received{state.email ? `. A receipt has been sent to ${state.email}` : ""}. Kiyari will reach out shortly with shipping details.
+            </p>
+            {state.items && state.items.length > 0 && (
+              <div className="mt-8 border-t border-border pt-6 text-left">
+                {state.items.map((i, idx) => (
+                  <div key={idx} className="flex justify-between text-sm py-1">
+                    <span>{i.title} <span className="text-muted-foreground">× {i.quantity}</span></span>
+                  </div>
+                ))}
+                {state.amount !== undefined && (
+                  <div className="mt-4 pt-4 border-t border-border flex justify-between">
+                    <span className="text-muted-foreground">Total paid</span>
+                    <span className="text-gold font-medium">${state.amount.toLocaleString()} CAD</span>
+                  </div>
+                )}
+              </div>
+            )}
+            {state.orderId && (
+              <div className="mt-6 text-[11px] text-muted-foreground">
+                Order reference: <span className="font-mono">{state.orderId.slice(0, 8)}</span>
+              </div>
+            )}
+            <div className="mt-10 flex gap-3 justify-center">
+              <Link to="/artworks" className="border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] hover:border-gold transition">
+                Keep browsing
+              </Link>
+              <Link to="/" className="bg-gradient-gold text-primary-foreground px-6 py-3 text-xs uppercase tracking-[0.2em]">
+                Back home
+              </Link>
+            </div>
+          </>
+        )}
+
+        {state.kind === "pending" && (
+          <>
+            <Loader2 className="h-10 w-10 animate-spin text-muted-foreground mx-auto" />
+            <div className="mt-6 font-display text-3xl">Payment processing</div>
+            <p className="mt-3 text-muted-foreground">
+              Your payment is still being processed. Refresh this page in a moment.
+            </p>
+          </>
+        )}
+
+        {state.kind === "error" && (
+          <>
+            <AlertCircle className="h-12 w-12 text-accent mx-auto" />
+            <div className="mt-6 font-display text-3xl">Something went wrong</div>
+            <p className="mt-3 text-sm text-muted-foreground">{state.message}</p>
+            <Link to="/artworks" className="mt-8 inline-block underline text-gold">
+              Return to artworks
+            </Link>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
