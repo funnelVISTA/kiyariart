@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, Plus, X } from "lucide-react";
+import { Check, Plus, X, Search } from "lucide-react";
 import { ARTWORKS, type Artwork } from "@/lib/artworks";
 import { useCart } from "@/lib/cart";
+import { TiltCard } from "@/components/ui/TiltCard";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/artworks")({
@@ -19,6 +20,14 @@ export const Route = createFileRoute("/artworks")({
 });
 
 type Filter = "all" | "available" | "sold" | "essence" | "legends";
+
+function blurb(a: Artwork) {
+  if (a.description) return a.description;
+  if (a.collection === "The Legends") {
+    return `${a.title} honours an icon — rendered in acrylic, oil & mixed media with hand-built texture.`;
+  }
+  return `${a.title} — from Our Essence. Layered acrylic, oil & mixed media on canvas, signed by the artist.`;
+}
 
 function ArtworksPage() {
   const [filter, setFilter] = useState<Filter>("all");
@@ -85,7 +94,7 @@ function ArtworksPage() {
         </div>
 
         {/* Grid */}
-        <motion.div layout className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+        <motion.div layout className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 [perspective:1500px]">
           <AnimatePresence mode="popLayout">
             {items.map((a, i) => (
               <motion.article
@@ -97,51 +106,78 @@ function ArtworksPage() {
                 transition={{ duration: 0.5, delay: (i % 8) * 0.04 }}
                 className="group"
               >
-                <div
-                  onClick={() => setActive(a)}
-                  className="relative aspect-[4/5] overflow-hidden cursor-zoom-in bg-card"
-                >
-                  <img
-                    src={a.image}
-                    alt={a.title}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/10 to-transparent opacity-70 group-hover:opacity-90 transition" />
-                  {a.sold && (
-                    <div className="absolute top-3 left-3 px-3 py-1 text-[10px] uppercase tracking-[0.2em] bg-background/80 backdrop-blur border border-border">
-                      Sold
-                    </div>
-                  )}
-                  {!a.sold && (
-                    <div className="absolute top-3 left-3 px-3 py-1 text-[10px] uppercase tracking-[0.2em] bg-gold/90 text-primary-foreground">
-                      Available
-                    </div>
-                  )}
-                </div>
+                <TiltCard max={12} scale={1.04} glare className="relative">
+                  <div
+                    onClick={() => setActive(a)}
+                    className="relative aspect-[4/5] overflow-hidden cursor-zoom-in bg-card"
+                  >
+                    <img
+                      src={a.image}
+                      alt={a.title}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
+                      style={{ transform: "translateZ(0)" }}
+                    />
+                    {/* Status badge */}
+                    {a.sold ? (
+                      <div className="absolute top-3 left-3 px-3 py-1 text-[10px] uppercase tracking-[0.2em] bg-background/80 backdrop-blur border border-border z-10" style={{ transform: "translateZ(40px)" }}>
+                        Sold
+                      </div>
+                    ) : (
+                      <div className="absolute top-3 left-3 px-3 py-1 text-[10px] uppercase tracking-[0.2em] bg-gold/90 text-primary-foreground z-10" style={{ transform: "translateZ(40px)" }}>
+                        Available
+                      </div>
+                    )}
 
-                <div className="mt-4 flex items-start justify-between gap-3">
+                    {/* Zoom icon */}
+                    <button
+                      aria-label="Zoom"
+                      onClick={(e) => { e.stopPropagation(); setActive(a); }}
+                      className="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full border border-border bg-background/60 backdrop-blur opacity-0 group-hover:opacity-100 transition z-10"
+                      style={{ transform: "translateZ(40px)" }}
+                    >
+                      <Search className="h-4 w-4" />
+                    </button>
+
+                    {/* Description reveal panel */}
+                    <div
+                      className="absolute inset-x-0 bottom-0 p-4 md:p-5 bg-gradient-to-t from-background via-background/90 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"
+                      style={{ transform: "translateZ(60px)" }}
+                    >
+                      <div className="font-display text-lg md:text-xl leading-tight">{a.title}</div>
+                      <p className="mt-1.5 text-[11px] md:text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                        {blurb(a)}
+                      </p>
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        <div className={`text-xs ${a.sold ? "text-muted-foreground line-through" : "text-gold"}`}>
+                          {a.price > 0 ? `$${a.price.toLocaleString()} CAD` : "Inquire"}
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleAdd(a); }}
+                          disabled={a.sold}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] uppercase tracking-[0.2em] border transition ${
+                            a.sold
+                              ? "border-border text-muted-foreground cursor-not-allowed"
+                              : "border-gold text-gold hover:bg-gold hover:text-primary-foreground"
+                          }`}
+                        >
+                          {a.sold ? <><Check className="h-3 w-3" /> Sold</> : <><Plus className="h-3 w-3" /> Add</>}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </TiltCard>
+
+                {/* Static caption below tilt card */}
+                <div className="mt-3 flex items-start justify-between gap-3">
                   <div>
-                    <div className="font-display text-xl leading-tight">{a.title}</div>
-                    <div className="mt-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                    <div className="font-display text-lg leading-tight">{a.title}</div>
+                    <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                       {a.collection}
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <div className={`text-sm ${a.sold ? "text-muted-foreground line-through" : "text-gold"}`}>
-                      {a.price > 0 ? `$${a.price.toLocaleString()}` : "Inquire"}
-                    </div>
-                    <button
-                      onClick={() => handleAdd(a)}
-                      disabled={a.sold}
-                      className={`mt-2 inline-flex items-center gap-1 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border transition ${
-                        a.sold
-                          ? "border-border text-muted-foreground cursor-not-allowed"
-                          : "border-gold text-gold hover:bg-gold hover:text-primary-foreground"
-                      }`}
-                    >
-                      {a.sold ? <><Check className="h-3 w-3" /> Sold</> : <><Plus className="h-3 w-3" /> Add</>}
-                    </button>
+                  <div className={`text-sm shrink-0 ${a.sold ? "text-muted-foreground line-through" : "text-gold"}`}>
+                    {a.price > 0 ? `$${a.price.toLocaleString()}` : "Inquire"}
                   </div>
                 </div>
               </motion.article>
@@ -176,9 +212,7 @@ function ArtworksPage() {
                 <div className="mt-4 text-2xl text-gold">
                   {active.price > 0 ? `$${active.price.toLocaleString()} CAD` : "Price on request"}
                 </div>
-                {active.description && (
-                  <p className="mt-6 text-muted-foreground">{active.description}</p>
-                )}
+                <p className="mt-6 text-muted-foreground">{blurb(active)}</p>
                 <p className="mt-6 text-sm text-muted-foreground leading-relaxed">
                   Acrylic, oil & mixed media on canvas. Signed by the artist.
                   Each piece is unique and ships fully insured from Vancouver, BC.

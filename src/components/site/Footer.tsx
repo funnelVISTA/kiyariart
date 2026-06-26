@@ -30,7 +30,10 @@ export function Footer() {
       <div className="border-t border-border">
         <div className="container-page py-6 text-xs text-muted-foreground flex flex-wrap justify-between gap-3">
           <span>© {new Date().getFullYear()} Kiyari — All rights reserved.</span>
-          <span>Vancouver, BC · Canada</span>
+          <span className="flex items-center gap-4">
+            <Link to="/admin" className="hover:text-gold transition">Studio</Link>
+            <span>Vancouver, BC · Canada</span>
+          </span>
         </div>
       </div>
     </footer>
