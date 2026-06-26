@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { z } from "zod";
 import { Mail, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/community")({
   head: () => ({
@@ -17,17 +18,18 @@ export const Route = createFileRoute("/community")({
   component: CommunityPage,
 });
 
-const schema = z.object({
-  name: z.string().trim().min(1, "Please share your name").max(80),
-  email: z.string().trim().email("Please enter a valid email").max(160),
-  message: z.string().trim().min(5, "A few more words…").max(1500),
-  subscribe: z.boolean().optional(),
-});
-
 function CommunityPage() {
+  const { t } = useI18n();
   const [form, setForm] = useState({ name: "", email: "", message: "", subscribe: true });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sending, setSending] = useState(false);
+
+  const schema = z.object({
+    name: z.string().trim().min(1, t("com.err.name")).max(80),
+    email: z.string().trim().email(t("com.err.email")).max(160),
+    message: z.string().trim().min(5, t("com.err.message")).max(1500),
+    subscribe: z.boolean().optional(),
+  });
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +44,7 @@ function CommunityPage() {
     setSending(true);
     await new Promise((r) => setTimeout(r, 800));
     setSending(false);
-    toast.success("Message sent", { description: "Kiyari will be in touch soon." });
+    toast.success(t("com.sent"), { description: t("com.sentDesc") });
     setForm({ name: "", email: "", message: "", subscribe: true });
   };
 
@@ -50,18 +52,15 @@ function CommunityPage() {
     <div className="pt-32 pb-20">
       <div className="container-page">
         <div className="max-w-3xl">
-          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">Community</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">{t("com.kicker")}</div>
           <h1 className="font-display text-6xl md:text-8xl leading-[0.95]">
-            Let's<br />
-            <span className="italic text-gradient-gold">connect.</span>
+            {t("com.title1")}<br />
+            <span className="italic text-gradient-gold">{t("com.title2")}</span>
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground max-w-xl">
-            Commissions, collaborations, press, or simply to say hello — Kiyari reads every message.
-          </p>
+          <p className="mt-6 text-lg text-muted-foreground max-w-xl">{t("com.lede")}</p>
         </div>
 
         <div className="mt-20 grid lg:grid-cols-12 gap-12">
-          {/* Form */}
           <motion.form
             onSubmit={submit}
             initial={{ opacity: 0, y: 30 }}
@@ -69,30 +68,30 @@ function CommunityPage() {
             viewport={{ once: true }}
             className="lg:col-span-7 space-y-6"
           >
-            <Field label="Name" error={errors.name}>
+            <Field label={t("com.name")} error={errors.name}>
               <input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 className="w-full bg-transparent border-b border-border focus:border-gold outline-none py-3 text-lg transition-colors"
-                placeholder="Your full name"
+                placeholder={t("com.name.ph")}
               />
             </Field>
-            <Field label="Email" error={errors.email}>
+            <Field label={t("com.email")} error={errors.email}>
               <input
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="w-full bg-transparent border-b border-border focus:border-gold outline-none py-3 text-lg transition-colors"
-                placeholder="you@somewhere.com"
+                placeholder={t("com.email.ph")}
               />
             </Field>
-            <Field label="Message" error={errors.message}>
+            <Field label={t("com.message")} error={errors.message}>
               <textarea
                 value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
                 rows={5}
                 className="w-full bg-transparent border-b border-border focus:border-gold outline-none py-3 text-lg resize-none transition-colors"
-                placeholder="Tell Kiyari what's on your mind…"
+                placeholder={t("com.message.ph")}
               />
             </Field>
             <label className="flex items-center gap-3 text-sm text-muted-foreground cursor-pointer">
@@ -102,18 +101,17 @@ function CommunityPage() {
                 onChange={(e) => setForm({ ...form, subscribe: e.target.checked })}
                 className="h-4 w-4 accent-[var(--gold)]"
               />
-              Subscribe to studio updates & exhibition invites
+              {t("com.subscribe")}
             </label>
             <button
               type="submit"
               disabled={sending}
               className="group inline-flex items-center gap-3 bg-gradient-gold px-8 py-4 text-sm uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition disabled:opacity-50"
             >
-              {sending ? "Sending…" : <>Send message <Send className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>}
+              {sending ? t("com.sending") : <>{t("com.send")} <Send className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>}
             </button>
           </motion.form>
 
-          {/* Side info */}
           <div className="lg:col-span-5 space-y-6">
             <ContactCard
               icon={<MessageCircle className="h-5 w-5" />}
@@ -123,28 +121,23 @@ function CommunityPage() {
             />
             <ContactCard
               icon={<Mail className="h-5 w-5" />}
-              title="Email"
+              title={t("com.email")}
               detail="hello@kiyari.ca"
               href="mailto:hello@kiyari.ca"
             />
             <div className="border border-border p-8">
-              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">Studio</div>
-              <div className="font-display text-2xl">Calgary, AB</div>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Visits by appointment. Mention your favourite piece when you write.
-              </p>
+              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("com.studio")}</div>
+              <div className="font-display text-2xl">{t("com.studio.loc")}</div>
+              <p className="mt-3 text-sm text-muted-foreground">{t("com.studio.note")}</p>
             </div>
             <SubscribeCard />
           </div>
         </div>
 
-        {/* Supporters strip */}
         <section className="mt-32 text-center">
-          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">With gratitude to</div>
-          <h2 className="font-display text-4xl md:text-5xl">Our supporters</h2>
-          <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-            Communities, organizations, and collectors who help carry this work forward.
-          </p>
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("com.supporters.kicker")}</div>
+          <h2 className="font-display text-4xl md:text-5xl">{t("com.supporters.title")}</h2>
+          <p className="mt-4 text-muted-foreground max-w-xl mx-auto">{t("com.supporters.lede")}</p>
           <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6">
             {["Sisters in Canada Wellness Society", "Afro World Expo", "Lupus BC", "Vancouver Black Library"].map((s) => (
               <div key={s} className="border border-border p-6 hover:border-gold transition">
@@ -161,6 +154,7 @@ function CommunityPage() {
 }
 
 function SubscribeCard() {
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -178,20 +172,20 @@ function SubscribeCard() {
       return;
     }
     setDone(true);
-    toast.success("Subscribed", { description: "You'll hear about new artworks & exhibitions." });
+    toast.success(t("com.news.toast"), { description: t("com.news.toastDesc") });
     setEmail(""); setName("");
   };
 
   return (
     <form onSubmit={submit} className="border border-gold/40 bg-card/40 p-8">
-      <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">Newsletter</div>
-      <div className="font-display text-2xl">Stay in the loop</div>
-      <p className="mt-2 text-sm text-muted-foreground">New artworks, exhibitions, studio dispatches.</p>
+      <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("com.news.kicker")}</div>
+      <div className="font-display text-2xl">{t("com.news.title")}</div>
+      <p className="mt-2 text-sm text-muted-foreground">{t("com.news.lede")}</p>
       <div className="mt-5 space-y-3">
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name (optional)" className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:border-gold outline-none" />
-        <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:border-gold outline-none" />
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("com.news.name.ph")} className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:border-gold outline-none" />
+        <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("com.news.email.ph")} className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:border-gold outline-none" />
         <button disabled={busy} className="w-full bg-gradient-gold py-3 text-[11px] uppercase tracking-[0.25em] text-primary-foreground font-medium hover:shadow-glow transition disabled:opacity-50">
-          {busy ? "Subscribing…" : done ? "Subscribed ✓" : "Subscribe"}
+          {busy ? t("com.news.subscribing") : done ? t("com.news.subscribed") : t("com.news.subscribe")}
         </button>
       </div>
     </form>
