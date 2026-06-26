@@ -61,7 +61,7 @@ export const DICT: Dict = {
   "art.priceOnRequest": { en: "Price on request", fr: "Prix sur demande" },
   "art.addToCart": { en: "Add to cart", fr: "Ajouter au panier" },
   "art.addedToast": { en: "added", fr: "ajouté" },
-  "art.addedDesc": { en: "Open cart to request an invoice.", fr: "Ouvrez le panier pour demander une facture." },
+  "art.addedDesc": { en: "Open cart to checkout securely.", fr: "Ouvrez le panier pour passer à la caisse." },
   "art.soldToast": { en: "This piece is sold", fr: "Cette œuvre est vendue" },
   "art.soldDesc": { en: "Reach out to commission something similar.", fr: "Contactez-nous pour une commande similaire." },
 
@@ -70,9 +70,10 @@ export const DICT: Dict = {
   "artworks.title1": { en: "Originals,", fr: "Originaux," },
   "artworks.title2": { en: "one of one.", fr: "uniques." },
   "artworks.lede": {
-    en: "Each piece is hand-made with acrylic, oil, and a wandering palette of textures. Add a painting to your cart to request an invoice — Kiyari personally confirms each sale.",
-    fr: "Chaque pièce est faite à la main avec acrylique, huile et une palette de textures. Ajoutez une œuvre au panier pour demander une facture — Kiyari confirme personnellement chaque vente.",
+    en: "Each piece is hand-made with acrylic, oil, and a wandering palette of textures. Add a painting to your cart and check out securely — Kiyari ships every sale personally.",
+    fr: "Chaque pièce est faite à la main avec acrylique, huile et une palette de textures. Ajoutez une œuvre au panier et payez en toute sécurité — Kiyari expédie personnellement chaque vente.",
   },
+
   "artworks.filter.all": { en: "All", fr: "Tout" },
   "artworks.filter.available": { en: "Available", fr: "Disponibles" },
   "artworks.filter.essence": { en: "Our Essence", fr: "Notre Essence" },
