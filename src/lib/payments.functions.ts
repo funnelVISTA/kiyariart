@@ -12,6 +12,8 @@ type CartLine = {
 
 type CreateResult = { clientSecret: string } | { error: string };
 
+const MAX_CART_ITEMS = 20;
+
 export const createArtworkCheckout = createServerFn({ method: "POST" })
   .inputValidator((data: {
     items: CartLine[];
@@ -21,19 +23,32 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
     if (!Array.isArray(data.items) || data.items.length === 0) {
       throw new Error("Cart is empty");
     }
-    for (const i of data.items) {
-      if (!i.id) throw new Error("Invalid cart item");
+    if (data.items.length > MAX_CART_ITEMS) {
+      throw new Error("Too many items in cart");
     }
-    if (!data.returnUrl?.startsWith("http")) throw new Error("Invalid returnUrl");
+    for (const i of data.items) {
+      if (!i || typeof i.id !== "string" || i.id.length === 0 || i.id.length > 128) {
+        throw new Error("Invalid cart item");
+      }
+    }
+    if (typeof data.returnUrl !== "string" || !data.returnUrl.startsWith("http")) {
+      throw new Error("Invalid returnUrl");
+    }
+    if (data.environment !== "sandbox" && data.environment !== "live") {
+      throw new Error("Invalid environment");
+    }
     return data;
   })
   .handler(async ({ data }): Promise<CreateResult> => {
     try {
-      // Resolve each cart item against the server-authoritative catalog.
-      // Never trust client-supplied prices.
-      const resolved = data.items.map((i) => {
-        const art = ARTWORKS.find((a) => a.id === i.id);
-        if (!art) throw new Error(`Unknown artwork: ${i.id}`);
+      // Dedupe ids — artworks are one-of-a-kind, so multiple lines for the
+      // same id collapse to one. Client-supplied price/title/image fields
+      // are discarded; only the id is trusted.
+      const uniqueIds = Array.from(new Set(data.items.map((i) => i.id)));
+
+      const resolved = uniqueIds.map((id) => {
+        const art = ARTWORKS.find((a) => a.id === id);
+        if (!art) throw new Error(`Unknown artwork: ${id}`);
         if (art.sold) throw new Error(`"${art.title}" is not available`);
         if (!(art.price > 0)) throw new Error(`"${art.title}" is not for sale`);
         return {
@@ -41,7 +56,6 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
           title: art.title,
           image: art.image,
           unit_amount_cad: art.price,
-          // Artworks are one-of-a-kind — force qty 1.
           quantity: 1,
         };
       });
