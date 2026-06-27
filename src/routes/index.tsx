@@ -53,6 +53,8 @@ function Home() {
           <img
             src={HERO_IMAGE}
             alt="Unbothered — featured painting by Kiyari"
+            fetchPriority="high"
+            decoding="async"
             className="h-full w-full object-cover object-center opacity-70"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-background/60" />
