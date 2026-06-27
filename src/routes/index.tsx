@@ -177,7 +177,13 @@ function Home() {
               delay={(i % 3) * 0.08}
               className={i === 0 ? "md:row-span-2 md:col-span-2" : ""}
             >
-              <TiltCard max={8} scale={1.02} className="group relative h-full">
+              <TiltCard
+                max={8}
+                scale={1.02}
+                className="group relative h-full"
+                data-reveal={revealedId === a.id}
+                onClick={() => isTouch && setRevealedId(revealedId === a.id ? null : a.id)}
+              >
                 <div className={`relative overflow-hidden ${i === 0 ? "aspect-square md:aspect-[4/5]" : "aspect-square"}`}>
                   <img
                     src={a.image}
@@ -185,20 +191,20 @@ function Home() {
                     className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
                     style={{ transform: "translateZ(0)" }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/10 to-transparent opacity-70 group-hover:opacity-95 transition-opacity duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/10 to-transparent opacity-70 group-hover:opacity-95 group-data-[reveal=true]:opacity-95 transition-opacity duration-500" />
 
                   {/* Top-right actions */}
-                  <div className="absolute right-3 top-3 flex gap-2 opacity-0 group-hover:opacity-100 transition" style={{ transform: "translateZ(40px)" }}>
+                  <div className="absolute right-3 top-3 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 group-data-[reveal=true]:opacity-100 transition" style={{ transform: "translateZ(40px)" }}>
                     <button
                       aria-label="Zoom"
-                      onClick={(e) => { e.preventDefault(); setLightbox(a); }}
+                      onClick={(e) => { e.stopPropagation(); setLightbox(a); }}
                       className="grid h-10 w-10 place-items-center rounded-full border border-border bg-background/70 backdrop-blur hover:border-gold transition"
                     >
                       <Search className="h-4 w-4" />
                     </button>
                   </div>
 
-                  <div className="absolute inset-x-0 bottom-0 p-6 translate-y-2 group-hover:translate-y-0 transition-transform duration-500" style={{ transform: "translateZ(30px)" }}>
+                  <div className="absolute inset-x-0 bottom-0 p-6 translate-y-2 group-hover:translate-y-0 group-data-[reveal=true]:translate-y-0 transition-transform duration-500 pointer-events-none group-data-[reveal=true]:pointer-events-auto" style={{ transform: "translateZ(30px)" }}>
                     <div className="font-display text-2xl md:text-3xl">{a.title}</div>
                     <div className="mt-1 flex items-center justify-between gap-4">
                       <div className="text-xs uppercase tracking-[0.2em] text-gold">
@@ -206,7 +212,7 @@ function Home() {
                       </div>
                       <button
                         onClick={(e) => {
-                          e.preventDefault();
+                          e.stopPropagation();
                           add(a);
                           toast.success(`${a.title} ${t("art.addedToast")}`);
                         }}
