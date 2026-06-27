@@ -92,7 +92,20 @@ export async function verifyWebhook(
   const expected = Array.from(new Uint8Array(signed))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
-  if (!v1Signatures.includes(expected)) throw new Error("Invalid webhook signature");
+  // Timing-safe comparison against every accepted v1 signature
+  // (Stripe sends multiple during secret rotation).
+  const expectedBytes = new TextEncoder().encode(expected);
+  let matched = false;
+  for (const candidate of v1Signatures) {
+    const candidateBytes = new TextEncoder().encode(candidate);
+    if (candidateBytes.length !== expectedBytes.length) continue;
+    let diff = 0;
+    for (let i = 0; i < expectedBytes.length; i++) {
+      diff |= expectedBytes[i] ^ candidateBytes[i];
+    }
+    if (diff === 0) matched = true;
+  }
+  if (!matched) throw new Error("Invalid webhook signature");
 
   return JSON.parse(body);
 }
