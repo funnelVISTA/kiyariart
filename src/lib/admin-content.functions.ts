@@ -1,0 +1,206 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+async function assertAdmin(context: { supabase: any; userId: string }) {
+  const { data, error } = await context.supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", context.userId)
+    .eq("role", "admin")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Forbidden");
+}
+
+// ===== Image upload (returns long-lived signed URL) =====
+
+const SIGNED_TTL = 60 * 60 * 24 * 365 * 10; // ~10 years
+
+export const adminUploadImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { bucket: "artwork-images" | "exhibition-images"; filename: string; contentType: string; dataBase64: string }) => {
+    if (!d || (d.bucket !== "artwork-images" && d.bucket !== "exhibition-images"))
+      throw new Error("Invalid bucket");
+    if (!d.filename || typeof d.filename !== "string" || d.filename.length > 200)
+      throw new Error("Invalid filename");
+    if (!d.contentType?.startsWith("image/")) throw new Error("Only images allowed");
+    if (!d.dataBase64 || typeof d.dataBase64 !== "string") throw new Error("No data");
+    // ~12MB cap on the base64 string
+    if (d.dataBase64.length > 16_000_000) throw new Error("Image too large (max ~12MB)");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const safe = data.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+    const bytes = Buffer.from(data.dataBase64, "base64");
+    const { error: upErr } = await supabaseAdmin.storage
+      .from(data.bucket)
+      .upload(path, bytes, { contentType: data.contentType, upsert: false });
+    if (upErr) throw new Error(upErr.message);
+    const { data: signed, error: sErr } = await supabaseAdmin.storage
+      .from(data.bucket)
+      .createSignedUrl(path, SIGNED_TTL);
+    if (sErr) throw new Error(sErr.message);
+    return { url: signed.signedUrl, path };
+  });
+
+// ===== Artworks CRUD =====
+
+type ArtworkUpsert = {
+  id?: string;
+  title: string;
+  description?: string | null;
+  price: number;
+  image_url: string;
+  collection: string;
+  medium?: string | null;
+  sold?: boolean;
+  sort_order?: number;
+};
+
+export const adminListCustomArtworks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("artworks_custom")
+      .select("*")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return { artworks: data ?? [] };
+  });
+
+export const adminUpsertCustomArtwork = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: ArtworkUpsert) => {
+    if (!d.title?.trim()) throw new Error("Title required");
+    if (!d.image_url?.trim()) throw new Error("Image required");
+    const price = Number(d.price);
+    if (!Number.isFinite(price) || price < 0) throw new Error("Invalid price");
+    if (!d.collection) throw new Error("Collection required");
+    return { ...d, price };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const payload: any = {
+      title: data.title.trim(),
+      description: data.description?.trim() || null,
+      price: data.price,
+      image_url: data.image_url,
+      collection: data.collection,
+      medium: data.medium?.trim() || null,
+      sold: !!data.sold,
+      sort_order: Number.isFinite(data.sort_order) ? data.sort_order : 0,
+      created_by: context.userId,
+    };
+    if (data.id) {
+      const { data: row, error } = await supabaseAdmin
+        .from("artworks_custom").update(payload).eq("id", data.id).select("*").single();
+      if (error) throw new Error(error.message);
+      return { artwork: row };
+    }
+    const { data: row, error } = await supabaseAdmin
+      .from("artworks_custom").insert(payload).select("*").single();
+    if (error) throw new Error(error.message);
+    return { artwork: row };
+  });
+
+export const adminDeleteCustomArtwork = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => {
+    if (!d.id) throw new Error("id required");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("artworks_custom").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ===== Exhibitions CRUD =====
+
+type ExhibitionUpsert = {
+  id?: string;
+  title: string;
+  venue?: string | null;
+  city?: string | null;
+  blurb?: string | null;
+  event_date?: string | null;
+  end_date?: string | null;
+  time_text?: string | null;
+  image_url?: string | null;
+  link_url?: string | null;
+  status?: "upcoming" | "past";
+  sort_order?: number;
+};
+
+export const adminListExhibitions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("exhibitions").select("*")
+      .order("status", { ascending: true })
+      .order("event_date", { ascending: true, nullsFirst: false })
+      .order("sort_order", { ascending: true });
+    if (error) throw new Error(error.message);
+    return { exhibitions: data ?? [] };
+  });
+
+export const adminUpsertExhibition = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: ExhibitionUpsert) => {
+    if (!d.title?.trim()) throw new Error("Title required");
+    const status = d.status === "past" ? "past" : "upcoming";
+    return { ...d, status };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const payload: any = {
+      title: data.title.trim(),
+      venue: data.venue?.trim() || null,
+      city: data.city?.trim() || null,
+      blurb: data.blurb?.trim() || null,
+      event_date: data.event_date || null,
+      end_date: data.end_date || null,
+      time_text: data.time_text?.trim() || null,
+      image_url: data.image_url || null,
+      link_url: data.link_url?.trim() || null,
+      status: data.status,
+      sort_order: Number.isFinite(data.sort_order) ? data.sort_order : 0,
+      created_by: context.userId,
+    };
+    if (data.id) {
+      const { data: row, error } = await supabaseAdmin
+        .from("exhibitions").update(payload).eq("id", data.id).select("*").single();
+      if (error) throw new Error(error.message);
+      return { exhibition: row };
+    }
+    const { data: row, error } = await supabaseAdmin
+      .from("exhibitions").insert(payload).select("*").single();
+    if (error) throw new Error(error.message);
+    return { exhibition: row };
+  });
+
+export const adminDeleteExhibition = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => {
+    if (!d.id) throw new Error("id required");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("exhibitions").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
