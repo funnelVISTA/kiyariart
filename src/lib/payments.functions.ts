@@ -22,9 +22,7 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
       throw new Error("Cart is empty");
     }
     for (const i of data.items) {
-      if (!i.id || !i.title || !(i.unit_amount_cad > 0) || !(i.quantity > 0)) {
-        throw new Error("Invalid cart item");
-      }
+      if (!i.id) throw new Error("Invalid cart item");
     }
     if (!data.returnUrl?.startsWith("http")) throw new Error("Invalid returnUrl");
     return data;
