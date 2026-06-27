@@ -1,6 +1,6 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type HTMLAttributes } from "react";
 
-type Props = {
+type Props = HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
   className?: string;
   max?: number;
@@ -16,6 +16,7 @@ export function TiltCard({
   scale = 1.03,
   glare = true,
   gyroscope = true,
+  ...rest
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -44,7 +45,7 @@ export function TiltCard({
   }, [max, scale, glare, gyroscope]);
 
   return (
-    <div ref={ref} className={className} style={{ transformStyle: "preserve-3d" }}>
+    <div ref={ref} className={className} style={{ transformStyle: "preserve-3d" }} {...rest}>
       {children}
     </div>
   );
