@@ -6,16 +6,23 @@ type Props = {
   max?: number;
   scale?: number;
   glare?: boolean;
+  gyroscope?: boolean;
 };
 
-export function TiltCard({ children, className, max = 10, scale = 1.03, glare = true }: Props) {
+export function TiltCard({
+  children,
+  className,
+  max = 10,
+  scale = 1.03,
+  glare = true,
+  gyroscope = true,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     if (typeof window === "undefined") return;
-    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     let destroyed = false;
     (async () => {
       const VanillaTilt = (await import("vanilla-tilt")).default;
@@ -27,14 +34,14 @@ export function TiltCard({ children, className, max = 10, scale = 1.03, glare = 
         glare,
         "max-glare": 0.25,
         perspective: 1200,
-        "gyroscope": false,
+        gyroscope,
       } as any);
     })();
     return () => {
       destroyed = true;
       (el as any).vanillaTilt?.destroy?.();
     };
-  }, [max, scale, glare]);
+  }, [max, scale, glare, gyroscope]);
 
   return (
     <div ref={ref} className={className} style={{ transformStyle: "preserve-3d" }}>
@@ -42,3 +49,4 @@ export function TiltCard({ children, className, max = 10, scale = 1.03, glare = 
     </div>
   );
 }
+
