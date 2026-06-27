@@ -36,27 +36,41 @@ const GALLERY = [
   "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE15.jpg/:/rs=w:1200",
 ];
 
+type DbEx = {
+  id: string;
+  title: string;
+  venue: string | null;
+  city: string | null;
+  blurb: string | null;
+  event_date: string | null;
+  end_date: string | null;
+  time_text: string | null;
+  image_url: string | null;
+  link_url: string | null;
+  status: "upcoming" | "past";
+  sort_order: number;
+};
+
 function ExhibitionsPage() {
   const { t, lang } = useI18n();
   const [active, setActive] = useState<number | null>(null);
 
-  const UPCOMING = [
-    {
-      title: t("ex.event1.title"),
-      time: "6PM – 9PM",
-      venue: lang === "fr" ? "Centre des congrès de Vancouver" : "Vancouver Convention Centre",
-      blurb: t("ex.event1.blurb"),
-      monthShort: lang === "fr" ? "JUIN" : "JUN",
-      day: "16",
-      year: "2024",
+  const { data: dbRows } = useQuery({
+    queryKey: ["public", "exhibitions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("exhibitions")
+        .select("*")
+        .order("status", { ascending: true })
+        .order("event_date", { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      return (data ?? []) as DbEx[];
     },
-  ];
+  });
 
-  const PAST = [
-    { en: "Afro World Expo 2024", fr: "Afro World Expo 2024" },
-    { en: "Our Essence — Beautiful in Black", fr: "Notre Essence — Beauté en Noir" },
-    { en: "Essence of a Butterfly — Lupus Fundraiser", fr: "Essence d'un papillon — Collecte Lupus" },
-  ];
+  const dbUpcoming = useMemo(() => (dbRows ?? []).filter((r) => r.status === "upcoming"), [dbRows]);
+  const dbPast = useMemo(() => (dbRows ?? []).filter((r) => r.status === "past"), [dbRows]);
+
 
   return (
     <div className="pt-32 pb-20">
