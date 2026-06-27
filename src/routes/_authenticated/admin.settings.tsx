@@ -101,7 +101,7 @@ function SettingsPage() {
                   <div className="flex items-center gap-2">
                     <span
                       className={`inline-block h-1.5 w-1.5 rounded-full ${
-                        e.status === "sent" || e.sent_at ? "bg-gold" : "bg-accent"
+                        e.status === "sent" ? "bg-gold" : "bg-accent"
                       }`}
                     />
                     <span className="font-medium">{e.template_name}</span>

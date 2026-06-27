@@ -34,7 +34,7 @@ export const adminGetSettings = createServerFn({ method: "GET" })
         .limit(8),
       supabaseAdmin
         .from("email_send_log")
-        .select("template_name,recipient_email,status,sent_at,created_at,error_message")
+        .select("template_name,recipient_email,status,created_at,error_message")
         .order("created_at", { ascending: false })
         .limit(8),
       supabaseAdmin.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),

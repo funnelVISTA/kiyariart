@@ -32,7 +32,7 @@ export const adminGetOrder = createServerFn({ method: "POST" })
 
     const { data: emails } = await supabaseAdmin
       .from("email_send_log")
-      .select("template_name,recipient_email,status,sent_at,created_at,error_message")
+      .select("template_name,recipient_email,status,created_at,error_message")
       .or(`idempotency_key.like.receipt-${order.id}%,idempotency_key.like.shipped-${order.id}%,idempotency_key.like.admin-${order.id}%`)
       .order("created_at", { ascending: false })
       .limit(20);
