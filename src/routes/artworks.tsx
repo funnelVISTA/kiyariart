@@ -251,20 +251,10 @@ function ArtCard({ a, index, isTouch, revealed, onToggleReveal, onOpen, onAdd, b
               {t("art.sold")}
             </div>
           ) : (
-            <div className="absolute top-3 left-3 flex flex-col gap-1 z-10" style={{ transform: "translateZ(40px)" }}>
+            <div className="absolute top-3 left-3 z-10" style={{ transform: "translateZ(40px)" }}>
               <span className="px-3 py-1 text-[10px] uppercase tracking-[0.2em] bg-gold/90 text-primary-foreground">
                 {t("art.available")}
               </span>
-              {typeof (a as any).unitsLeft === "number" && (a as any).unitsLeft > 1 && (
-                <span className="px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] bg-background/80 backdrop-blur border border-border self-start">
-                  {(a as any).unitsLeft} left
-                </span>
-              )}
-              {typeof (a as any).unitsLeft === "number" && (a as any).unitsLeft === 1 && (
-                <span className="px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] bg-accent/80 text-background self-start">
-                  Last one
-                </span>
-              )}
             </div>
           )}
 
