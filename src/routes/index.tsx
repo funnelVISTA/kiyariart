@@ -8,6 +8,7 @@ import { TiltCard } from "@/components/ui/TiltCard";
 import { Reveal, RevealText } from "@/components/ui/Reveal";
 import { Lightbox } from "@/components/site/Lightbox";
 import { useCart } from "@/lib/cart";
+import { useIsTouch } from "@/hooks/useIsTouch";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
