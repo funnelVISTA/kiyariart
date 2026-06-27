@@ -9,7 +9,10 @@ import { Reveal, RevealText } from "@/components/ui/Reveal";
 import { Lightbox } from "@/components/site/Lightbox";
 import { useCart } from "@/lib/cart";
 import { useIsTouch } from "@/hooks/useIsTouch";
+import { useTapSwipe } from "@/hooks/useTapSwipe";
 import { toast } from "sonner";
+
+const thumb = (url: string, w = 800) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 
 export const Route = createFileRoute("/")({
   head: () => ({
