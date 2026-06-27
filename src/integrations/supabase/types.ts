@@ -35,6 +35,51 @@ export type Database = {
         }
         Relationships: []
       }
+      artworks_custom: {
+        Row: {
+          collection: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          image_url: string
+          medium: string | null
+          price: number
+          sold: boolean
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          collection?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url: string
+          medium?: string | null
+          price?: number
+          sold?: boolean
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          collection?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string
+          medium?: string | null
+          price?: number
+          sold?: boolean
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -119,6 +164,60 @@ export type Database = {
           id?: string
           token?: string
           used_at?: string | null
+        }
+        Relationships: []
+      }
+      exhibitions: {
+        Row: {
+          blurb: string | null
+          city: string | null
+          created_at: string
+          created_by: string | null
+          end_date: string | null
+          event_date: string | null
+          id: string
+          image_url: string | null
+          link_url: string | null
+          sort_order: number
+          status: string
+          time_text: string | null
+          title: string
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          blurb?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          event_date?: string | null
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          sort_order?: number
+          status?: string
+          time_text?: string | null
+          title: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          blurb?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          event_date?: string | null
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          sort_order?: number
+          status?: string
+          time_text?: string | null
+          title?: string
+          updated_at?: string
+          venue?: string | null
         }
         Relationships: []
       }
