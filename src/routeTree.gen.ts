@@ -30,6 +30,7 @@ import { Route as AuthenticatedAdminSubscribersRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminInventoryRouteImport } from './routes/_authenticated/admin.inventory'
+import { Route as AuthenticatedAdminExhibitionsRouteImport } from './routes/_authenticated/admin.exhibitions'
 import { Route as AuthenticatedAdminArtworksRouteImport } from './routes/_authenticated/admin.artworks'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -146,6 +147,12 @@ const AuthenticatedAdminInventoryRoute =
     path: '/inventory',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminExhibitionsRoute =
+  AuthenticatedAdminExhibitionsRouteImport.update({
+    id: '/exhibitions',
+    path: '/exhibitions',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminArtworksRoute =
   AuthenticatedAdminArtworksRouteImport.update({
     id: '/artworks',
@@ -206,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/artworks': typeof AuthenticatedAdminArtworksRoute
+  '/admin/exhibitions': typeof AuthenticatedAdminExhibitionsRoute
   '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -235,6 +243,7 @@ export interface FileRoutesByTo {
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/artworks': typeof AuthenticatedAdminArtworksRoute
+  '/admin/exhibitions': typeof AuthenticatedAdminExhibitionsRoute
   '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -266,6 +275,7 @@ export interface FileRoutesById {
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/artworks': typeof AuthenticatedAdminArtworksRoute
+  '/_authenticated/admin/exhibitions': typeof AuthenticatedAdminExhibitionsRoute
   '/_authenticated/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRouteWithChildren
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/admin/analytics'
     | '/admin/artworks'
+    | '/admin/exhibitions'
     | '/admin/inventory'
     | '/admin/orders'
     | '/admin/settings'
@@ -326,6 +337,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/admin/analytics'
     | '/admin/artworks'
+    | '/admin/exhibitions'
     | '/admin/inventory'
     | '/admin/orders'
     | '/admin/settings'
@@ -356,6 +368,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/artworks'
+    | '/_authenticated/admin/exhibitions'
     | '/_authenticated/admin/inventory'
     | '/_authenticated/admin/orders'
     | '/_authenticated/admin/settings'
@@ -539,6 +552,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminInventoryRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/exhibitions': {
+      id: '/_authenticated/admin/exhibitions'
+      path: '/exhibitions'
+      fullPath: '/admin/exhibitions'
+      preLoaderRoute: typeof AuthenticatedAdminExhibitionsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/artworks': {
       id: '/_authenticated/admin/artworks'
       path: '/artworks'
@@ -608,6 +628,7 @@ const AuthenticatedAdminOrdersRouteWithChildren =
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminArtworksRoute: typeof AuthenticatedAdminArtworksRoute
+  AuthenticatedAdminExhibitionsRoute: typeof AuthenticatedAdminExhibitionsRoute
   AuthenticatedAdminInventoryRoute: typeof AuthenticatedAdminInventoryRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRouteWithChildren
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
@@ -617,6 +638,7 @@ interface AuthenticatedAdminRouteChildren {
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminArtworksRoute: AuthenticatedAdminArtworksRoute,
+  AuthenticatedAdminExhibitionsRoute: AuthenticatedAdminExhibitionsRoute,
   AuthenticatedAdminInventoryRoute: AuthenticatedAdminInventoryRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRouteWithChildren,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
