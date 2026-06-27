@@ -8,7 +8,7 @@ import { useCart } from "@/lib/cart";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
-import { listSoldArtworkIds } from "@/lib/payments.functions";
+import { listArtworkAvailability } from "@/lib/payments.functions";
 import { useIsTouch } from "@/hooks/useIsTouch";
 import { useTapSwipe } from "@/hooks/useTapSwipe";
 
@@ -39,15 +39,21 @@ function ArtworksPage() {
 
   // Overlay live "sold" state from the database on top of the static catalog
   // so artworks paid for via Stripe automatically appear as Sold.
-  const { data: soldIds } = useQuery({
-    queryKey: ["sold-artworks"],
-    queryFn: () => listSoldArtworkIds(),
+  const { data: availability } = useQuery({
+    queryKey: ["artwork-availability"],
+    queryFn: () => listArtworkAvailability(),
     staleTime: 60_000,
   });
-  const soldSet = useMemo(() => new Set(soldIds ?? []), [soldIds]);
-  const catalog = useMemo<Artwork[]>(
-    () => ARTWORKS.map((a) => (soldSet.has(a.id) ? { ...a, sold: true } : a)),
-    [soldSet],
+  const soldSet = useMemo(() => new Set(availability?.soldIds ?? []), [availability]);
+  const stockMap = availability?.stock ?? {};
+  const catalog = useMemo<(Artwork & { unitsLeft?: number })[]>(
+    () =>
+      ARTWORKS.map((a) => {
+        const left = stockMap[a.id];
+        const sold = a.sold || soldSet.has(a.id);
+        return { ...a, sold, unitsLeft: left };
+      }),
+    [soldSet, availability],
   );
 
   const blurb = (a: Artwork) => {
