@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
+import { ARTWORKS } from "@/lib/artworks";
 
 type CartLine = {
   id: string;
