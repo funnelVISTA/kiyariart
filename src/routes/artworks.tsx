@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, Plus, X, Search } from "lucide-react";
+import { Check, Plus, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ARTWORKS, type Artwork } from "@/lib/artworks";
 import { useCart } from "@/lib/cart";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { Lightbox } from "@/components/site/Lightbox";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { listArtworkAvailability } from "@/lib/payments.functions";
@@ -13,7 +14,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsTouch } from "@/hooks/useIsTouch";
 import { useTapSwipe } from "@/hooks/useTapSwipe";
 
-// Swap wsimg width param to request smaller thumbnails (perf).
 const thumb = (url: string, w = 700) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 
 export const Route = createFileRoute("/artworks")({
@@ -34,12 +34,10 @@ function ArtworksPage() {
   const { t } = useI18n();
   const isTouch = useIsTouch();
   const [filter, setFilter] = useState<Filter>("all");
-  const [active, setActive] = useState<Artwork | null>(null);
+  const [activeIdx, setActiveIdx] = useState<number | null>(null);
   const [revealedId, setRevealedId] = useState<string | null>(null);
   const { add } = useCart();
 
-  // Overlay live "sold" state from the database on top of the static catalog
-  // so artworks paid for via Stripe automatically appear as Sold.
   const { data: availability } = useQuery({
     queryKey: ["artwork-availability"],
     queryFn: () => listArtworkAvailability(),
@@ -47,14 +45,13 @@ function ArtworksPage() {
   });
   const soldSet = useMemo(() => new Set(availability?.soldIds ?? []), [availability]);
 
-  // Admin-uploaded artworks (live, additive to hardcoded catalog).
   const { data: customRows } = useQuery({
     queryKey: ["artworks-custom"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("artworks_custom")
-        .select("id,title,description,price,image_url,collection,medium,sold,sort_order,created_at")
-        .order("sort_order", { ascending: true })
+        .select("id,title,description,price,image_url,collection,medium,sold,display_order,sort_order,alt_text,created_at")
+        .order("display_order", { ascending: true })
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -62,7 +59,20 @@ function ArtworksPage() {
     staleTime: 60_000,
   });
 
+  const { data: orderRows } = useQuery({
+    queryKey: ["artwork-display-order"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("artwork_display_order")
+        .select("artwork_id,position");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
+
   const catalog = useMemo<Artwork[]>(() => {
+    const orderMap = new Map<string, number>((orderRows ?? []).map((r) => [r.artwork_id, r.position]));
     const fromCustom: Artwork[] = (customRows ?? []).map((r) => ({
       id: r.id,
       title: r.title,
@@ -77,8 +87,13 @@ function ArtworksPage() {
       ...a,
       sold: a.sold || soldSet.has(a.id),
     }));
-    return [...fromCustom, ...fromCatalog];
-  }, [soldSet, customRows]);
+    const merged = [...fromCustom, ...fromCatalog];
+    return merged.sort((a, b) => {
+      const pa = orderMap.get(a.id) ?? 9999;
+      const pb = orderMap.get(b.id) ?? 9999;
+      return pa - pb;
+    });
+  }, [soldSet, customRows, orderRows]);
 
   const blurb = (a: Artwork) => {
     if (a.description) return a.description;
@@ -95,7 +110,6 @@ function ArtworksPage() {
       return true;
     });
   }, [filter, catalog]);
-
 
   const handleAdd = (a: Artwork) => {
     if (a.sold) {
@@ -114,6 +128,8 @@ function ArtworksPage() {
     { id: "sold", label: t("artworks.filter.sold") },
   ];
 
+  const active = activeIdx !== null ? items[activeIdx] : null;
+
   return (
     <div className="pt-32 pb-20">
       <div className="container-page">
@@ -131,13 +147,18 @@ function ArtworksPage() {
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
-              className={`px-5 py-2 text-xs uppercase tracking-[0.2em] border transition ${
-                filter === f.id
-                  ? "border-gold text-gold bg-gold/5"
-                  : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
+              className={`relative px-5 py-2 text-xs uppercase tracking-[0.2em] transition ${
+                filter === f.id ? "text-gold" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {f.label}
+              {filter === f.id && (
+                <motion.span
+                  layoutId="filter-pill"
+                  className="absolute inset-0 border border-gold bg-gold/5"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10">{f.label}</span>
             </button>
           ))}
         </div>
@@ -152,7 +173,7 @@ function ArtworksPage() {
                 isTouch={isTouch}
                 revealed={revealedId === a.id}
                 onToggleReveal={() => setRevealedId(revealedId === a.id ? null : a.id)}
-                onOpen={() => setActive(a)}
+                onOpen={() => setActiveIdx(i)}
                 onAdd={() => handleAdd(a)}
                 blurb={blurb(a)}
                 t={t}
@@ -162,50 +183,15 @@ function ArtworksPage() {
         </motion.div>
       </div>
 
-
-      <AnimatePresence>
-        {active && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setActive(null)}
-            className="fixed inset-0 z-[80] bg-background/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-12"
-          >
-            <button
-              onClick={() => setActive(null)}
-              className="absolute top-6 right-6 grid h-12 w-12 place-items-center rounded-full border border-border hover:border-gold"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <motion.div
-              initial={{ scale: 0.95, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 30 }}
-              onClick={(e) => e.stopPropagation()}
-              className="grid md:grid-cols-2 gap-8 max-w-6xl w-full max-h-full"
-            >
-              <img src={active.image} alt={active.title} className="w-full max-h-[80vh] object-contain" />
-              <div className="flex flex-col justify-center">
-                <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{active.collection}</div>
-                <h2 className="font-display text-5xl md:text-6xl">{active.title}</h2>
-                <div className="mt-4 text-2xl text-gold">
-                  {active.price > 0 ? `$${active.price.toLocaleString()} CAD` : t("art.priceOnRequest")}
-                </div>
-                <p className="mt-6 text-muted-foreground">{blurb(active)}</p>
-                <p className="mt-6 text-sm text-muted-foreground leading-relaxed">{t("artworks.details")}</p>
-                <button
-                  onClick={() => { handleAdd(active); setActive(null); }}
-                  disabled={active.sold}
-                  className={`mt-8 inline-flex items-center justify-center gap-3 px-8 py-4 text-sm uppercase tracking-[0.2em] transition ${
-                    active.sold
-                      ? "border border-border text-muted-foreground cursor-not-allowed"
-                      : "bg-gradient-gold text-primary-foreground hover:shadow-glow"
-                  }`}
-                >
-                  {active.sold ? t("art.sold") : t("art.addToCart")}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Lightbox
+        open={active !== null}
+        src={active?.image ?? null}
+        alt={active?.title}
+        caption={active ? `${active.title} · ${active.collection}${active.price > 0 ? ` · $${active.price.toLocaleString()} CAD` : ""}` : undefined}
+        onClose={() => setActiveIdx(null)}
+        onPrev={activeIdx !== null && items.length > 1 ? () => setActiveIdx((activeIdx - 1 + items.length) % items.length) : undefined}
+        onNext={activeIdx !== null && items.length > 1 ? () => setActiveIdx((activeIdx + 1) % items.length) : undefined}
+      />
     </div>
   );
 }
@@ -305,8 +291,8 @@ function ArtCard({ a, index, isTouch, revealed, onToggleReveal, onOpen, onAdd, b
       </TiltCard>
 
       <div className="mt-3 flex items-start justify-between gap-3">
-        <div>
-          <div className="font-display text-lg leading-tight">{a.title}</div>
+        <div className="min-w-0">
+          <div className="font-display text-lg leading-tight truncate">{a.title}</div>
           <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             {a.collection}
           </div>
@@ -318,4 +304,3 @@ function ArtCard({ a, index, isTouch, revealed, onToggleReveal, onOpen, onAdd, b
     </motion.article>
   );
 }
-
