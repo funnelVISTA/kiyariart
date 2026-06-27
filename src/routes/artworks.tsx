@@ -114,7 +114,15 @@ function ArtworksPage() {
 
         <motion.div layout className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 [perspective:1500px]">
           <AnimatePresence mode="popLayout">
-            {items.map((a, i) => (
+            {items.map((a, i) => {
+              const revealed = revealedId === a.id;
+              const toggleReveal = () => setRevealedId(revealed ? null : a.id);
+              const openLightbox = () => setActive(a);
+              const swipe = useTapSwipe({
+                onTap: openLightbox,
+                onSwipe: toggleReveal,
+              });
+              return (
               <motion.article
                 layout
                 key={a.id}
@@ -123,18 +131,19 @@ function ArtworksPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.5, delay: (i % 8) * 0.04 }}
                 className="group"
-                data-reveal={revealedId === a.id}
-                onClick={() => {
-                  if (isTouch) setRevealedId(revealedId === a.id ? null : a.id);
-                  else setActive(a);
-                }}
+                data-reveal={revealed}
+                {...(isTouch
+                  ? swipe
+                  : { onClick: openLightbox })}
               >
                 <TiltCard max={12} scale={1.04} glare className="relative">
                   <div className="relative aspect-[4/5] overflow-hidden bg-card">
                     <img
-                      src={a.image}
+                      src={thumb(a.image, 700)}
                       alt={a.title}
                       loading="lazy"
+                      decoding="async"
+                      sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
                       className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
                       style={{ transform: "translateZ(0)" }}
                     />
