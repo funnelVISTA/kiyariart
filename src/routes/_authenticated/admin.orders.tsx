@@ -1,17 +1,15 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  LogOut,
   Mail,
   RefreshCw,
   Search,
   Truck,
   Send,
   ExternalLink,
-  KeyRound,
 } from "lucide-react";
 
 import { sendTransactionalEmail } from "@/lib/email/send";
@@ -73,38 +71,13 @@ function carrierTrackingUrl(carrier: string | null, num: string | null): string 
 }
 
 function AdminOrdersPage() {
-  const navigate = useNavigate();
   const qc = useQueryClient();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [filter, setFilter] = useState<Status | "all">("all");
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        navigate({ to: "/auth" });
-        return;
-      }
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userData.user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (error) {
-        toast.error("Couldn't verify role");
-        setIsAdmin(false);
-        return;
-      }
-      setIsAdmin(!!data);
-    })();
-  }, [navigate]);
-
   const ordersQ = useQuery({
     queryKey: ["orders"],
-    enabled: isAdmin === true,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
