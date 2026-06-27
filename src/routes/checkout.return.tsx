@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { CheckCircle2, Loader2, AlertCircle, Share2, Copy, Facebook } from "lucide-react";
+import { toast } from "sonner";
 import { confirmCheckout } from "@/lib/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useCart } from "@/lib/cart";
@@ -115,6 +116,7 @@ function ReturnPage() {
               </Link>
             </div>
 
+            <ShareCard items={state.items} />
           </>
         )}
 
@@ -138,6 +140,52 @@ function ReturnPage() {
             </Link>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ShareCard({ items }: { items?: Array<{ title: string; quantity: number }> }) {
+  const shareUrl = "https://kiyari.art/artworks";
+  const title = items?.[0]?.title
+    ? `Just collected "${items[0].title}" by KIYARI`
+    : "Just collected an original by KIYARI";
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(`${title} — ${shareUrl}`);
+      toast.success("Link copied");
+    } catch {
+      toast.error("Could not copy");
+    }
+  };
+
+  const native = async () => {
+    if (navigator.share) {
+      try { await navigator.share({ title, text: title, url: shareUrl }); } catch {}
+    } else {
+      copy();
+    }
+  };
+
+  return (
+    <div className="mt-14 border-t border-border pt-8">
+      <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Share the joy</div>
+      <div className="mt-3 flex flex-wrap justify-center gap-2">
+        <button onClick={native} className="inline-flex items-center gap-2 border border-gold text-gold px-4 py-2 text-[11px] uppercase tracking-[0.2em] hover:bg-gold/10">
+          <Share2 className="h-3.5 w-3.5" /> Share
+        </button>
+        <button onClick={copy} className="inline-flex items-center gap-2 border border-border px-4 py-2 text-[11px] uppercase tracking-[0.2em] hover:border-gold">
+          <Copy className="h-3.5 w-3.5" /> Copy link
+        </button>
+        <a
+          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 border border-border px-4 py-2 text-[11px] uppercase tracking-[0.2em] hover:border-gold"
+        >
+          <Facebook className="h-3.5 w-3.5" /> Facebook
+        </a>
       </div>
     </div>
   );

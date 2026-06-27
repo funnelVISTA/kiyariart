@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      artwork_display_order: {
+        Row: {
+          artwork_id: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          artwork_id: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          artwork_id?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       artwork_stock: {
         Row: {
           artwork_id: string
@@ -37,42 +55,54 @@ export type Database = {
       }
       artworks_custom: {
         Row: {
+          alt_text: string | null
           collection: string
           created_at: string
           created_by: string | null
           description: string | null
+          display_order: number
           id: string
           image_url: string
           medium: string | null
           price: number
+          seo_description: string | null
+          seo_title: string | null
           sold: boolean
           sort_order: number
           title: string
           updated_at: string
         }
         Insert: {
+          alt_text?: string | null
           collection?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
+          display_order?: number
           id?: string
           image_url: string
           medium?: string | null
           price?: number
+          seo_description?: string | null
+          seo_title?: string | null
           sold?: boolean
           sort_order?: number
           title: string
           updated_at?: string
         }
         Update: {
+          alt_text?: string | null
           collection?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
+          display_order?: number
           id?: string
           image_url?: string
           medium?: string | null
           price?: number
+          seo_description?: string | null
+          seo_title?: string | null
           sold?: boolean
           sort_order?: number
           title?: string
