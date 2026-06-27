@@ -114,6 +114,8 @@
   .shadow-elegant { box-shadow: var(--shadow-elegant); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
   .container-page { @apply mx-auto w-full max-w-7xl px-6 md:px-10; }
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 
   .link-underline {
     position: relative;
