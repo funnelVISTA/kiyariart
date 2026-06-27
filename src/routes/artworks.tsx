@@ -119,12 +119,14 @@ function ArtworksPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.5, delay: (i % 8) * 0.04 }}
                 className="group"
+                data-reveal={revealedId === a.id}
+                onClick={() => {
+                  if (isTouch) setRevealedId(revealedId === a.id ? null : a.id);
+                  else setActive(a);
+                }}
               >
                 <TiltCard max={12} scale={1.04} glare className="relative">
-                  <div
-                    onClick={() => setActive(a)}
-                    className="relative aspect-[4/5] overflow-hidden cursor-zoom-in bg-card"
-                  >
+                  <div className="relative aspect-[4/5] overflow-hidden bg-card">
                     <img
                       src={a.image}
                       alt={a.title}
@@ -145,14 +147,14 @@ function ArtworksPage() {
                     <button
                       aria-label="Zoom"
                       onClick={(e) => { e.stopPropagation(); setActive(a); }}
-                      className="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full border border-border bg-background/60 backdrop-blur opacity-0 group-hover:opacity-100 transition z-10"
+                      className="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full border border-border bg-background/60 backdrop-blur opacity-100 md:opacity-0 md:group-hover:opacity-100 transition z-10"
                       style={{ transform: "translateZ(40px)" }}
                     >
                       <Search className="h-4 w-4" />
                     </button>
 
                     <div
-                      className="absolute inset-x-0 bottom-0 p-4 md:p-5 bg-gradient-to-t from-background via-background/90 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"
+                      className="absolute inset-x-0 bottom-0 p-4 md:p-5 bg-gradient-to-t from-background via-background/90 to-transparent translate-y-full group-hover:translate-y-0 group-data-[reveal=true]:translate-y-0 transition-transform duration-500 ease-out pointer-events-none group-data-[reveal=true]:pointer-events-auto"
                       style={{ transform: "translateZ(60px)" }}
                     >
                       <div className="font-display text-lg md:text-xl leading-tight">{a.title}</div>
