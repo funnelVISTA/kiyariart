@@ -329,7 +329,26 @@ export const confirmCheckout = createServerFn({ method: "POST" })
     }
   });
 
-// Public: list artwork IDs already sold via paid orders.
+// Public: list sold-out artwork IDs + per-id stock left.
+export const listArtworkAvailability = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ soldIds: string[]; stock: Record<string, number> }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: sold }, { data: stock }] = await Promise.all([
+      supabaseAdmin.from("sold_artworks").select("artwork_id"),
+      supabaseAdmin.from("artwork_stock").select("artwork_id,total_units,sold_units"),
+    ]);
+    const stockMap: Record<string, number> = {};
+    const soldSet = new Set<string>((sold ?? []).map((r) => r.artwork_id));
+    for (const r of stock ?? []) {
+      const left = Math.max(0, (r.total_units ?? 0) - (r.sold_units ?? 0));
+      stockMap[r.artwork_id] = left;
+      if (left <= 0) soldSet.add(r.artwork_id);
+    }
+    return { soldIds: Array.from(soldSet), stock: stockMap };
+  },
+);
+
+// Back-compat shim
 export const listSoldArtworkIds = createServerFn({ method: "GET" }).handler(
   async (): Promise<string[]> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -339,6 +358,7 @@ export const listSoldArtworkIds = createServerFn({ method: "GET" }).handler(
     return (data ?? []).map((r) => r.artwork_id);
   },
 );
+
 
 // Public order lookup: caller must supply both order id and matching email.
 type PublicOrderResult =
