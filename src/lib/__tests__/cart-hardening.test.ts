@@ -72,7 +72,7 @@ describe("validateCartInput", () => {
 });
 
 describe("resolveCartItems", () => {
-  it("ignores client-supplied price, title, image, and quantity", () => {
+  it("ignores client-supplied price, title, image; honors quantity (clamped)", () => {
     const [resolved] = resolveCartItems([
       line({
         unit_amount_cad: 0.01,
@@ -84,13 +84,18 @@ describe("resolveCartItems", () => {
     expect(resolved.unit_amount_cad).toBe(forSale.price);
     expect(resolved.title).toBe(forSale.title);
     expect(resolved.image).toBe(forSale.image);
-    expect(resolved.quantity).toBe(1);
+    expect(resolved.quantity).toBeLessThanOrEqual(20);
+    expect(resolved.quantity).toBeGreaterThan(0);
   });
 
-  it("dedupes repeated ids (artworks are one-of-a-kind)", () => {
-    const resolved = resolveCartItems([line(), line(), line()]);
+  it("sums quantities for repeated ids (single dedupe row)", () => {
+    const resolved = resolveCartItems([
+      line({ quantity: 1 }),
+      line({ quantity: 1 }),
+      line({ quantity: 1 }),
+    ]);
     expect(resolved).toHaveLength(1);
-    expect(resolved[0].quantity).toBe(1);
+    expect(resolved[0].quantity).toBe(3);
   });
 
   it("rejects unknown artwork ids", () => {
@@ -101,3 +106,4 @@ describe("resolveCartItems", () => {
     expect(() => resolveCartItems([line({ id: sold.id })])).toThrow(/not available/);
   });
 });
+
