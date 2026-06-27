@@ -9,6 +9,7 @@ import { TiltCard } from "@/components/ui/TiltCard";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { listArtworkAvailability } from "@/lib/payments.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { useIsTouch } from "@/hooks/useIsTouch";
 import { useTapSwipe } from "@/hooks/useTapSwipe";
 
