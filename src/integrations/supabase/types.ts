@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      artwork_stock: {
+        Row: {
+          artwork_id: string
+          sold_units: number
+          total_units: number
+          updated_at: string
+        }
+        Insert: {
+          artwork_id: string
+          sold_units?: number
+          total_units?: number
+          updated_at?: string
+        }
+        Update: {
+          artwork_id?: string
+          sold_units?: number
+          total_units?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -273,6 +294,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrement_artwork_stock: {
+        Args: { _artwork_id: string; _qty: number }
+        Returns: boolean
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
