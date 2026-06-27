@@ -29,13 +29,30 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }): Promise<CreateResult> => {
     try {
+      // Resolve each cart item against the server-authoritative catalog.
+      // Never trust client-supplied prices.
+      const resolved = data.items.map((i) => {
+        const art = ARTWORKS.find((a) => a.id === i.id);
+        if (!art) throw new Error(`Unknown artwork: ${i.id}`);
+        if (art.sold) throw new Error(`"${art.title}" is not available`);
+        if (!(art.price > 0)) throw new Error(`"${art.title}" is not for sale`);
+        return {
+          id: art.id,
+          title: art.title,
+          image: art.image,
+          unit_amount_cad: art.price,
+          // Artworks are one-of-a-kind — force qty 1.
+          quantity: 1,
+        };
+      });
+
       // Stock check — block already-sold artworks from being purchased again.
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const ids = data.items.map((i) => i.id);
+      const ids = resolved.map((i) => i.id);
       const { data: sold } = await supabaseAdmin
         .from("sold_artworks").select("artwork_id").in("artwork_id", ids);
       const soldSet = new Set((sold ?? []).map((r) => r.artwork_id));
-      const conflicts = data.items.filter((i) => soldSet.has(i.id));
+      const conflicts = resolved.filter((i) => soldSet.has(i.id));
       if (conflicts.length) {
         return {
           error: `Sorry, ${conflicts.map((c) => `"${c.title}"`).join(", ")} just sold. Please remove from cart and try again.`,
@@ -47,7 +64,7 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
         mode: "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
-        line_items: data.items.map((i) => ({
+        line_items: resolved.map((i) => ({
           quantity: i.quantity,
           price_data: {
             currency: "cad",
