@@ -46,11 +46,11 @@ export const adminListInventory = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
-      .from("sold_artworks")
-      .select("artwork_id,order_id,sold_at");
-    if (error) throw new Error(error.message);
-    return { sold: data ?? [] };
+    const [{ data: sold }, { data: stock }] = await Promise.all([
+      supabaseAdmin.from("sold_artworks").select("artwork_id,order_id,sold_at"),
+      supabaseAdmin.from("artwork_stock").select("artwork_id,total_units,sold_units,updated_at"),
+    ]);
+    return { sold: sold ?? [], stock: stock ?? [] };
   });
 
 export const adminSetArtworkSold = createServerFn({ method: "POST" })
@@ -77,6 +77,81 @@ export const adminSetArtworkSold = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+// Set total units and (optionally) sold units. Clears legacy sold_artworks
+// row when there's still stock left so the artwork reappears in checkout.
+export const adminSetArtworkStock = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { artworkId: string; total: number; sold?: number }) => {
+    if (!d.artworkId || typeof d.artworkId !== "string") throw new Error("artworkId required");
+    const total = Math.floor(Number(d.total));
+    const sold = d.sold == null ? undefined : Math.floor(Number(d.sold));
+    if (!Number.isFinite(total) || total < 0 || total > 9999) throw new Error("Invalid total");
+    if (sold != null && (!Number.isFinite(sold) || sold < 0 || sold > total))
+      throw new Error("Invalid sold count");
+    return { artworkId: d.artworkId, total, sold };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const payload: Record<string, unknown> = {
+      artwork_id: data.artworkId,
+      total_units: data.total,
+      updated_at: new Date().toISOString(),
+    };
+    if (data.sold != null) payload.sold_units = data.sold;
+
+    const { error } = await supabaseAdmin
+      .from("artwork_stock")
+      .upsert(payload, { onConflict: "artwork_id" });
+    if (error) throw new Error(error.message);
+
+    const { data: row } = await supabaseAdmin
+      .from("artwork_stock")
+      .select("total_units,sold_units")
+      .eq("artwork_id", data.artworkId)
+      .maybeSingle();
+    const left = row ? row.total_units - row.sold_units : 0;
+    if (left > 0) {
+      await supabaseAdmin.from("sold_artworks").delete().eq("artwork_id", data.artworkId);
+    }
+    return { ok: true };
+  });
+
+// Increment sold_units by 1 / restock by 1 — handy quick-action.
+export const adminAdjustArtworkSold = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { artworkId: string; delta: number }) => {
+    if (!d.artworkId || typeof d.artworkId !== "string") throw new Error("artworkId required");
+    const delta = Math.trunc(Number(d.delta));
+    if (delta !== 1 && delta !== -1) throw new Error("delta must be ±1");
+    return { artworkId: d.artworkId, delta };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabaseAdmin
+      .from("artwork_stock")
+      .select("total_units,sold_units")
+      .eq("artwork_id", data.artworkId)
+      .maybeSingle();
+    const total = existing?.total_units ?? 1;
+    const currentSold = existing?.sold_units ?? 0;
+    const nextSold = Math.max(0, Math.min(total, currentSold + data.delta));
+    const { error } = await supabaseAdmin
+      .from("artwork_stock")
+      .upsert(
+        { artwork_id: data.artworkId, total_units: total, sold_units: nextSold, updated_at: new Date().toISOString() },
+        { onConflict: "artwork_id" },
+      );
+    if (error) throw new Error(error.message);
+    if (total - nextSold > 0) {
+      await supabaseAdmin.from("sold_artworks").delete().eq("artwork_id", data.artworkId);
+    }
+    return { ok: true, sold: nextSold, left: total - nextSold };
+  });
+
 
 // -------- Analytics --------
 export const adminGetAnalytics = createServerFn({ method: "GET" })
