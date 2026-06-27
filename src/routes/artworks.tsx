@@ -46,16 +46,39 @@ function ArtworksPage() {
     staleTime: 60_000,
   });
   const soldSet = useMemo(() => new Set(availability?.soldIds ?? []), [availability]);
-  const stockMap = availability?.stock ?? {};
-  const catalog = useMemo<(Artwork & { unitsLeft?: number })[]>(
-    () =>
-      ARTWORKS.map((a) => {
-        const left = stockMap[a.id];
-        const sold = a.sold || soldSet.has(a.id);
-        return { ...a, sold, unitsLeft: left };
-      }),
-    [soldSet, availability],
-  );
+
+  // Admin-uploaded artworks (live, additive to hardcoded catalog).
+  const { data: customRows } = useQuery({
+    queryKey: ["artworks-custom"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("artworks_custom")
+        .select("id,title,description,price,image_url,collection,medium,sold,sort_order,created_at")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
+
+  const catalog = useMemo<Artwork[]>(() => {
+    const fromCustom: Artwork[] = (customRows ?? []).map((r) => ({
+      id: r.id,
+      title: r.title,
+      image: r.image_url,
+      price: Number(r.price ?? 0),
+      sold: !!r.sold,
+      collection: (r.collection === "The Legends" ? "The Legends" : "Our Essence"),
+      medium: r.medium ?? undefined,
+      description: r.description ?? undefined,
+    }));
+    const fromCatalog: Artwork[] = ARTWORKS.map((a) => ({
+      ...a,
+      sold: a.sold || soldSet.has(a.id),
+    }));
+    return [...fromCustom, ...fromCatalog];
+  }, [soldSet, customRows]);
 
   const blurb = (a: Artwork) => {
     if (a.description) return a.description;
