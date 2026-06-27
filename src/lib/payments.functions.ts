@@ -237,15 +237,33 @@ export const confirmCheckout = createServerFn({ method: "POST" })
       if (error) throw error;
       const orderId = row?.id as string;
 
-      // Mark artworks as sold (idempotent — onConflict do nothing).
-      const soldRows = lineItems
-        .filter((i) => i.artwork_id)
-        .map((i) => ({ artwork_id: i.artwork_id as string, order_id: orderId }));
-      if (soldRows.length) {
-        await supabaseAdmin
-          .from("sold_artworks")
-          .upsert(soldRows, { onConflict: "artwork_id", ignoreDuplicates: true });
+      // Decrement stock atomically per line (idempotent per session via isReentry check).
+      // Also keep sold_artworks for any line that ends up fully depleted.
+      if (!isReentry) {
+        for (const li of lineItems) {
+          if (!li.artwork_id) continue;
+          await supabaseAdmin.rpc("decrement_artwork_stock", {
+            _artwork_id: li.artwork_id,
+            _qty: li.quantity ?? 1,
+          });
+          // Check remaining; if 0, mark legacy sold_artworks too
+          const { data: s } = await supabaseAdmin
+            .from("artwork_stock")
+            .select("total_units,sold_units")
+            .eq("artwork_id", li.artwork_id)
+            .maybeSingle();
+          const left = s ? (s.total_units - s.sold_units) : 0;
+          if (left <= 0) {
+            await supabaseAdmin
+              .from("sold_artworks")
+              .upsert(
+                { artwork_id: li.artwork_id, order_id: orderId },
+                { onConflict: "artwork_id", ignoreDuplicates: true },
+              );
+          }
+        }
       }
+
 
       // Send receipts only on first record of this session.
       if (!isReentry) {
