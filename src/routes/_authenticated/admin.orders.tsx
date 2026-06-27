@@ -1,17 +1,15 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  LogOut,
   Mail,
   RefreshCw,
   Search,
   Truck,
   Send,
   ExternalLink,
-  KeyRound,
 } from "lucide-react";
 
 import { sendTransactionalEmail } from "@/lib/email/send";
@@ -73,38 +71,13 @@ function carrierTrackingUrl(carrier: string | null, num: string | null): string 
 }
 
 function AdminOrdersPage() {
-  const navigate = useNavigate();
   const qc = useQueryClient();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [filter, setFilter] = useState<Status | "all">("all");
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        navigate({ to: "/auth" });
-        return;
-      }
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userData.user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (error) {
-        toast.error("Couldn't verify role");
-        setIsAdmin(false);
-        return;
-      }
-      setIsAdmin(!!data);
-    })();
-  }, [navigate]);
-
   const ordersQ = useQuery({
     queryKey: ["orders"],
-    enabled: isAdmin === true,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
@@ -153,11 +126,6 @@ function AdminOrdersPage() {
     }
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    navigate({ to: "/auth" });
-  };
-
   const [sendingTest, setSendingTest] = useState(false);
   const sendTest = async () => {
     const { data: userData } = await supabase.auth.getUser();
@@ -182,34 +150,12 @@ function AdminOrdersPage() {
     }
   };
 
-  if (isAdmin === null) {
-    return <div className="pt-32 pb-20 text-center text-muted-foreground">Verifying access…</div>;
-  }
-
-  if (isAdmin === false) {
-    return (
-      <div className="pt-40 pb-20 container-page max-w-xl text-center">
-        <h1 className="font-display text-5xl">Access denied</h1>
-        <p className="mt-4 text-muted-foreground">
-          Your account isn't an admin yet. Ask the site owner to grant the{" "}
-          <code className="text-gold">admin</code> role to your user.
-        </p>
-        <button
-          onClick={signOut}
-          className="mt-8 inline-flex items-center gap-2 border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] hover:border-gold"
-        >
-          <LogOut className="h-4 w-4" /> Sign out
-        </button>
-      </div>
-    );
-  }
-
   const revenue = (ordersQ.data ?? [])
     .filter((o) => o.status !== "cancelled")
     .reduce((s, o) => s + Number(o.total_cad), 0);
 
   return (
-    <div className="pt-28 pb-20">
+    <div className="pt-10 pb-20">
       <div className="container-page">
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
@@ -230,21 +176,9 @@ function AdminOrdersPage() {
             >
               <RefreshCw className={`h-3.5 w-3.5 ${ordersQ.isFetching ? "animate-spin" : ""}`} /> Refresh
             </button>
-            <Link
-              to="/account"
-              className="inline-flex items-center gap-2 border border-border px-4 py-2.5 text-xs uppercase tracking-[0.2em] hover:border-gold transition"
-            >
-              <KeyRound className="h-3.5 w-3.5" /> Account
-            </Link>
-            <button
-              onClick={signOut}
-              className="inline-flex items-center gap-2 border border-border px-4 py-2.5 text-xs uppercase tracking-[0.2em] hover:border-gold transition"
-            >
-              <LogOut className="h-3.5 w-3.5" /> Sign out
-            </button>
-
           </div>
         </div>
+
 
         <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
           <Stat label="Total orders" value={counts.all.toString()} />
