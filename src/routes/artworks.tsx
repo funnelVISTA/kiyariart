@@ -9,6 +9,7 @@ import { TiltCard } from "@/components/ui/TiltCard";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { listSoldArtworkIds } from "@/lib/payments.functions";
+import { useIsTouch } from "@/hooks/useIsTouch";
 
 export const Route = createFileRoute("/artworks")({
   head: () => ({
