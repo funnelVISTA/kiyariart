@@ -198,7 +198,7 @@ function OrderDetailPage() {
                       </span>
                     </td>
                     <td className="p-3 text-[11px] text-muted-foreground">
-                      {new Date(e.sent_at ?? e.created_at).toLocaleString()}
+                      {new Date(e.created_at).toLocaleString()}
                     </td>
                   </tr>
                 ))}
