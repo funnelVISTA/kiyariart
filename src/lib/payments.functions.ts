@@ -85,7 +85,7 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
         },
         phone_number_collection: { enabled: true },
         payment_intent_data: {
-          description: data.items.map((i) => i.title).join(", ").slice(0, 500),
+          description: resolved.map((i) => i.title).join(", ").slice(0, 500),
         },
       });
 
