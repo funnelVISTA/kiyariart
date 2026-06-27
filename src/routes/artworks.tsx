@@ -206,7 +206,7 @@ function ArtworksPage() {
                   </div>
                 </div>
               </motion.article>
-            ))}
+            );})}
           </AnimatePresence>
         </motion.div>
       </div>
