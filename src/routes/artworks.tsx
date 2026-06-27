@@ -10,6 +10,10 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { listSoldArtworkIds } from "@/lib/payments.functions";
 import { useIsTouch } from "@/hooks/useIsTouch";
+import { useTapSwipe } from "@/hooks/useTapSwipe";
+
+// Swap wsimg width param to request smaller thumbnails (perf).
+const thumb = (url: string, w = 700) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 
 export const Route = createFileRoute("/artworks")({
   head: () => ({
