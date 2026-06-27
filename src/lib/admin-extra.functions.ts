@@ -95,7 +95,12 @@ export const adminSetArtworkStock = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const payload: Record<string, unknown> = {
+    const payload: {
+      artwork_id: string;
+      total_units: number;
+      sold_units?: number;
+      updated_at: string;
+    } = {
       artwork_id: data.artworkId,
       total_units: data.total,
       updated_at: new Date().toISOString(),
