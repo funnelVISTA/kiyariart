@@ -13,6 +13,7 @@ export type CartLine = {
 type CreateResult = { clientSecret: string } | { error: string };
 
 export const MAX_CART_ITEMS = 20;
+export const MAX_QTY_PER_LINE = 20;
 
 // Pure validator — throws on tampered / malformed input. Exported for tests.
 export function validateCartInput(data: {
@@ -40,11 +41,20 @@ export function validateCartInput(data: {
   return data;
 }
 
+function sanitizeQty(q: unknown): number {
+  const n = Math.floor(Number(q));
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.min(n, MAX_QTY_PER_LINE);
+}
+
 // Resolve client-supplied cart ids against the server-authoritative catalog.
-// Discards every other client field. Exported for tests.
+// Discards every other client field except quantity (clamped, summed per id).
 export function resolveCartItems(items: CartLine[]) {
-  const uniqueIds = Array.from(new Set(items.map((i) => i.id)));
-  return uniqueIds.map((id) => {
+  const reqQty = new Map<string, number>();
+  for (const i of items) {
+    reqQty.set(i.id, (reqQty.get(i.id) ?? 0) + sanitizeQty(i.quantity));
+  }
+  return Array.from(reqQty.entries()).map(([id, qty]) => {
     const art = ARTWORKS.find((a) => a.id === id);
     if (!art) throw new Error(`Unknown artwork: ${id}`);
     if (art.sold) throw new Error(`"${art.title}" is not available`);
@@ -54,9 +64,30 @@ export function resolveCartItems(items: CartLine[]) {
       title: art.title,
       image: art.image,
       unit_amount_cad: art.price,
-      quantity: 1,
+      quantity: Math.min(qty, MAX_QTY_PER_LINE),
     };
   });
+}
+
+// Returns map of artwork_id → available units (default 1 when no stock row).
+async function fetchAvailability(ids: string[]) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: stock } = await supabaseAdmin
+    .from("artwork_stock")
+    .select("artwork_id,total_units,sold_units")
+    .in("artwork_id", ids);
+  const map = new Map<string, number>();
+  for (const id of ids) map.set(id, 1);
+  for (const row of stock ?? []) {
+    map.set(row.artwork_id, Math.max(0, (row.total_units ?? 0) - (row.sold_units ?? 0)));
+  }
+  const { data: legacy } = await supabaseAdmin
+    .from("sold_artworks").select("artwork_id").in("artwork_id", ids);
+  for (const r of legacy ?? []) {
+    // legacy rows mean a 1-of-1 was sold; only override when no stock row gave a count
+    if (!(stock ?? []).find((s) => s.artwork_id === r.artwork_id)) map.set(r.artwork_id, 0);
+  }
+  return map;
 }
 
 export const createArtworkCheckout = createServerFn({ method: "POST" })
@@ -68,18 +99,18 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<CreateResult> => {
     try {
       const resolved = resolveCartItems(data.items);
-
-      // Stock check — block already-sold artworks from being purchased again.
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const ids = resolved.map((i) => i.id);
-      const { data: sold } = await supabaseAdmin
-        .from("sold_artworks").select("artwork_id").in("artwork_id", ids);
-      const soldSet = new Set((sold ?? []).map((r) => r.artwork_id));
-      const conflicts = resolved.filter((i) => soldSet.has(i.id));
+
+      const avail = await fetchAvailability(ids);
+      const conflicts: string[] = [];
+      for (const item of resolved) {
+        const left = avail.get(item.id) ?? 0;
+        if (left <= 0) conflicts.push(`"${item.title}" just sold out`);
+        else if (item.quantity > left)
+          conflicts.push(`Only ${left} of "${item.title}" left`);
+      }
       if (conflicts.length) {
-        return {
-          error: `Sorry, ${conflicts.map((c) => `"${c.title}"`).join(", ")} just sold. Please remove from cart and try again.`,
-        };
+        return { error: conflicts.join(". ") + ". Please update your cart." };
       }
 
       const stripe = createStripeClient(data.environment);
@@ -99,10 +130,7 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
             },
           },
         })),
-        // Mirror artwork_ids on the Session too for easy retrieval.
-        metadata: {
-          artwork_ids: ids.join(","),
-        },
+        metadata: { artwork_ids: ids.join(",") },
         shipping_address_collection: {
           allowed_countries: ["CA", "US", "GB", "AU", "NZ", "DE", "FR", "NL", "IE", "ES", "IT", "BE", "DK", "SE", "NO", "FI", "CH", "AT", "PT"],
         },
@@ -209,15 +237,33 @@ export const confirmCheckout = createServerFn({ method: "POST" })
       if (error) throw error;
       const orderId = row?.id as string;
 
-      // Mark artworks as sold (idempotent — onConflict do nothing).
-      const soldRows = lineItems
-        .filter((i) => i.artwork_id)
-        .map((i) => ({ artwork_id: i.artwork_id as string, order_id: orderId }));
-      if (soldRows.length) {
-        await supabaseAdmin
-          .from("sold_artworks")
-          .upsert(soldRows, { onConflict: "artwork_id", ignoreDuplicates: true });
+      // Decrement stock atomically per line (idempotent per session via isReentry check).
+      // Also keep sold_artworks for any line that ends up fully depleted.
+      if (!isReentry) {
+        for (const li of lineItems) {
+          if (!li.artwork_id) continue;
+          await supabaseAdmin.rpc("decrement_artwork_stock", {
+            _artwork_id: li.artwork_id,
+            _qty: li.quantity ?? 1,
+          });
+          // Check remaining; if 0, mark legacy sold_artworks too
+          const { data: s } = await supabaseAdmin
+            .from("artwork_stock")
+            .select("total_units,sold_units")
+            .eq("artwork_id", li.artwork_id)
+            .maybeSingle();
+          const left = s ? (s.total_units - s.sold_units) : 0;
+          if (left <= 0) {
+            await supabaseAdmin
+              .from("sold_artworks")
+              .upsert(
+                { artwork_id: li.artwork_id, order_id: orderId },
+                { onConflict: "artwork_id", ignoreDuplicates: true },
+              );
+          }
+        }
       }
+
 
       // Send receipts only on first record of this session.
       if (!isReentry) {
@@ -283,7 +329,26 @@ export const confirmCheckout = createServerFn({ method: "POST" })
     }
   });
 
-// Public: list artwork IDs already sold via paid orders.
+// Public: list sold-out artwork IDs + per-id stock left.
+export const listArtworkAvailability = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ soldIds: string[]; stock: Record<string, number> }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: sold }, { data: stock }] = await Promise.all([
+      supabaseAdmin.from("sold_artworks").select("artwork_id"),
+      supabaseAdmin.from("artwork_stock").select("artwork_id,total_units,sold_units"),
+    ]);
+    const stockMap: Record<string, number> = {};
+    const soldSet = new Set<string>((sold ?? []).map((r) => r.artwork_id));
+    for (const r of stock ?? []) {
+      const left = Math.max(0, (r.total_units ?? 0) - (r.sold_units ?? 0));
+      stockMap[r.artwork_id] = left;
+      if (left <= 0) soldSet.add(r.artwork_id);
+    }
+    return { soldIds: Array.from(soldSet), stock: stockMap };
+  },
+);
+
+// Back-compat shim
 export const listSoldArtworkIds = createServerFn({ method: "GET" }).handler(
   async (): Promise<string[]> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -293,6 +358,7 @@ export const listSoldArtworkIds = createServerFn({ method: "GET" }).handler(
     return (data ?? []).map((r) => r.artwork_id);
   },
 );
+
 
 // Public order lookup: caller must supply both order id and matching email.
 type PublicOrderResult =

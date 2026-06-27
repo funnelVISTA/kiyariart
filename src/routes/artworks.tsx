@@ -8,7 +8,7 @@ import { useCart } from "@/lib/cart";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
-import { listSoldArtworkIds } from "@/lib/payments.functions";
+import { listArtworkAvailability } from "@/lib/payments.functions";
 import { useIsTouch } from "@/hooks/useIsTouch";
 import { useTapSwipe } from "@/hooks/useTapSwipe";
 
@@ -39,15 +39,21 @@ function ArtworksPage() {
 
   // Overlay live "sold" state from the database on top of the static catalog
   // so artworks paid for via Stripe automatically appear as Sold.
-  const { data: soldIds } = useQuery({
-    queryKey: ["sold-artworks"],
-    queryFn: () => listSoldArtworkIds(),
+  const { data: availability } = useQuery({
+    queryKey: ["artwork-availability"],
+    queryFn: () => listArtworkAvailability(),
     staleTime: 60_000,
   });
-  const soldSet = useMemo(() => new Set(soldIds ?? []), [soldIds]);
-  const catalog = useMemo<Artwork[]>(
-    () => ARTWORKS.map((a) => (soldSet.has(a.id) ? { ...a, sold: true } : a)),
-    [soldSet],
+  const soldSet = useMemo(() => new Set(availability?.soldIds ?? []), [availability]);
+  const stockMap = availability?.stock ?? {};
+  const catalog = useMemo<(Artwork & { unitsLeft?: number })[]>(
+    () =>
+      ARTWORKS.map((a) => {
+        const left = stockMap[a.id];
+        const sold = a.sold || soldSet.has(a.id);
+        return { ...a, sold, unitsLeft: left };
+      }),
+    [soldSet, availability],
   );
 
   const blurb = (a: Artwork) => {
@@ -221,8 +227,20 @@ function ArtCard({ a, index, isTouch, revealed, onToggleReveal, onOpen, onAdd, b
               {t("art.sold")}
             </div>
           ) : (
-            <div className="absolute top-3 left-3 px-3 py-1 text-[10px] uppercase tracking-[0.2em] bg-gold/90 text-primary-foreground z-10" style={{ transform: "translateZ(40px)" }}>
-              {t("art.available")}
+            <div className="absolute top-3 left-3 flex flex-col gap-1 z-10" style={{ transform: "translateZ(40px)" }}>
+              <span className="px-3 py-1 text-[10px] uppercase tracking-[0.2em] bg-gold/90 text-primary-foreground">
+                {t("art.available")}
+              </span>
+              {typeof (a as any).unitsLeft === "number" && (a as any).unitsLeft > 1 && (
+                <span className="px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] bg-background/80 backdrop-blur border border-border self-start">
+                  {(a as any).unitsLeft} left
+                </span>
+              )}
+              {typeof (a as any).unitsLeft === "number" && (a as any).unitsLeft === 1 && (
+                <span className="px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] bg-accent/80 text-background self-start">
+                  Last one
+                </span>
+              )}
             </div>
           )}
 
