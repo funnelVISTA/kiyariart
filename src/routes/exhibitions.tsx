@@ -83,49 +83,73 @@ function ExhibitionsPage() {
           </h1>
         </div>
 
-        <section className="mt-20">
-          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">{t("ex.upcoming")}</div>
-          <div className="space-y-6">
-            {UPCOMING.map((e, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="group relative border border-border p-8 md:p-12 hover:border-gold transition-colors"
-              >
-                <div className="grid md:grid-cols-12 gap-8 items-start">
-                  <div className="md:col-span-3">
-                    <div className="font-display text-5xl text-gold leading-none">{e.monthShort}<br />{e.day}</div>
-                    <div className="mt-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">{e.year}</div>
-                  </div>
-                  <div className="md:col-span-9">
-                    <h3 className="font-display text-4xl">{e.title}</h3>
-                    <div className="mt-3 flex flex-wrap gap-5 text-sm text-muted-foreground">
-                      <span className="inline-flex items-center gap-2"><Calendar className="h-4 w-4 text-gold" /> {e.time}</span>
-                      <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-gold" /> {e.venue}</span>
+        {dbUpcoming.length > 0 && (
+          <section className="mt-20">
+            <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">{t("ex.upcoming")}</div>
+            <div className="space-y-6">
+              {dbUpcoming.map((e, i) => {
+                const d = e.event_date ? new Date(e.event_date) : null;
+                const monthShort = d ? d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "short" }).toUpperCase() : "TBA";
+                const day = d ? String(d.getDate()).padStart(2, "0") : "—";
+                const year = d ? String(d.getFullYear()) : "";
+                return (
+                  <motion.div
+                    key={e.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: i * 0.05 }}
+                    className="group relative border border-border p-8 md:p-12 hover:border-gold transition-colors overflow-hidden"
+                  >
+                    {e.image_url && (
+                      <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition">
+                        <img src={e.image_url} alt="" className="h-full w-full object-cover" />
+                      </div>
+                    )}
+                    <div className="relative grid md:grid-cols-12 gap-8 items-start">
+                      <div className="md:col-span-3">
+                        <div className="font-display text-5xl text-gold leading-none">{monthShort}<br />{day}</div>
+                        <div className="mt-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">{year}</div>
+                      </div>
+                      <div className="md:col-span-9">
+                        <h3 className="font-display text-4xl">{e.title}</h3>
+                        <div className="mt-3 flex flex-wrap gap-5 text-sm text-muted-foreground">
+                          {e.time_text && <span className="inline-flex items-center gap-2"><Calendar className="h-4 w-4 text-gold" /> {e.time_text}</span>}
+                          {(e.venue || e.city) && (
+                            <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-gold" /> {[e.venue, e.city].filter(Boolean).join(", ")}</span>
+                          )}
+                        </div>
+                        {e.blurb && <p className="mt-5 text-muted-foreground max-w-2xl leading-relaxed">{e.blurb}</p>}
+                        {e.link_url && (
+                          <a href={e.link_url} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-2 text-sm link-underline text-gold">
+                            {t("ex.details")}
+                          </a>
+                        )}
+                      </div>
                     </div>
-                    <p className="mt-5 text-muted-foreground max-w-2xl leading-relaxed">{e.blurb}</p>
-                    <button className="mt-6 inline-flex items-center gap-2 text-sm link-underline text-gold">{t("ex.details")}</button>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {dbPast.length > 0 && (
+          <section className="mt-24">
+            <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">{t("ex.past")}</div>
+            <div className="grid md:grid-cols-3 gap-6">
+              {dbPast.map((p) => (
+                <div key={p.id} className="border border-border p-8 hover:border-gold transition group">
+                  <div className="font-display text-2xl group-hover:text-gold transition">{p.title}</div>
+                  <div className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                    {[p.venue, p.city].filter(Boolean).join(" · ") || ""}
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
-        <section className="mt-24">
-          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">{t("ex.past")}</div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {PAST.map((p) => (
-              <div key={p.en} className="border border-border p-8 hover:border-gold transition group">
-                <div className="font-display text-2xl group-hover:text-gold transition">{p[lang]}</div>
-                <div className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">Vancouver, BC</div>
-              </div>
-            ))}
-          </div>
-        </section>
 
         <section className="mt-24">
           <div className="flex items-end justify-between mb-8">
