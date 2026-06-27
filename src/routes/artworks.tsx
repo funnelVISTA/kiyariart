@@ -27,8 +27,10 @@ type Filter = "all" | "available" | "sold" | "essence" | "legends";
 
 function ArtworksPage() {
   const { t } = useI18n();
+  const isTouch = useIsTouch();
   const [filter, setFilter] = useState<Filter>("all");
   const [active, setActive] = useState<Artwork | null>(null);
+  const [revealedId, setRevealedId] = useState<string | null>(null);
   const { add } = useCart();
 
   // Overlay live "sold" state from the database on top of the static catalog
