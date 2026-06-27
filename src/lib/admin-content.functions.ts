@@ -12,9 +12,9 @@ async function assertAdmin(context: { supabase: any; userId: string }) {
   if (!data) throw new Error("Forbidden");
 }
 
-// ===== Image upload (returns long-lived signed URL) =====
+// ===== Image upload =====
 
-const SIGNED_TTL = 60 * 60 * 24 * 365 * 10; // ~10 years
+const SIGNED_TTL = 60 * 60 * 24 * 365 * 10;
 
 export const adminUploadImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -25,7 +25,6 @@ export const adminUploadImage = createServerFn({ method: "POST" })
       throw new Error("Invalid filename");
     if (!d.contentType?.startsWith("image/")) throw new Error("Only images allowed");
     if (!d.dataBase64 || typeof d.dataBase64 !== "string") throw new Error("No data");
-    // ~12MB cap on the base64 string
     if (d.dataBase64.length > 16_000_000) throw new Error("Image too large (max ~12MB)");
     return d;
   })
@@ -58,6 +57,10 @@ type ArtworkUpsert = {
   medium?: string | null;
   sold?: boolean;
   sort_order?: number;
+  display_order?: number;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  alt_text?: string | null;
 };
 
 export const adminListCustomArtworks = createServerFn({ method: "GET" })
@@ -68,7 +71,7 @@ export const adminListCustomArtworks = createServerFn({ method: "GET" })
     const { data, error } = await supabaseAdmin
       .from("artworks_custom")
       .select("*")
-      .order("sort_order", { ascending: true })
+      .order("display_order", { ascending: true })
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return { artworks: data ?? [] };
@@ -96,6 +99,10 @@ export const adminUpsertCustomArtwork = createServerFn({ method: "POST" })
       medium: data.medium?.trim() || null,
       sold: !!data.sold,
       sort_order: Number.isFinite(data.sort_order) ? data.sort_order : 0,
+      display_order: Number.isFinite(data.display_order) ? data.display_order : 0,
+      seo_title: data.seo_title?.trim() || null,
+      seo_description: data.seo_description?.trim() || null,
+      alt_text: data.alt_text?.trim() || null,
       created_by: context.userId,
     };
     if (data.id) {
@@ -120,6 +127,79 @@ export const adminDeleteCustomArtwork = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("artworks_custom").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ===== Bulk artwork actions =====
+
+export const adminBulkSetArtworkSold = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { ids: string[]; sold: boolean }) => {
+    if (!Array.isArray(d.ids) || d.ids.length === 0) throw new Error("No ids");
+    if (d.ids.length > 100) throw new Error("Too many");
+    return { ids: d.ids.filter((x) => typeof x === "string"), sold: !!d.sold };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("artworks_custom").update({ sold: data.sold }).in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { ok: true, count: data.ids.length };
+  });
+
+export const adminBulkDeleteArtworks = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { ids: string[] }) => {
+    if (!Array.isArray(d.ids) || d.ids.length === 0) throw new Error("No ids");
+    if (d.ids.length > 100) throw new Error("Too many");
+    return { ids: d.ids.filter((x) => typeof x === "string") };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("artworks_custom").delete().in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { ok: true, count: data.ids.length };
+  });
+
+// ===== Reordering (custom artworks) =====
+
+export const adminReorderCustomArtworks = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { orderedIds: string[] }) => {
+    if (!Array.isArray(d.orderedIds)) throw new Error("orderedIds required");
+    if (d.orderedIds.length > 500) throw new Error("Too many");
+    return { orderedIds: d.orderedIds.filter((x) => typeof x === "string") };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Update each row's display_order by index
+    await Promise.all(
+      data.orderedIds.map((id, idx) =>
+        supabaseAdmin.from("artworks_custom").update({ display_order: idx }).eq("id", id),
+      ),
+    );
+    return { ok: true };
+  });
+
+// ===== Static catalog display order (artwork_display_order) =====
+
+export const adminReorderStaticArtworks = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { orderedIds: string[] }) => {
+    if (!Array.isArray(d.orderedIds)) throw new Error("orderedIds required");
+    return { orderedIds: d.orderedIds.filter((x) => typeof x === "string") };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const rows = data.orderedIds.map((id, idx) => ({ artwork_id: id, position: idx, updated_at: new Date().toISOString() }));
+    const { error } = await supabaseAdmin
+      .from("artwork_display_order")
+      .upsert(rows, { onConflict: "artwork_id" });
     if (error) throw new Error(error.message);
     return { ok: true };
   });

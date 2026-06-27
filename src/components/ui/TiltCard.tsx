@@ -24,6 +24,8 @@ export function TiltCard({
     const el = ref.current;
     if (!el) return;
     if (typeof window === "undefined") return;
+    // Respect reduced-motion preference.
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     let destroyed = false;
     (async () => {
       const VanillaTilt = (await import("vanilla-tilt")).default;
@@ -50,4 +52,3 @@ export function TiltCard({
     </div>
   );
 }
-

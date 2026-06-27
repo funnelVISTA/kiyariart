@@ -1,6 +1,7 @@
-import { AnimatePresence, motion, useMotionValue } from "motion/react";
-import { X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { X, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { TransformWrapper, TransformComponent, type ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 
 type Props = {
   open: boolean;
@@ -8,30 +9,25 @@ type Props = {
   alt?: string;
   caption?: string;
   onClose: () => void;
+  onPrev?: () => void;
+  onNext?: () => void;
 };
 
-export function Lightbox({ open, src, alt, caption, onClose }: Props) {
-  const [scale, setScale] = useState(1);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
+export function Lightbox({ open, src, alt, caption, onClose, onPrev, onNext }: Props) {
+  const ref = useRef<ReactZoomPanPinchRef | null>(null);
 
   useEffect(() => {
     if (!open) return;
-    setScale(1); x.set(0); y.set(0);
+    ref.current?.resetTransform();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "+" || e.key === "=") setScale((s) => Math.min(5, s + 0.5));
-      if (e.key === "-") setScale((s) => Math.max(1, s - 0.5));
-      if (e.key === "0") { setScale(1); x.set(0); y.set(0); }
+      if (e.key === "ArrowLeft" && onPrev) onPrev();
+      if (e.key === "ArrowRight" && onNext) onNext();
+      if (e.key === "0") ref.current?.resetTransform();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose, x, y]);
-
-  const onWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    setScale((s) => Math.max(1, Math.min(5, s + (e.deltaY < 0 ? 0.15 : -0.15))));
-  };
+  }, [open, onClose, onPrev, onNext, src]);
 
   return (
     <AnimatePresence>
@@ -45,54 +41,76 @@ export function Lightbox({ open, src, alt, caption, onClose }: Props) {
           <button
             onClick={onClose}
             aria-label="Close"
-            className="absolute right-6 top-6 grid h-11 w-11 place-items-center rounded-full border border-border bg-card/60 hover:border-gold transition"
+            className="absolute right-4 top-4 md:right-6 md:top-6 grid h-11 w-11 place-items-center rounded-full border border-border bg-card/60 hover:border-gold transition z-20"
           >
             <X className="h-5 w-5" />
           </button>
 
-          <div className="absolute left-1/2 top-6 -translate-x-1/2 flex gap-2 z-10">
-            <Tool icon={<ZoomOut className="h-4 w-4" />} onClick={(e) => { e.stopPropagation(); setScale((s) => Math.max(1, s - 0.5)); }} />
-            <Tool icon={<RotateCcw className="h-4 w-4" />} onClick={(e) => { e.stopPropagation(); setScale(1); x.set(0); y.set(0); }} />
-            <Tool icon={<ZoomIn className="h-4 w-4" />} onClick={(e) => { e.stopPropagation(); setScale((s) => Math.min(5, s + 0.5)); }} />
+          <button
+            onClick={(e) => { e.stopPropagation(); ref.current?.resetTransform(); }}
+            aria-label="Reset zoom"
+            className="absolute left-1/2 top-4 md:top-6 -translate-x-1/2 grid h-10 w-10 place-items-center rounded-full border border-border bg-card/60 hover:border-gold transition z-20"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </button>
+
+          {onPrev && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onPrev(); }}
+              aria-label="Previous"
+              className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 grid h-12 w-12 place-items-center rounded-full border border-border bg-card/60 hover:border-gold transition z-20"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
+          {onNext && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onNext(); }}
+              aria-label="Next"
+              className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 grid h-12 w-12 place-items-center rounded-full border border-border bg-card/60 hover:border-gold transition z-20"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          )}
+
+          <div
+            className="relative w-[90vw] h-[80vh] flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <TransformWrapper
+              ref={ref}
+              initialScale={1}
+              minScale={1}
+              maxScale={5}
+              centerOnInit
+              doubleClick={{ mode: "toggle", step: 1.5 }}
+              wheel={{ step: 0.15 }}
+              pinch={{ step: 5 }}
+            >
+              <TransformComponent
+                wrapperStyle={{ width: "100%", height: "100%" }}
+                contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                <img
+                  src={src}
+                  alt={alt}
+                  draggable={false}
+                  className="max-h-[80vh] max-w-[90vw] object-contain select-none"
+                />
+              </TransformComponent>
+            </TransformWrapper>
           </div>
 
-          <motion.div
-            className="relative max-h-[85vh] max-w-[90vw] overflow-hidden cursor-grab active:cursor-grabbing"
-            onClick={(e) => e.stopPropagation()}
-            onWheel={onWheel}
-          >
-            <motion.img
-              src={src}
-              alt={alt}
-              draggable={false}
-              style={{ x, y, scale }}
-              drag={scale > 1}
-              dragMomentum={false}
-              dragElastic={0.1}
-              animate={{ scale }}
-              transition={{ type: "spring", stiffness: 180, damping: 22 }}
-              className="max-h-[85vh] max-w-[90vw] object-contain select-none"
-            />
-          </motion.div>
-
           {caption && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-xs uppercase tracking-[0.3em] text-muted-foreground">
+            <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground text-center">
               {caption}
+              <div className="mt-1 text-[9px] opacity-60 normal-case tracking-wider">
+                Pinch / scroll to zoom · drag to pan · ← → to navigate
+              </div>
             </div>
           )}
         </motion.div>
       )}
     </AnimatePresence>
-  );
-}
-
-function Tool({ icon, onClick }: { icon: React.ReactNode; onClick: (e: React.MouseEvent) => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card/60 hover:border-gold transition"
-    >
-      {icon}
-    </button>
   );
 }
