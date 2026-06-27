@@ -1,10 +1,13 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { KeyRound, LogOut, Package, LayoutDashboard } from "lucide-react";
+import { KeyRound, LogOut, Package, LayoutDashboard, Palette, BarChart3, Users } from "lucide-react";
 
 const items = [
   { to: "/admin/orders", label: "Orders", icon: Package },
+  { to: "/admin/inventory", label: "Inventory", icon: Palette },
+  { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/admin/subscribers", label: "Subscribers", icon: Users },
   { to: "/account", label: "Account", icon: KeyRound },
 ] as const;
 

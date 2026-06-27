@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -94,17 +95,25 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Chrome-less routes: admin dashboard + auth/account flows render their own
+  // shell, so hide the public site header/footer/cart to avoid the mashed UI.
+  const isChromeless =
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/reset-password");
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
         <CartProvider>
-          <SmoothScroll />
-          <Header />
+          {!isChromeless && <SmoothScroll />}
+          {!isChromeless && <Header />}
           <main className="min-h-screen">
             <Outlet />
           </main>
-          <Footer />
-          <CartSheet />
+          {!isChromeless && <Footer />}
+          {!isChromeless && <CartSheet />}
           <Toaster />
         </CartProvider>
       </I18nProvider>

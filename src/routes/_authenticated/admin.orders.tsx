@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -254,6 +254,23 @@ function AdminOrdersPage() {
                     )}
                   </div>
                 </button>
+
+                <div className="px-4 pb-3 -mt-2 flex items-center gap-3 text-[11px] uppercase tracking-[0.2em]">
+                  <Link
+                    to="/admin/orders/$orderId"
+                    params={{ orderId: o.id }}
+                    className="text-gold hover:underline inline-flex items-center gap-1"
+                  >
+                    Open detail <ExternalLink className="h-3 w-3" />
+                  </Link>
+                  <span className="text-muted-foreground">·</span>
+                  <button
+                    onClick={() => setExpanded(isOpen ? null : o.id)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    {isOpen ? "Hide quick actions" : "Quick actions"}
+                  </button>
+                </div>
 
                 {isOpen && (
                   <OrderDetail order={o} onChanged={refresh} setStatus={setStatus} />
