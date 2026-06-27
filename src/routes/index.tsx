@@ -239,3 +239,75 @@ function Stat({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+type FeaturedCardProps = {
+  a: Artwork;
+  hero: boolean;
+  isTouch: boolean;
+  revealed: boolean;
+  onToggleReveal: () => void;
+  onOpen: () => void;
+  onAdd: () => void;
+  t: (k: string) => string;
+};
+
+function FeaturedCard({ a, hero, isTouch, revealed, onToggleReveal, onOpen, onAdd, t }: FeaturedCardProps) {
+  const swipe = useTapSwipe({ onTap: onOpen, onSwipe: onToggleReveal });
+  return (
+    <TiltCard
+      max={8}
+      scale={1.02}
+      className="group relative h-full"
+      data-reveal={revealed}
+      {...(isTouch ? swipe : { onClick: onOpen })}
+    >
+      <div className={`relative overflow-hidden ${hero ? "aspect-square md:aspect-[4/5]" : "aspect-square"}`}>
+        <img
+          src={thumb(a.image, hero ? 1100 : 700)}
+          alt={a.title}
+          loading={hero ? "eager" : "lazy"}
+          decoding="async"
+          sizes={hero ? "(min-width: 768px) 66vw, 100vw" : "(min-width: 768px) 33vw, 50vw"}
+          className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
+          style={{ transform: "translateZ(0)" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/10 to-transparent opacity-70 group-hover:opacity-95 group-data-[reveal=true]:opacity-95 transition-opacity duration-500" />
+
+        <div className="absolute right-3 top-3 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 group-data-[reveal=true]:opacity-100 transition" style={{ transform: "translateZ(40px)" }}>
+          <button
+            aria-label="Zoom"
+            onClick={(e) => { e.stopPropagation(); onOpen(); }}
+            className="grid h-10 w-10 place-items-center rounded-full border border-border bg-background/70 backdrop-blur hover:border-gold transition"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+        </div>
+
+        {isTouch && !revealed && (
+          <div
+            className="absolute bottom-3 right-3 px-2 py-1 text-[9px] uppercase tracking-[0.2em] bg-background/70 backdrop-blur border border-border/60 rounded-full opacity-80 transition z-10 pointer-events-none"
+            style={{ transform: "translateZ(40px)" }}
+          >
+            ← swipe
+          </div>
+        )}
+
+        <div className="absolute inset-x-0 bottom-0 p-6 translate-y-2 group-hover:translate-y-0 group-data-[reveal=true]:translate-y-0 transition-transform duration-500 pointer-events-none group-data-[reveal=true]:pointer-events-auto md:group-hover:pointer-events-auto" style={{ transform: "translateZ(30px)" }}>
+          <div className="font-display text-2xl md:text-3xl">{a.title}</div>
+          <div className="mt-1 flex items-center justify-between gap-4">
+            <div className="text-xs uppercase tracking-[0.2em] text-gold">
+              {a.price > 0 ? `$${a.price.toLocaleString()} CAD` : t("art.inquire")} · {a.collection}
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onAdd(); }}
+              className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] border border-border px-3 py-2 hover:border-gold hover:text-gold transition"
+            >
+              <Plus className="h-3 w-3" /> {t("feat.add")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </TiltCard>
+  );
+}
+
