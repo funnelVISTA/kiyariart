@@ -85,7 +85,7 @@ function Home() {
               </span>
               <span className="block overflow-hidden">
                 <motion.span
-                  className="block"
+                  className="block pr-2 pb-1"
                   initial={{ y: "100%" }} animate={{ y: 0 }}
                   transition={{ duration: 1, delay: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
                 >
@@ -190,7 +190,7 @@ function Home() {
           <div className="md:col-span-7 md:col-start-6">
             <ul className="divide-y divide-border border-y border-border">
               {[
-                { title: "Future Stars Foundation", date: "June 2026", upcoming: true },
+                { title: "Future Stars Foundation", date: "June 2026" },
                 { title: "Essence of a Butterfly", date: "May 2023" },
                 { title: "Our Essence: Beautiful in Black", date: "Feb 2023" },
               ].map((ex) => (
