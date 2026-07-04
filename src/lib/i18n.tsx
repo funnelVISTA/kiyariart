@@ -12,13 +12,13 @@ export const DICT: Dict = {
   "nav.community": { en: "Community", fr: "Communauté" },
 
   // Hero (home)
-  "hero.tag": { en: "Calgary · est. forever", fr: "Calgary · depuis toujours" },
-  "hero.line1": { en: "Art you're", fr: "L'art que vous" },
-  "hero.line2": { en: "meant to", fr: "êtes destiné" },
-  "hero.line3": { en: "feel.", fr: "à ressentir." },
+  "hero.line1": { en: "Bold Colours, Fearless", fr: "Couleurs audacieuses, textures" },
+  "hero.line2": { en: "Textures & Stories", fr: "intrépides et histoires" },
+  "hero.line3a": { en: "You Can ", fr: "que vous pouvez " },
+  "hero.line3b": { en: "Feel", fr: "Ressentir" },
   "hero.lede": {
-    en: "Culturally guided, textured paintings capturing the pain, the strength, the struggle, the beauty, and the excellence of our essence.",
-    fr: "Des peintures texturées et culturellement inspirées qui capturent la douleur, la force, la lutte, la beauté et l'excellence de notre essence.",
+    en: "Kiyari creates vibrant, stand-out Afrocentric pieces that merge abstract expression with tactile elements — to honour the depth and brilliance of our culture.",
+    fr: "Kiyari crée des œuvres afrocentriques vibrantes et remarquables qui fusionnent l'expression abstraite et des éléments tactiles — pour honorer la profondeur et l'éclat de notre culture.",
   },
   "hero.cta1": { en: "Browse the collection", fr: "Voir la collection" },
   "hero.cta2": { en: "Upcoming exhibitions", fr: "Prochaines expositions" },
@@ -28,12 +28,22 @@ export const DICT: Dict = {
   "about.kicker": { en: "About the artist", fr: "À propos de l'artiste" },
   "about.title": { en: "A craft you can touch.", fr: "Un art que l'on peut toucher." },
   "about.p1": {
-    en: "Each one-of-a-kind creation starts with acrylic or oil — but the magic begins with whatever calls Kiyari's name in the craft aisle, fabric store, beauty supply, or home-building outlet.",
-    fr: "Chaque création unique commence par l'acrylique ou l'huile — mais la magie naît de tout ce qui interpelle Kiyari dans les rayons de bricolage, tissus, beauté ou matériaux.",
+    en: "Kiyari discovered painting in adulthood, at a time when she needed space to breathe. What began as a therapeutic outlet soon became a deeply personal form of healing.",
+    fr: "Kiyari a découvert la peinture à l'âge adulte, à un moment où elle avait besoin d'espace pour respirer. Ce qui a commencé comme un exutoire thérapeutique est vite devenu une forme profondément personnelle de guérison.",
   },
   "about.p2": {
-    en: "You will never hear \"please don't touch\" at a Kiyari exhibition.",
-    fr: "Vous n'entendrez jamais « ne touchez pas » lors d'une exposition Kiyari.",
+    en: "She blends traditional art mediums with whatever calls to her spirit — found in the craft aisle, fabric store, beauty supply, and beyond — transforming them into richly textured artworks.",
+    fr: "Elle mêle les médiums traditionnels à tout ce qui appelle son esprit — trouvé dans les rayons de bricolage, tissus, beauté et au-delà — pour les transformer en œuvres richement texturées.",
+  },
+  "about.p3a": {
+    en: "Her process is intuitive and fearless, with a refusal to color inside the lines. Kiyari's artworks welcome you closer. You are encouraged to run your fingers across the textures, to experience the emotion, and ",
+    fr: "Sa démarche est intuitive et intrépide, refusant de rester dans les lignes. Les œuvres de Kiyari vous invitent à vous approcher. Vous êtes encouragé à parcourir les textures du bout des doigts, à ressentir l'émotion et à ",
+  },
+  "about.p3b": { en: "FEEL", fr: "RESSENTIR" },
+  "about.p3c": { en: " the story.", fr: " l'histoire." },
+  "about.p4": {
+    en: "You will never hear \"don't touch\" with a Kiyari creation.",
+    fr: "Vous n'entendrez jamais « ne touchez pas » avec une création de Kiyari.",
   },
   "stat.originals": { en: "Originals", fr: "Originaux" },
   "stat.exhibitions": { en: "Exhibitions", fr: "Expositions" },
@@ -68,10 +78,10 @@ export const DICT: Dict = {
   // Artworks page
   "artworks.kicker": { en: "The collection", fr: "La collection" },
   "artworks.title1": { en: "Originals,", fr: "Originaux," },
-  "artworks.title2": { en: "one of one.", fr: "uniques." },
+  "artworks.title2": { en: "One of One", fr: "Uniques" },
   "artworks.lede": {
-    en: "Each piece is hand-made with acrylic, oil, and a wandering palette of textures. Add a painting to your cart and check out securely — Kiyari ships every sale personally.",
-    fr: "Chaque pièce est faite à la main avec acrylique, huile et une palette de textures. Ajoutez une œuvre au panier et payez en toute sécurité — Kiyari expédie personnellement chaque vente.",
+    en: "Each one-of-a-kind piece is a living narrative — a celebration of resilience, a confrontation of pain, a declaration of beauty, and a testament to freedom. Kiyari creations are not just artworks; they are moments of healing made visible. Let the piece choose you, check out securely, and Kiyari will personally ship the creation to its new home.",
+    fr: "Chaque pièce unique est un récit vivant — une célébration de la résilience, une confrontation avec la douleur, une déclaration de beauté et un témoignage de liberté. Les créations de Kiyari ne sont pas de simples œuvres ; ce sont des moments de guérison rendus visibles. Laissez la pièce vous choisir, passez commande en toute sécurité, et Kiyari expédiera personnellement la création vers son nouveau foyer.",
   },
 
   "artworks.filter.all": { en: "All", fr: "Tout" },
@@ -111,10 +121,10 @@ export const DICT: Dict = {
   // Community
   "com.kicker": { en: "Community", fr: "Communauté" },
   "com.title1": { en: "Let's", fr: "Restons" },
-  "com.title2": { en: "connect.", fr: "en contact." },
+  "com.title2": { en: "Connect", fr: "en contact" },
   "com.lede": {
-    en: "Commissions, collaborations, press, or simply to say hello — Kiyari reads every message.",
-    fr: "Commandes, collaborations, presse, ou simplement pour dire bonjour — Kiyari lit chaque message.",
+    en: "Kiyari personally reads every message.",
+    fr: "Kiyari lit personnellement chaque message.",
   },
   "com.name": { en: "Name", fr: "Nom" },
   "com.email": { en: "Email", fr: "Courriel" },
