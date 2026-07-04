@@ -158,7 +158,7 @@ export const DICT: Dict = {
   "com.news.toastDesc": { en: "You'll hear about new artworks & exhibitions.", fr: "Vous recevrez les nouvelles œuvres et expositions." },
 
   // Footer
-  "footer.tagline": { en: "Culturally guided, textured art you are encouraged to feel.", fr: "Art texturé et culturellement guidé, que vous êtes invité à ressentir." },
+  "footer.tagline": { en: "Bold Colours, Fearless Textures & Stories You Can Feel.", fr: "Couleurs audacieuses, textures intrépides et histoires que vous pouvez ressentir." },
   "footer.explore": { en: "Explore", fr: "Explorer" },
   "footer.connect": { en: "Connect", fr: "Connecter" },
   "footer.studioLink": { en: "Studio", fr: "Atelier" },
