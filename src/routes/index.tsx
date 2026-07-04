@@ -268,18 +268,18 @@ function Home() {
 
 
       {/* CTA */}
-      <section className="relative py-32 overflow-hidden">
+      <section className="relative py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-hero opacity-60" />
-        <div className="relative container-page text-center">
+        <div className="relative container-page max-w-3xl mx-auto text-center">
           <Reveal>
-            <div className="text-xs uppercase tracking-[0.4em] text-gold mb-6">{t("cta.kicker")}</div>
+            <div className="text-xs uppercase tracking-[0.4em] text-gold mb-4">{t("cta.kicker")}</div>
           </Reveal>
-          <RevealText as="h2" text={t("cta.title")} className="font-display text-5xl md:text-7xl max-w-3xl mx-auto leading-tight block" />
-          <Reveal delay={0.2}>
-            <p className="mt-6 text-muted-foreground max-w-xl mx-auto">{t("cta.lede")}</p>
+          <RevealText as="h2" text={t("cta.title")} className="font-display text-4xl md:text-5xl max-w-2xl mx-auto leading-tight block" />
+          <Reveal delay={0.15}>
+            <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-lg mx-auto">{t("cta.lede")}</p>
           </Reveal>
-          <Reveal delay={0.3}>
-            <Link to="/community" className="mt-10 inline-flex items-center gap-3 bg-gradient-gold px-8 py-4 text-sm uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition">
+          <Reveal delay={0.25}>
+            <Link to="/community" className="mt-6 inline-flex items-center gap-3 bg-gradient-gold px-8 py-4 text-sm uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition">
               {t("cta.btn")} <ArrowRight className="h-4 w-4" />
             </Link>
           </Reveal>
