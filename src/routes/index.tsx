@@ -17,10 +17,10 @@ const thumb = (url: string, w = 800) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "art by KIYARI — Original Mixed-Media Paintings" },
-      { name: "description", content: "Culturally guided, textured fine art by Kiyari. Browse originals, upcoming exhibitions, and the artist's community." },
-      { property: "og:title", content: "art by KIYARI" },
-      { property: "og:description", content: "Culturally guided, textured fine art you're encouraged to feel." },
+      { title: "Kiyari Art | Bold Afrocentric Textured Originals — Calgary" },
+      { name: "description", content: "Bold Colours, Fearless Textures & Stories You Can Feel. Vibrant, stand-out Afrocentric originals by Kiyari, merging abstract expression with tactile elements — Calgary." },
+      { property: "og:title", content: "Kiyari Art | Bold Afrocentric Textured Originals — Calgary" },
+      { property: "og:description", content: "Vibrant, stand-out Afrocentric originals that merge abstract expression with tactile elements — to honour the depth and brilliance of our culture." },
       { property: "og:image", content: HERO_IMAGE },
       { name: "twitter:image", content: HERO_IMAGE },
     ],
@@ -68,8 +68,7 @@ function Home() {
             transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1] }}
             className="max-w-3xl"
           >
-            <div className="text-xs uppercase tracking-[0.4em] text-gold mb-6">— {t("hero.tag")}</div>
-            <h1 className="font-display text-6xl md:text-8xl lg:text-9xl leading-[0.95]">
+            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95]">
               <span className="block overflow-hidden">
                 <motion.span
                   className="block"
@@ -86,15 +85,18 @@ function Home() {
               </span>
               <span className="block overflow-hidden">
                 <motion.span
-                  className="block italic text-gradient-gold"
+                  className="block"
                   initial={{ y: "100%" }} animate={{ y: 0 }}
                   transition={{ duration: 1, delay: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
-                >{t("hero.line3")}</motion.span>
+                >
+                  {t("hero.line3a")}
+                  <span className="italic text-gradient-gold">{t("hero.line3b")}</span>
+                </motion.span>
               </span>
             </h1>
             <motion.p
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}
-              className="mt-8 max-w-xl text-lg text-muted-foreground leading-relaxed"
+              className="mt-8 max-w-[60ch] text-lg text-muted-foreground leading-relaxed"
             >
               {t("hero.lede")}
             </motion.p>
