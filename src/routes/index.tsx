@@ -155,14 +155,78 @@ function Home() {
         </div>
         <div className="md:col-span-7 md:col-start-6 space-y-6 text-lg text-muted-foreground leading-relaxed">
           <Reveal delay={0.1}><p>{t("about.p1")}</p></Reveal>
-          <Reveal delay={0.2}><p className="text-foreground"><em className="text-gold">{t("about.p2")}</em></p></Reveal>
+          <Reveal delay={0.2}><p>{t("about.p2")}</p></Reveal>
+          <Reveal delay={0.25}>
+            <p>
+              {t("about.p3a")}
+              <span className="italic font-semibold text-gradient-gold">{t("about.p3b")}</span>
+              {t("about.p3c")}
+            </p>
+          </Reveal>
           <Reveal delay={0.3}>
+            <p className="text-foreground italic border-l-2 border-gold pl-5">
+              {t("about.p4")}
+            </p>
+          </Reveal>
+          <Reveal delay={0.35}>
             <div className="grid grid-cols-3 gap-6 pt-6 text-sm">
               <Stat label={t("stat.originals")} value="26+" />
               <Stat label={t("stat.exhibitions")} value="12" />
               <Stat label={t("stat.years")} value="9" />
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      {/* EXHIBITIONS */}
+      <section className="py-24 container-page">
+        <div className="grid md:grid-cols-12 gap-12">
+          <div className="md:col-span-4">
+            <Reveal>
+              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">Live shows</div>
+            </Reveal>
+            <RevealText as="h2" text="Exhibitions" className="font-display text-5xl md:text-6xl block" />
+          </div>
+          <div className="md:col-span-7 md:col-start-6">
+            <ul className="divide-y divide-border border-y border-border">
+              {[
+                { title: "Future Stars Foundation", date: "June 2026", upcoming: true },
+                { title: "Essence of a Butterfly", date: "May 2023" },
+                { title: "Our Essence: Beautiful in Black", date: "Feb 2023" },
+              ].map((ex) => (
+                <li key={ex.title} className="flex items-center justify-between gap-6 py-6">
+                  <div className="min-w-0">
+                    <div className="font-display text-2xl md:text-3xl leading-tight">{ex.title}</div>
+                    <div className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">{ex.date}</div>
+                  </div>
+                  {ex.upcoming && (
+                    <span className="shrink-0 px-3 py-1 text-[10px] uppercase tracking-[0.2em] border border-gold text-gold">
+                      Upcoming
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* SUPPORTERS */}
+      <section className="py-20 border-y border-border bg-card/30">
+        <div className="container-page">
+          <Reveal>
+            <div className="text-center text-xs uppercase tracking-[0.3em] text-gold mb-8">Our Supporters</div>
+          </Reveal>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 items-center">
+            {["Future Stars Foundation", "Pyoor Entertainment", "Big Rich Entertainment", "L&R Studios"].map((s) => (
+              <div
+                key={s}
+                className="text-center text-[11px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground hover:text-gold transition-colors"
+              >
+                {s}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
