@@ -169,7 +169,7 @@ function ExhibitionsPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: (i % 8) * 0.05 }}
-                className="block w-full break-inside-avoid group relative cursor-zoom-in mb-3 md:mb-4"
+                className="block w-full break-inside-avoid group relative cursor-zoom-in"
               >
                 <TiltCard max={18} scale={1.06} glare className="overflow-hidden shadow-elegant">
                   <img
