@@ -199,11 +199,6 @@ function Home() {
                     <div className="font-display text-2xl md:text-3xl leading-tight">{ex.title}</div>
                     <div className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">{ex.date}</div>
                   </div>
-                  {ex.upcoming && (
-                    <span className="shrink-0 px-3 py-1 text-[10px] uppercase tracking-[0.2em] border border-gold text-gold">
-                      Upcoming
-                    </span>
-                  )}
                 </li>
               ))}
             </ul>
