@@ -5,6 +5,7 @@ import { Calendar, MapPin, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { TiltCard } from "@/components/ui/TiltCard";
 
 export const Route = createFileRoute("/exhibitions")({
   head: () => ({
@@ -159,7 +160,7 @@ function ExhibitionsPage() {
             </div>
           </div>
 
-          <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4">
+          <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4 [perspective:1400px]">
             {GALLERY.map((src, i) => (
               <motion.button
                 key={src + i}
@@ -168,15 +169,18 @@ function ExhibitionsPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: (i % 8) * 0.05 }}
-                className="block w-full break-inside-avoid overflow-hidden group relative cursor-zoom-in"
+                className="block w-full break-inside-avoid group relative cursor-zoom-in mb-3 md:mb-4"
               >
-                <img
-                  src={src}
-                  alt={`Exhibition moment ${i + 1}`}
-                  loading="lazy"
-                  className="w-full h-auto transition-transform duration-[1.2s] ease-out group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-background/0 group-hover:bg-background/30 transition" />
+                <TiltCard max={18} scale={1.06} glare className="overflow-hidden shadow-elegant">
+                  <img
+                    src={src}
+                    alt={`Exhibition moment ${i + 1}`}
+                    loading="lazy"
+                    className="w-full h-auto"
+                    style={{ transform: "translateZ(0)" }}
+                  />
+                  <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition" style={{ transform: "translateZ(30px)" }} />
+                </TiltCard>
               </motion.button>
             ))}
           </div>
