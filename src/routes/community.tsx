@@ -139,7 +139,7 @@ function CommunityPage() {
           <h2 className="font-display text-4xl md:text-5xl">{t("com.supporters.title")}</h2>
           <p className="mt-4 text-muted-foreground max-w-xl mx-auto">{t("com.supporters.lede")}</p>
           <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6">
-            {["Sisters in Canada Wellness Society", "Afro World Expo", "Lupus BC", "Vancouver Black Library"].map((s) => (
+            {["Future Stars Foundation", "Pyoor Entertainment", "Big Rich Entertainment", "L&R Studios"].map((s) => (
               <div key={s} className="border border-border p-6 hover:border-gold transition">
                 <div className="text-sm uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground">
                   {s}

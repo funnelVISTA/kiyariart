@@ -17,10 +17,10 @@ const thumb = (url: string, w = 800) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "art by KIYARI — Original Mixed-Media Paintings" },
-      { name: "description", content: "Culturally guided, textured fine art by Kiyari. Browse originals, upcoming exhibitions, and the artist's community." },
-      { property: "og:title", content: "art by KIYARI" },
-      { property: "og:description", content: "Culturally guided, textured fine art you're encouraged to feel." },
+      { title: "Kiyari Art | Bold Afrocentric Textured Originals — Calgary" },
+      { name: "description", content: "Bold Colours, Fearless Textures & Stories You Can Feel. Vibrant, stand-out Afrocentric originals by Kiyari, merging abstract expression with tactile elements — Calgary." },
+      { property: "og:title", content: "Kiyari Art | Bold Afrocentric Textured Originals — Calgary" },
+      { property: "og:description", content: "Vibrant, stand-out Afrocentric originals that merge abstract expression with tactile elements — to honour the depth and brilliance of our culture." },
       { property: "og:image", content: HERO_IMAGE },
       { name: "twitter:image", content: HERO_IMAGE },
     ],
@@ -68,8 +68,7 @@ function Home() {
             transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1] }}
             className="max-w-3xl"
           >
-            <div className="text-xs uppercase tracking-[0.4em] text-gold mb-6">— {t("hero.tag")}</div>
-            <h1 className="font-display text-6xl md:text-8xl lg:text-9xl leading-[0.95]">
+            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95]">
               <span className="block overflow-hidden">
                 <motion.span
                   className="block"
@@ -86,15 +85,18 @@ function Home() {
               </span>
               <span className="block overflow-hidden">
                 <motion.span
-                  className="block italic text-gradient-gold"
+                  className="block"
                   initial={{ y: "100%" }} animate={{ y: 0 }}
                   transition={{ duration: 1, delay: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
-                >{t("hero.line3")}</motion.span>
+                >
+                  {t("hero.line3a")}
+                  <span className="italic text-gradient-gold">{t("hero.line3b")}</span>
+                </motion.span>
               </span>
             </h1>
             <motion.p
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}
-              className="mt-8 max-w-xl text-lg text-muted-foreground leading-relaxed"
+              className="mt-8 max-w-[60ch] text-lg text-muted-foreground leading-relaxed"
             >
               {t("hero.lede")}
             </motion.p>
@@ -153,14 +155,78 @@ function Home() {
         </div>
         <div className="md:col-span-7 md:col-start-6 space-y-6 text-lg text-muted-foreground leading-relaxed">
           <Reveal delay={0.1}><p>{t("about.p1")}</p></Reveal>
-          <Reveal delay={0.2}><p className="text-foreground"><em className="text-gold">{t("about.p2")}</em></p></Reveal>
+          <Reveal delay={0.2}><p>{t("about.p2")}</p></Reveal>
+          <Reveal delay={0.25}>
+            <p>
+              {t("about.p3a")}
+              <span className="italic font-semibold text-gradient-gold">{t("about.p3b")}</span>
+              {t("about.p3c")}
+            </p>
+          </Reveal>
           <Reveal delay={0.3}>
+            <p className="text-foreground italic border-l-2 border-gold pl-5">
+              {t("about.p4")}
+            </p>
+          </Reveal>
+          <Reveal delay={0.35}>
             <div className="grid grid-cols-3 gap-6 pt-6 text-sm">
               <Stat label={t("stat.originals")} value="26+" />
               <Stat label={t("stat.exhibitions")} value="12" />
               <Stat label={t("stat.years")} value="9" />
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      {/* EXHIBITIONS */}
+      <section className="py-24 container-page">
+        <div className="grid md:grid-cols-12 gap-12">
+          <div className="md:col-span-4">
+            <Reveal>
+              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">Live shows</div>
+            </Reveal>
+            <RevealText as="h2" text="Exhibitions" className="font-display text-5xl md:text-6xl block" />
+          </div>
+          <div className="md:col-span-7 md:col-start-6">
+            <ul className="divide-y divide-border border-y border-border">
+              {[
+                { title: "Future Stars Foundation", date: "June 2026", upcoming: true },
+                { title: "Essence of a Butterfly", date: "May 2023" },
+                { title: "Our Essence: Beautiful in Black", date: "Feb 2023" },
+              ].map((ex) => (
+                <li key={ex.title} className="flex items-center justify-between gap-6 py-6">
+                  <div className="min-w-0">
+                    <div className="font-display text-2xl md:text-3xl leading-tight">{ex.title}</div>
+                    <div className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">{ex.date}</div>
+                  </div>
+                  {ex.upcoming && (
+                    <span className="shrink-0 px-3 py-1 text-[10px] uppercase tracking-[0.2em] border border-gold text-gold">
+                      Upcoming
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* SUPPORTERS */}
+      <section className="py-20 border-y border-border bg-card/30">
+        <div className="container-page">
+          <Reveal>
+            <div className="text-center text-xs uppercase tracking-[0.3em] text-gold mb-8">Our Supporters</div>
+          </Reveal>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 items-center">
+            {["Future Stars Foundation", "Pyoor Entertainment", "Big Rich Entertainment", "L&R Studios"].map((s) => (
+              <div
+                key={s}
+                className="text-center text-[11px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground hover:text-gold transition-colors"
+              >
+                {s}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
