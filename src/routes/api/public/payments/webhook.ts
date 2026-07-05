@@ -30,6 +30,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
             case "checkout.session.async_payment_succeeded":
               await handleCheckoutSessionCompleted(event.data.object, env);
               break;
+            case "payment_intent.payment_failed":
             case "charge.refunded":
             case "checkout.session.async_payment_failed":
               console.log("Stripe event (no-op):", event.type);
