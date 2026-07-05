@@ -31,7 +31,7 @@ export function Header() {
       <div className="container-page flex items-center justify-between py-5">
         <Link to="/" className="group flex items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center border border-gold text-gold font-display text-lg transition-transform group-hover:rotate-3">K</span>
-          <span className="font-display text-base md:text-lg lg:text-xl tracking-wide">
+          <span className="font-display text-base md:text-lg lg:text-xl tracking-wide whitespace-nowrap">
             art by <span className="text-gradient-gold">KIYARI</span>
           </span>
         </Link>
