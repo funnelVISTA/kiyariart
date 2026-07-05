@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
-import { createArtworkCheckout } from "@/lib/payments.functions";
+import { createArtworkCheckout, listArtworkAvailability } from "@/lib/payments.functions";
 import { useCart } from "@/lib/cart";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/checkout")({
   ssr: false,
@@ -14,10 +15,34 @@ export const Route = createFileRoute("/checkout")({
 });
 
 function CheckoutPage() {
-  const { items, total } = useCart();
+  const { items, total, remove } = useCart();
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const optInRef = useRef(false);
   optInRef.current = marketingOptIn;
+
+  // Auto-prune: if any cart item was sold elsewhere while it sat in the
+  // buyer's localStorage, drop it before Stripe rejects the whole session.
+  useEffect(() => {
+    let cancelled = false;
+    listArtworkAvailability()
+      .then((res) => {
+        if (cancelled) return;
+        const soldSet = new Set(res.soldIds);
+        const overrideSet = new Set(res.availableOverrideIds);
+        const stale = items.filter(
+          (i) => soldSet.has(i.artwork.id) && !overrideSet.has(i.artwork.id),
+        );
+        for (const s of stale) {
+          remove(s.artwork.id);
+          toast.warning(`"${s.artwork.title}" just sold — removed from cart`);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const stripePromise = useMemo(() => getStripe(), []);
 
