@@ -146,6 +146,11 @@ function OrderDetailPage() {
               />
             )}
             <ResendButton orderId={orderId} />
+            <RefundButton
+              orderId={orderId}
+              status={order.status}
+              onRefunded={() => qc.invalidateQueries({ queryKey: ["admin", "order", orderId] })}
+            />
           </section>
         </div>
 
