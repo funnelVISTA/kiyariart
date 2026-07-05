@@ -432,3 +432,22 @@ export const adminBulkDeleteExhibitions = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true, count: data.ids.length };
   });
+
+// ===== Admin activity log =====
+
+export const adminListActivityLog = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { limit?: number } | undefined) => ({
+    limit: Math.min(Math.max(Number(d?.limit ?? 200), 1), 500),
+  }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("admin_activity_log")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(data.limit);
+    if (error) throw new Error(error.message);
+    return { entries: rows ?? [] };
+  });
