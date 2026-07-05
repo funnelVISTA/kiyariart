@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CheckCircle2, Loader2, AlertCircle, Share2, Copy, Facebook } from "lucide-react";
+import { Mail, Package, Truck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { confirmCheckout } from "@/lib/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
@@ -124,6 +125,9 @@ function ReturnPage() {
                 )}
               </div>
             )}
+
+            <NextSteps email={state.email} orderId={state.orderId} />
+
             <div className="mt-10 flex flex-wrap gap-3 justify-center">
               {state.orderId && (
                 <Link
@@ -173,6 +177,68 @@ function ReturnPage() {
 }
 
 function ShareCard({ items }: { items?: Array<{ title: string; quantity: number }> }) {
+  return ShareCardImpl({ items });
+}
+
+function NextSteps({ email, orderId }: { email?: string | null; orderId?: string }) {
+  const steps = [
+    {
+      icon: Mail,
+      title: "Confirmation email",
+      body: email
+        ? `A receipt is on its way to ${email}. Check your spam folder if you don't see it within a few minutes.`
+        : "A receipt has been sent to your email. Check your spam folder if you don't see it within a few minutes.",
+    },
+    {
+      icon: Sparkles,
+      title: "Kiyari prepares your piece",
+      body: "Each work is inspected, signed, and packaged by hand within 2–3 business days.",
+    },
+    {
+      icon: Truck,
+      title: "Shipping details",
+      body: "You'll receive a personal message from Kiyari with tracking information as soon as your piece ships.",
+    },
+    {
+      icon: Package,
+      title: "Delivery & unboxing",
+      body: "Your artwork arrives insured and ready to display. We'd love to see it in its new home — tag @kiyari.art.",
+    },
+  ];
+  return (
+    <div className="mt-12 border border-border bg-card/40 p-6 text-left">
+      <div className="text-[10px] uppercase tracking-[0.3em] text-gold">What happens next</div>
+      <ol className="mt-5 space-y-5">
+        {steps.map((s, i) => {
+          const Icon = s.icon;
+          return (
+            <li key={i} className="flex gap-4">
+              <div className="shrink-0 h-9 w-9 rounded-full border border-gold/40 grid place-items-center text-gold">
+                <Icon className="h-4 w-4" />
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-medium flex items-baseline gap-2">
+                  <span className="text-[10px] tabular-nums text-muted-foreground">0{i + 1}</span>
+                  <span>{s.title}</span>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{s.body}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+      {orderId && (
+        <p className="mt-6 pt-5 border-t border-border text-xs text-muted-foreground">
+          Questions about your order? Reply to your confirmation email or reach us at{" "}
+          <a href="mailto:hello@kiyari.art" className="text-gold hover:underline">hello@kiyari.art</a>{" "}
+          with order <span className="font-mono text-gold">#{orderId.slice(0, 8).toUpperCase()}</span>.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ShareCardImpl({ items }: { items?: Array<{ title: string; quantity: number }> }) {
   const shareUrl = "https://kiyari.art/artworks";
   const title = items?.[0]?.title
     ? `Just collected "${items[0].title}" by KIYARI`
