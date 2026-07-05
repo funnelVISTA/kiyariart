@@ -342,16 +342,24 @@ export const confirmCheckout = createServerFn({ method: "POST" })
 
 // Public: list sold-out artwork IDs (from both catalog overrides and custom).
 export const listArtworkAvailability = createServerFn({ method: "GET" }).handler(
-  async (): Promise<{ soldIds: string[] }> => {
+  async (): Promise<{ soldIds: string[]; availableOverrideIds: string[] }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data: sold }, { data: customSold }] = await Promise.all([
+    const [{ data: sold }, { data: customSold }, { data: stock }] = await Promise.all([
       supabaseAdmin.from("sold_artworks").select("artwork_id"),
       supabaseAdmin.from("artworks_custom").select("id").eq("sold", true),
+      supabaseAdmin.from("artwork_stock").select("artwork_id,total_units,sold_units"),
     ]);
     const soldSet = new Set<string>();
     for (const r of sold ?? []) soldSet.add(r.artwork_id);
     for (const r of customSold ?? []) soldSet.add(r.id);
-    return { soldIds: Array.from(soldSet) };
+    const availableOverride = new Set<string>();
+    for (const r of stock ?? []) {
+      if ((r.total_units ?? 0) - (r.sold_units ?? 0) > 0) {
+        availableOverride.add(r.artwork_id);
+        soldSet.delete(r.artwork_id);
+      }
+    }
+    return { soldIds: Array.from(soldSet), availableOverrideIds: Array.from(availableOverride) };
   },
 );
 
