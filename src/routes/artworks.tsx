@@ -44,6 +44,10 @@ function ArtworksPage() {
     staleTime: 60_000,
   });
   const soldSet = useMemo(() => new Set(availability?.soldIds ?? []), [availability]);
+  const availableOverrideSet = useMemo(
+    () => new Set(availability?.availableOverrideIds ?? []),
+    [availability],
+  );
 
   const { data: customRows } = useQuery({
     queryKey: ["artworks-custom"],
@@ -85,7 +89,7 @@ function ArtworksPage() {
     }));
     const fromCatalog: Artwork[] = ARTWORKS.map((a) => ({
       ...a,
-      sold: a.sold || soldSet.has(a.id),
+      sold: availableOverrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
     }));
     const merged = [...fromCustom, ...fromCatalog];
     return merged.sort((a, b) => {
