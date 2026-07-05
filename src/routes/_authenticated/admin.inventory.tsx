@@ -272,16 +272,6 @@ function AdminArtworksPage() {
             >Mark available</button>
             <button
               disabled={selected.size === 0}
-              onClick={() => bulkSetCollection("Our Essence")}
-              className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border border-border hover:border-gold disabled:opacity-40"
-            >→ Our Essence</button>
-            <button
-              disabled={selected.size === 0}
-              onClick={() => bulkSetCollection("The Legends")}
-              className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border border-border hover:border-gold disabled:opacity-40"
-            >→ The Legends</button>
-            <button
-              disabled={selected.size === 0}
               onClick={() => setConfirmDelete({ kind: "bulk", ids: [...selected] })}
               className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border border-border hover:border-accent hover:text-accent disabled:opacity-40"
             >Delete</button>
