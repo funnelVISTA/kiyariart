@@ -247,6 +247,30 @@ export const adminBulkDeleteArtworks = createServerFn({ method: "POST" })
     return { ok: true, deleted, blocked: [...blockedSet] };
   });
 
+export const adminBulkSetArtworkCollection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { ids: string[]; collection: string }) => {
+    if (!Array.isArray(d.ids) || d.ids.length === 0) throw new Error("No ids");
+    if (d.ids.length > 100) throw new Error("Too many");
+    const allowed = new Set(["Our Essence", "The Legends"]);
+    if (!allowed.has(d.collection)) throw new Error("Invalid collection");
+    return { ids: d.ids.filter((x) => typeof x === "string"), collection: d.collection };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("artworks_custom").update({ collection: data.collection }).in("id", data.ids);
+    if (error) throw new Error(error.message);
+    await logActivity(supabaseAdmin, context, {
+      action: "artwork.bulk_collection_changed",
+      entity_id: null,
+      entity_title: `${data.ids.length} artwork(s)`,
+      details: { ids: data.ids, count: data.ids.length, collection: data.collection },
+    });
+    return { ok: true, count: data.ids.length };
+  });
+
 // Returns the subset of artwork ids that appear in sold_artworks or any order's items[].id.
 async function findArtworksWithOrderHistory(
   supabaseAdmin: any,
