@@ -230,6 +230,15 @@ export const confirmCheckout = createServerFn({ method: "POST" })
 
       const isPaid = session.payment_status === "paid";
       if (!isPaid) {
+        console.error("[confirmCheckout] session not paid", {
+          sessionId: session.id,
+          payment_status: session.payment_status,
+          status: session.status,
+          last_payment_error:
+            typeof session.payment_intent === "object"
+              ? (session.payment_intent as any)?.last_payment_error
+              : undefined,
+        });
         return { status: session.payment_status === "unpaid" ? "pending" : "failed" };
       }
 
@@ -414,6 +423,12 @@ export const confirmCheckout = createServerFn({ method: "POST" })
         })),
       };
     } catch (error) {
+      console.error("[confirmCheckout] handler threw", {
+        sessionId: data.sessionId,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        raw: error,
+      });
       return { error: getStripeErrorMessage(error) };
     }
   });
