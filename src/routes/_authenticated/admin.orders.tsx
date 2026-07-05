@@ -105,6 +105,48 @@ function AdminOrdersPage() {
     });
   }, [ordersQ.data, filter, search]);
 
+  // When search is active, aggregate matched orders by customer (email preferred, else name).
+  const customerSummary = useMemo(() => {
+    if (!search.trim()) return null;
+    const groups = new Map<
+      string,
+      { key: string; name: string; email: string; count: number; lifetime: number; firstOrder: string; lastOrder: string }
+    >();
+    for (const o of filtered) {
+      const key = (o.customer_email ?? o.customer_name ?? "unknown").toLowerCase();
+      const existing = groups.get(key);
+      const amt = Number(o.amount_total_cad ?? o.total_cad ?? 0);
+      if (existing) {
+        existing.count++;
+        if (o.status !== "cancelled") existing.lifetime += amt;
+        if (o.created_at < existing.firstOrder) existing.firstOrder = o.created_at;
+        if (o.created_at > existing.lastOrder) existing.lastOrder = o.created_at;
+      } else {
+        groups.set(key, {
+          key,
+          name: o.customer_name ?? "—",
+          email: o.customer_email ?? "—",
+          count: 1,
+          lifetime: o.status === "cancelled" ? 0 : amt,
+          firstOrder: o.created_at,
+          lastOrder: o.created_at,
+        });
+      }
+    }
+    return Array.from(groups.values()).sort((a, b) => b.count - a.count);
+  }, [filtered, search]);
+
+  // Full lifetime order count per customer key (across ALL orders, not just filtered),
+  // so each row can show "Nth order from this customer".
+  const customerOrderCount = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const o of ordersQ.data ?? []) {
+      const key = (o.customer_email ?? o.customer_name ?? "unknown").toLowerCase();
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    return map;
+  }, [ordersQ.data]);
+
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: 0, pending: 0, paid: 0, shipped: 0, delivered: 0, cancelled: 0 };
     (ordersQ.data ?? []).forEach((o) => {
