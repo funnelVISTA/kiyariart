@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { sendTransactionalEmail } from "@/lib/email/send";
-import { adminUpdateOrder, adminResendReceipt } from "@/lib/admin.functions";
+import { adminUpdateOrder } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/orders")({
   head: () => ({
