@@ -196,6 +196,7 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
         shipping_address_collection: {
           allowed_countries: ["CA", "US", "GB", "AU", "NZ", "DE", "FR", "NL", "IE", "ES", "IT", "BE", "DK", "SE", "NO", "FI", "CH", "AT", "PT"],
         },
+        shipping_options: SHIPPING_OPTIONS as any,
         phone_number_collection: { enabled: true },
         payment_intent_data: {
           description: resolved.map((i) => i.title).join(", ").slice(0, 500),
