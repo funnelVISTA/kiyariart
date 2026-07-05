@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, ExternalLink, Mail, Send, Truck } from "lucide-react";
-import { adminUpdateOrder, adminResendReceipt } from "@/lib/admin.functions";
+import { adminUpdateOrder, adminResendReceipt, adminResendShipped } from "@/lib/admin.functions";
 import { adminGetOrder } from "@/lib/admin-extra.functions";
 
 const STATUSES = ["pending", "paid", "shipped", "delivered", "cancelled"] as const;
@@ -257,8 +257,20 @@ function TrackingEditor({ order, onSaved }: { order: any; onSaved: () => void })
   const [number, setNumber] = useState(order.tracking_number ?? "");
   const [url, setUrl] = useState(order.tracking_url ?? "");
   const [saving, setSaving] = useState(false);
+  const [resending, setResending] = useState(false);
+  const shippedAt = order.shipped_at as string | null;
 
   const save = async (markShipped: boolean) => {
+    if (markShipped) {
+      if (!number.trim()) {
+        toast.error("Enter a tracking number before sending the shipped email");
+        return;
+      }
+      const ok = window.confirm(
+        `Send shipped email to ${order.customer_email ?? "customer"}?`,
+      );
+      if (!ok) return;
+    }
     setSaving(true);
     try {
       await adminUpdateOrder({
@@ -276,6 +288,27 @@ function TrackingEditor({ order, onSaved }: { order: any; onSaved: () => void })
       toast.error(e?.message ?? "Failed");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const resendShipped = async () => {
+    if (!number.trim()) {
+      toast.error("Enter a tracking number first");
+      return;
+    }
+    const ok = window.confirm(
+      `Resend shipped email to ${order.customer_email ?? "customer"}?`,
+    );
+    if (!ok) return;
+    setResending(true);
+    try {
+      const r = await adminResendShipped({ data: { orderId: order.id } });
+      toast.success(`Shipped email resent to ${r.sentTo}`);
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -324,14 +357,33 @@ function TrackingEditor({ order, onSaved }: { order: any; onSaved: () => void })
           >
             Save tracking
           </button>
-          <button
-            disabled={saving}
-            onClick={() => save(true)}
-            className="bg-gradient-gold text-primary-foreground px-4 py-2 text-[11px] uppercase tracking-[0.2em] hover:opacity-90 transition disabled:opacity-50 inline-flex items-center gap-1"
-          >
-            <Send className="h-3 w-3" /> Save & mark shipped
-          </button>
+          {shippedAt ? (
+            <button
+              disabled={resending || !number.trim()}
+              onClick={resendShipped}
+              title={!number.trim() ? "Enter a tracking number first" : "Resend shipped email"}
+              className="border border-gold/40 text-gold px-4 py-2 text-[11px] uppercase tracking-[0.2em] hover:bg-gold/10 transition disabled:opacity-50 inline-flex items-center gap-1"
+            >
+              <Send className="h-3 w-3" /> {resending ? "Sending…" : "Resend shipped email"}
+            </button>
+          ) : (
+            <button
+              disabled={saving || !number.trim()}
+              onClick={() => save(true)}
+              title={!number.trim() ? "Enter a tracking number first" : "Send shipped email & mark shipped"}
+              className="bg-gradient-gold text-primary-foreground px-4 py-2 text-[11px] uppercase tracking-[0.2em] hover:opacity-90 transition disabled:opacity-50 inline-flex items-center gap-1"
+            >
+              <Send className="h-3 w-3" /> Send shipped email
+            </button>
+          )}
         </div>
+        {shippedAt && (
+          <p className="pt-2 text-[11px] text-muted-foreground">
+            Shipped email sent on{" "}
+            <span className="text-foreground">{new Date(shippedAt).toLocaleString()}</span>.
+            Use Resend only if you need to correct tracking.
+          </p>
+        )}
       </div>
     </div>
   );

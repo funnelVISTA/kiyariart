@@ -302,6 +302,16 @@ function OrderDetail({
   const computedUrl = url || carrierTrackingUrl(carrier, number);
 
   const saveTracking = async (markShipped: boolean) => {
+    if (markShipped) {
+      if (!number.trim()) {
+        toast.error("Enter a tracking number first");
+        return;
+      }
+      const ok = window.confirm(
+        `Send shipped email to ${order.customer_email ?? "customer"}?`,
+      );
+      if (!ok) return;
+    }
     setSaving(true);
     try {
       await adminUpdateOrder({
