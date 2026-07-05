@@ -29,9 +29,9 @@ export function Header() {
   return (
     <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${scrolled ? "backdrop-blur-xl bg-background/80 border-b border-border" : "bg-transparent"}`}>
       <div className="container-page flex items-center justify-between py-5">
-        <Link to="/" className="group flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center border border-gold text-gold font-display text-lg transition-transform group-hover:rotate-3">K</span>
-          <span className="font-display text-xl tracking-wide">
+        <Link to="/" className="group flex items-center gap-3 min-w-0">
+          <span className="grid h-10 w-10 shrink-0 place-items-center border border-gold text-gold font-display text-lg transition-transform group-hover:rotate-3">K</span>
+          <span className="font-display text-base md:text-lg lg:text-xl tracking-wide truncate">
             art by <span className="text-gradient-gold">KIYARI</span>
           </span>
         </Link>
