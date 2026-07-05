@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, Plus, Search } from "lucide-react";
+import { Check, Plus, Mail } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ARTWORKS, type Artwork } from "@/lib/artworks";
 import { useCart } from "@/lib/cart";
@@ -263,16 +263,6 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
             )}
           </div>
 
-          {/* Zoom button */}
-          <button
-            aria-label="Zoom"
-            onClick={(e) => { e.stopPropagation(); onOpen(); }}
-            className="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full border border-border/60 bg-background/70 backdrop-blur opacity-0 md:group-hover:opacity-100 group-data-[reveal=true]:opacity-100 hover:border-gold hover:text-gold transition-all duration-300 z-10"
-            style={{ transform: "translateZ(40px)" }}
-          >
-            <Search className="h-4 w-4" />
-          </button>
-
           {/* Immersive info overlay — always dark gradient, content slides up on hover/reveal */}
           <div
             className="absolute inset-0 flex flex-col justify-end p-3 md:p-5 z-[5] bg-gradient-to-t from-background via-background/50 to-transparent md:from-background/95 md:via-background/20 md:to-transparent transition-opacity duration-500"
@@ -282,8 +272,8 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
             <div className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gold font-medium">
               {a.collection}
             </div>
-            {/* Title — always visible */}
-            <div className="mt-1 font-display text-base md:text-2xl leading-tight text-foreground">
+            {/* Title — always visible, strong contrast against any image */}
+            <div className="mt-1 font-display text-base md:text-2xl leading-tight text-foreground font-semibold drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
               {a.title}
             </div>
 
@@ -294,34 +284,57 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
 
             {/* Price + CTA row */}
             <div className="mt-2 md:mt-4 flex items-center justify-between gap-2 translate-y-1 md:translate-y-2 md:opacity-0 md:group-hover:opacity-100 md:group-hover:translate-y-0 group-data-[reveal=true]:opacity-100 group-data-[reveal=true]:translate-y-0 transition-all duration-500 pointer-events-none md:group-hover:pointer-events-auto group-data-[reveal=true]:pointer-events-auto">
-              <div className={`text-xs md:text-sm font-medium ${a.sold ? "text-muted-foreground line-through" : "text-gold"}`}>
-                {a.price > 0 ? `$${a.price.toLocaleString()} ` : t("art.inquire")}
-                {a.price > 0 && <span className="text-[9px] opacity-60">CAD</span>}
-              </div>
+              {a.sold ? (
+                <Link
+                  to="/community"
+                  search={{ inquiry: a.title }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 text-xs md:text-sm font-medium text-gold hover:text-foreground transition-colors underline-offset-4 hover:underline"
+                >
+                  <Mail className="h-3 w-3" /> {t("art.inquire")}
+                </Link>
+              ) : (
+                <div className="text-xs md:text-sm font-medium text-gold">
+                  {a.price > 0 ? `$${a.price.toLocaleString()} ` : t("art.inquire")}
+                  {a.price > 0 && <span className="text-[9px] opacity-60">CAD</span>}
+                </div>
+              )}
+              {a.sold ? (
+                <Link
+                  to="/community"
+                  search={{ inquiry: a.title }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchEnd={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label={`Inquire about ${a.title}`}
+                  className="inline-flex items-center gap-1 px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-semibold border border-gold text-gold hover:bg-gold hover:text-primary-foreground transition-all duration-300"
+                >
+                  <Mail className="h-3 w-3" /> {t("art.inquire")}
+                </Link>
+              ) : (
               <button
                 onPointerDown={(e) => { e.stopPropagation(); }}
                 onMouseDown={(e) => { e.stopPropagation(); }}
                 onTouchStart={(e) => { e.stopPropagation(); }}
                 onTouchEnd={(e) => { e.stopPropagation(); }}
                 onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAdd(); }}
-                disabled={a.sold || inCart}
-                aria-label={a.sold ? t("art.sold") : inCart ? "In cart" : t("feat.add")}
+                disabled={inCart}
+                aria-label={inCart ? "In cart" : t("feat.add")}
                 className={`inline-flex items-center gap-1 px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-semibold transition-all duration-300 ${
-                  a.sold
-                    ? "border border-border text-muted-foreground cursor-not-allowed"
-                    : inCart
+                  inCart
                     ? "border border-gold text-gold cursor-default"
                     : "bg-gradient-gold text-primary-foreground hover:shadow-glow active:scale-95"
                 }`}
               >
-                {a.sold ? (
-                  <><Check className="h-3 w-3" /> {t("art.sold")}</>
-                ) : inCart ? (
+                {inCart ? (
                   <><Check className="h-3 w-3" /> In cart</>
                 ) : (
                   <><Plus className="h-3 w-3" /> {t("feat.add")}</>
                 )}
               </button>
+              )}
             </div>
 
             {/* Touch hint */}
