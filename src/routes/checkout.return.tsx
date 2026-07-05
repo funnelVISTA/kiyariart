@@ -37,6 +37,7 @@ function ReturnPage() {
         const res = await confirmCheckout({
           data: { sessionId: session_id, environment: getStripeEnvironment() },
         });
+        console.log("[checkout.return] confirmCheckout response", res);
         if ("error" in res) {
           setState({ kind: "error", message: res.error });
           return;
@@ -51,9 +52,13 @@ function ReturnPage() {
             items: res.items,
           });
         } else {
-          setState({ kind: res.status === "pending" ? "pending" : "error", message: "Payment not completed" } as State);
+          setState({
+            kind: res.status === "pending" ? "pending" : "error",
+            message: `Payment not completed (status: ${res.status}). If you were charged, please contact hello@kiyari.art with session ${session_id}.`,
+          } as State);
         }
       } catch (e) {
+        console.error("[checkout.return] confirmCheckout threw", e);
         setState({ kind: "error", message: e instanceof Error ? e.message : "Unknown error" });
       }
     })();
