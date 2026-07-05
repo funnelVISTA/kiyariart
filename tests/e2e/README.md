@@ -1,3 +1,20 @@
+
+## Suites
+
+- `checkout.spec.ts` — verifies the Stripe Embedded Checkout session is created
+  and the iframe mounts with a valid `clientSecret`. Prevents the "checkout
+  loop" regression (empty session / rejected clientSecret / "Checkout
+  unavailable" banner). Does **not** submit a real payment.
+- `sold-out.spec.ts` — verifies sold artworks render the Sold badge, have a
+  disabled Add-to-cart button, and cannot be added to the cart. Also checks
+  the empty-cart guard on `/checkout`.
+
+## CI
+
+`.github/workflows/e2e.yml` runs both suites on every push and pull request.
+It installs Playwright's own Chromium and boots the dev server via
+`E2E_START_SERVER=1`. Local runs against the sandbox's pre-installed Chromium
+need `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/chromium-1194/chrome-linux/chrome`.
 # End-to-end tests
 
 Playwright specs that drive the running app.
