@@ -39,7 +39,7 @@ function Home() {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
   const { t } = useI18n();
   const isTouch = useIsTouch();
-  const { add } = useCart();
+  const { add, has } = useCart();
   const [lightbox, setLightbox] = useState<Artwork | null>(null);
   const [revealedId, setRevealedId] = useState<string | null>(null);
 
@@ -251,9 +251,17 @@ function Home() {
                 hero={i === 0}
                 isTouch={isTouch}
                 revealed={revealedId === a.id}
+                inCart={has(a.id)}
                 onToggleReveal={() => setRevealedId(revealedId === a.id ? null : a.id)}
                 onOpen={() => setLightbox(a)}
-                onAdd={() => { add(a); toast.success(`${a.title} ${t("art.addedToast")}`); }}
+                onAdd={() => {
+                  if (has(a.id)) {
+                    toast.info(`${a.title} — already in your cart`);
+                    return;
+                  }
+                  add(a);
+                  toast.success(`${a.title} ${t("art.addedToast")}`);
+                }}
                 t={t}
               />
             </Reveal>
@@ -306,13 +314,14 @@ type FeaturedCardProps = {
   hero: boolean;
   isTouch: boolean;
   revealed: boolean;
+  inCart: boolean;
   onToggleReveal: () => void;
   onOpen: () => void;
   onAdd: () => void;
   t: (k: string) => string;
 };
 
-function FeaturedCard({ a, hero, isTouch, revealed, onToggleReveal, onOpen, onAdd, t }: FeaturedCardProps) {
+function FeaturedCard({ a, hero, isTouch, revealed, inCart, onToggleReveal, onOpen, onAdd, t }: FeaturedCardProps) {
   const swipe = useTapSwipe({ onTap: onOpen, onSwipe: onToggleReveal });
   return (
     <TiltCard
@@ -360,10 +369,20 @@ function FeaturedCard({ a, hero, isTouch, revealed, onToggleReveal, onOpen, onAd
               {a.price > 0 ? `$${a.price.toLocaleString()} CAD` : t("art.inquire")} · {a.collection}
             </div>
             <button
-              onClick={(e) => { e.stopPropagation(); onAdd(); }}
-              className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] border border-border px-3 py-2 hover:border-gold hover:text-gold transition"
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAdd(); }}
+              disabled={inCart}
+              aria-label={inCart ? "In cart" : t("feat.add")}
+              className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] border px-3 py-2 transition ${
+                inCart
+                  ? "border-gold text-gold cursor-default"
+                  : "border-border hover:border-gold hover:text-gold"
+              }`}
             >
-              <Plus className="h-3 w-3" /> {t("feat.add")}
+              {inCart ? <>✓ In cart</> : <><Plus className="h-3 w-3" /> {t("feat.add")}</>}
             </button>
           </div>
         </div>

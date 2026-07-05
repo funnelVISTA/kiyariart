@@ -76,9 +76,9 @@ function CheckoutPage() {
                   <img src={i.artwork.image} alt={i.artwork.title} className="h-20 w-20 object-cover" />
                   <div className="flex-1">
                     <div className="font-display text-lg">{i.artwork.title}</div>
-                    <div className="text-xs text-muted-foreground">Qty {i.qty}</div>
+                    <div className="text-xs text-muted-foreground">{i.artwork.collection}</div>
                   </div>
-                  <div className="text-gold text-sm">${(i.artwork.price * i.qty).toLocaleString()} CAD</div>
+                  <div className="text-gold text-sm">${i.artwork.price.toLocaleString()} CAD</div>
                 </div>
               ))}
             </div>
