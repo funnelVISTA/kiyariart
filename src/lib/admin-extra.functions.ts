@@ -78,6 +78,46 @@ export const adminSetArtworkSold = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Toggle availability of a catalog (hardcoded) artwork by combining the
+// sold_artworks and artwork_stock override tables. Handles the case where
+// the hardcoded piece is `sold: true` in the catalog: an artwork_stock row
+// with sold_units < total_units forces it back to available.
+export const adminSetCatalogAvailability = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { artworkId: string; available: boolean }) => {
+    if (!d.artworkId || typeof d.artworkId !== "string") throw new Error("artworkId required");
+    if (typeof d.available !== "boolean") throw new Error("available flag required");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (data.available) {
+      // remove sold marker and add an availability override
+      await supabaseAdmin.from("sold_artworks").delete().eq("artwork_id", data.artworkId);
+      const { error } = await supabaseAdmin
+        .from("artwork_stock")
+        .upsert(
+          { artwork_id: data.artworkId, total_units: 1, sold_units: 0, updated_at: new Date().toISOString() },
+          { onConflict: "artwork_id" },
+        );
+      if (error) throw new Error(error.message);
+    } else {
+      // mark sold and clear any availability override
+      await supabaseAdmin
+        .from("artwork_stock")
+        .upsert(
+          { artwork_id: data.artworkId, total_units: 1, sold_units: 1, updated_at: new Date().toISOString() },
+          { onConflict: "artwork_id" },
+        );
+      const { error } = await supabaseAdmin
+        .from("sold_artworks")
+        .upsert({ artwork_id: data.artworkId, sold_at: new Date().toISOString() });
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
 // Set total units and (optionally) sold units. Clears legacy sold_artworks
 // row when there's still stock left so the artwork reappears in checkout.
 export const adminSetArtworkStock = createServerFn({ method: "POST" })
