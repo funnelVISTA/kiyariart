@@ -230,7 +230,7 @@ export const confirmCheckout = createServerFn({ method: "POST" })
     try {
       const stripe = createStripeClient(data.environment);
       const session = await stripe.checkout.sessions.retrieve(data.sessionId, {
-        expand: ["line_items.data.price.product", "payment_intent", "shipping_details"],
+        expand: ["line_items.data.price.product", "payment_intent"],
       });
 
       const isPaid = session.payment_status === "paid";
