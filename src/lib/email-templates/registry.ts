@@ -3,6 +3,9 @@ import { template as testEmailTemplate } from './test-email'
 import { template as orderReceiptTemplate } from './order-receipt'
 import { template as orderAdminNotificationTemplate } from './order-admin-notification'
 import { template as orderShippedTemplate } from './order-shipped'
+import { template as doubleSaleTemplate } from './order-double-sale-alert'
+import { template as refundedTemplate } from './order-refunded-alert'
+import { template as paymentFailedTemplate } from './payment-failed-alert'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -18,4 +21,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'order-receipt': orderReceiptTemplate,
   'order-admin-notification': orderAdminNotificationTemplate,
   'order-shipped': orderShippedTemplate,
+  'order-double-sale-alert': doubleSaleTemplate,
+  'order-refunded-alert': refundedTemplate,
+  'payment-failed-alert': paymentFailedTemplate,
 }
