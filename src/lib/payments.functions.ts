@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
 import { ARTWORKS } from "@/lib/artworks";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type CartLine = {
   id: string;
@@ -13,6 +14,44 @@ export type CartLine = {
 type CreateResult = { clientSecret: string } | { error: string };
 
 export const MAX_CART_ITEMS = 20;
+
+// Flat shipping tiers (CAD). Buyer picks the region matching their address
+// inside Stripe Checkout. Cheapest option shows first.
+const SHIPPING_OPTIONS = [
+  {
+    shipping_rate_data: {
+      display_name: "Shipping — Canada",
+      type: "fixed_amount" as const,
+      fixed_amount: { amount: 5000, currency: "cad" },
+      delivery_estimate: {
+        minimum: { unit: "business_day" as const, value: 3 },
+        maximum: { unit: "business_day" as const, value: 7 },
+      },
+    },
+  },
+  {
+    shipping_rate_data: {
+      display_name: "Shipping — United States",
+      type: "fixed_amount" as const,
+      fixed_amount: { amount: 10000, currency: "cad" },
+      delivery_estimate: {
+        minimum: { unit: "business_day" as const, value: 5 },
+        maximum: { unit: "business_day" as const, value: 10 },
+      },
+    },
+  },
+  {
+    shipping_rate_data: {
+      display_name: "Shipping — International",
+      type: "fixed_amount" as const,
+      fixed_amount: { amount: 20000, currency: "cad" },
+      delivery_estimate: {
+        minimum: { unit: "business_day" as const, value: 7 },
+        maximum: { unit: "business_day" as const, value: 21 },
+      },
+    },
+  },
+];
 
 // Pure validator — throws on tampered / malformed input. Exported for tests.
 export function validateCartInput(data: {
@@ -157,6 +196,7 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
         shipping_address_collection: {
           allowed_countries: ["CA", "US", "GB", "AU", "NZ", "DE", "FR", "NL", "IE", "ES", "IT", "BE", "DK", "SE", "NO", "FI", "CH", "AT", "PT"],
         },
+        shipping_options: SHIPPING_OPTIONS as any,
         phone_number_collection: { enabled: true },
         payment_intent_data: {
           description: resolved.map((i) => i.title).join(", ").slice(0, 500),
@@ -262,20 +302,61 @@ export const confirmCheckout = createServerFn({ method: "POST" })
 
       // 1-of-1 model: mark each artwork sold.
       if (!isReentry) {
+        // Detect double-sale: any artwork already claimed by a different order
+        // (or already flagged sold on a custom row from a different session).
+        // Payment already succeeded — flag it and email admin so they can refund.
+        const conflicts: string[] = [];
         for (const li of lineItems) {
           if (!li.artwork_id) continue;
           if (li.source === "custom") {
+            const { data: cur } = await supabaseAdmin
+              .from("artworks_custom")
+              .select("sold")
+              .eq("id", li.artwork_id)
+              .maybeSingle();
+            if (cur?.sold) conflicts.push(li.title);
             await supabaseAdmin
               .from("artworks_custom")
               .update({ sold: true })
               .eq("id", li.artwork_id);
           } else {
+            const { data: existingSold } = await supabaseAdmin
+              .from("sold_artworks")
+              .select("order_id")
+              .eq("artwork_id", li.artwork_id)
+              .maybeSingle();
+            if (existingSold && existingSold.order_id !== orderId) {
+              conflicts.push(li.title);
+            }
             await supabaseAdmin
               .from("sold_artworks")
               .upsert(
                 { artwork_id: li.artwork_id, order_id: orderId },
                 { onConflict: "artwork_id", ignoreDuplicates: true },
               );
+          }
+        }
+
+        if (conflicts.length) {
+          try {
+            const { sendTransactionalEmailInternal } = await import(
+              "@/lib/email/send-internal.server"
+            );
+            await sendTransactionalEmailInternal({
+              templateName: "order-double-sale-alert",
+              idempotencyKey: `double-sale-${orderId}`,
+              templateData: {
+                orderId,
+                customerName: name,
+                customerEmail: email,
+                customerPhone: phone,
+                conflictingTitles: conflicts,
+                amountTotal,
+                adminUrl: `${process.env.PUBLIC_SITE_ORIGIN || "https://kiyari.art"}/admin/orders/${orderId}`,
+              },
+            });
+          } catch (e) {
+            console.error("Double-sale alert enqueue failed", e);
           }
         }
       }
@@ -418,3 +499,71 @@ export const getOrderForCustomer = createServerFn({ method: "POST" })
       },
     };
   });
+
+// -------- Admin: refund an order --------
+// Verifies caller is an admin, refunds the PaymentIntent in Stripe, and
+// relies on the `charge.refunded` webhook to flip status + un-mark artworks.
+// Optimistically flips status to 'refunded' immediately for admin feedback.
+export const adminRefundOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { orderId: string; environment: StripeEnv; reason?: string }) => {
+    if (!data.orderId) throw new Error("orderId required");
+    if (data.environment !== "sandbox" && data.environment !== "live") {
+      throw new Error("Invalid environment");
+    }
+    return data;
+  })
+  .handler(async ({ data, context }): Promise<{ ok: true } | { error: string }> => {
+    try {
+      // Admin gate
+      const { data: role } = await context.supabase
+        .from("user_roles").select("role")
+        .eq("user_id", context.userId).eq("role", "admin").maybeSingle();
+      if (!role) return { error: "Forbidden" };
+
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: order, error } = await supabaseAdmin
+        .from("orders")
+        .select("id,status,payment_intent_id,stripe_session_id,items")
+        .eq("id", data.orderId)
+        .maybeSingle();
+      if (error) throw error;
+      if (!order) return { error: "Order not found" };
+      if (order.status === "refunded") return { error: "Order already refunded" };
+      if (!order.payment_intent_id) return { error: "No payment intent on this order" };
+
+      const stripe = createStripeClient(data.environment);
+      await stripe.refunds.create({
+        payment_intent: order.payment_intent_id,
+        reason: "requested_by_customer",
+        metadata: { orderId: data.orderId, note: data.reason ?? "" },
+      });
+
+      // Optimistic local update — webhook `charge.refunded` also does this.
+      await supabaseAdmin
+        .from("orders")
+        .update({ status: "refunded" as any, updated_at: new Date().toISOString() })
+        .eq("id", data.orderId);
+
+      // Un-mark artworks as sold so they can be re-listed.
+      const items = Array.isArray(order.items) ? (order.items as any[]) : [];
+      for (const li of items) {
+        const artId = li.artwork_id ?? li.id;
+        if (!artId) continue;
+        const isCustom = !ARTWORKS.find((a) => a.id === artId);
+        if (isCustom) {
+          await supabaseAdmin.from("artworks_custom").update({ sold: false }).eq("id", artId);
+        } else {
+          await supabaseAdmin.from("sold_artworks").delete().eq("artwork_id", artId).eq("order_id", data.orderId);
+        }
+      }
+
+      return { ok: true };
+    } catch (e) {
+      return { error: getStripeErrorMessage(e) };
+    }
+  });
+
+// -------- Public: fetch sold ids for cart auto-prune --------
+// Thin wrapper around listArtworkAvailability for the checkout page's
+// stale-cart cleanup. Same data — separate name for cache clarity.

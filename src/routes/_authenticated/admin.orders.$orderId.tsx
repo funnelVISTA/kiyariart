@@ -2,12 +2,17 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, ExternalLink, Mail, Send, Truck } from "lucide-react";
+import { ArrowLeft, ExternalLink, Mail, Send, Truck, RotateCcw } from "lucide-react";
 import { adminUpdateOrder, adminResendReceipt, adminResendShipped } from "@/lib/admin.functions";
 import { adminGetOrder } from "@/lib/admin-extra.functions";
+import { adminRefundOrder } from "@/lib/payments.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 
+// Statuses admins can set manually. Refunded is set by the Refund button
+// (which triggers Stripe + webhook), not by clicking a status pill.
 const STATUSES = ["pending", "paid", "shipped", "delivered", "cancelled"] as const;
-type Status = (typeof STATUSES)[number];
+type ManualStatus = (typeof STATUSES)[number];
+type Status = ManualStatus | "refunded";
 
 const CARRIERS = ["Canada Post", "UPS", "FedEx", "Purolator", "DHL", "USPS", "Other"];
 
@@ -42,7 +47,7 @@ function OrderDetailPage() {
   const emails = q.data!.emails;
   const items = Array.isArray(order.items) ? order.items : [];
 
-  const setStatus = async (status: Status) => {
+  const setStatus = async (status: ManualStatus) => {
     try {
       await adminUpdateOrder({ data: { orderId, status } });
       toast.success(`Marked ${status}`);
@@ -141,6 +146,11 @@ function OrderDetailPage() {
               />
             )}
             <ResendButton orderId={orderId} />
+            <RefundButton
+              orderId={orderId}
+              status={order.status}
+              onRefunded={() => qc.invalidateQueries({ queryKey: ["admin", "order", orderId] })}
+            />
           </section>
         </div>
 
@@ -227,6 +237,7 @@ function StatusPill({ status }: { status: Status }) {
     shipped: "border-foreground text-foreground",
     delivered: "border-emerald-500/50 text-emerald-400",
     cancelled: "border-accent/50 text-accent",
+    refunded: "border-accent/60 text-accent bg-accent/5",
   };
   return (
     <span className={`px-3 py-1.5 text-[11px] uppercase tracking-[0.2em] border ${tone[status]}`}>{status}</span>
@@ -409,6 +420,66 @@ function ResendButton({ orderId }: { orderId: string }) {
       className="mt-3 w-full inline-flex items-center justify-center gap-2 border border-gold/40 text-gold px-3 py-2 text-[11px] uppercase tracking-[0.2em] hover:bg-gold/10 transition disabled:opacity-50"
     >
       <Send className="h-3.5 w-3.5" /> {busy ? "Sending…" : "Resend receipt"}
+    </button>
+  );
+}
+
+function RefundButton({ orderId, status, onRefunded }: { orderId: string; status: Status; onRefunded: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  if (status === "refunded" || status === "cancelled" || status === "pending") return null;
+
+  const run = async () => {
+    setBusy(true);
+    try {
+      const res = await adminRefundOrder({
+        data: { orderId, environment: getStripeEnvironment() },
+      });
+      if ("error" in res) throw new Error(res.error);
+      toast.success("Refund issued. Stripe will confirm via webhook.");
+      onRefunded();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Refund failed");
+    } finally {
+      setBusy(false);
+      setConfirming(false);
+    }
+  };
+
+  if (confirming) {
+    return (
+      <div className="mt-3 border border-accent/40 bg-accent/5 p-3 text-xs space-y-2">
+        <div className="text-accent">Refund the full order in Stripe?</div>
+        <div className="text-muted-foreground">
+          Artworks will be marked available again. This can't be undone from the app.
+        </div>
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={run}
+            disabled={busy}
+            className="px-3 py-1.5 border border-accent text-accent hover:bg-accent/10 uppercase tracking-[0.2em] text-[10px] disabled:opacity-50"
+          >
+            {busy ? "Refunding…" : "Yes, refund"}
+          </button>
+          <button
+            onClick={() => setConfirming(false)}
+            disabled={busy}
+            className="px-3 py-1.5 border border-border uppercase tracking-[0.2em] text-[10px]"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setConfirming(true)}
+      className="mt-3 inline-flex items-center gap-2 px-3 py-2 border border-accent/50 text-accent hover:bg-accent/10 uppercase tracking-[0.2em] text-[10px] transition"
+    >
+      <RotateCcw className="h-3.5 w-3.5" /> Refund order
     </button>
   );
 }
