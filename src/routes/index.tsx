@@ -369,10 +369,20 @@ function FeaturedCard({ a, hero, isTouch, revealed, inCart, onToggleReveal, onOp
               {a.price > 0 ? `$${a.price.toLocaleString()} CAD` : t("art.inquire")} · {a.collection}
             </div>
             <button
-              onClick={(e) => { e.stopPropagation(); onAdd(); }}
-              className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] border border-border px-3 py-2 hover:border-gold hover:text-gold transition"
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAdd(); }}
+              disabled={inCart}
+              aria-label={inCart ? "In cart" : t("feat.add")}
+              className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] border px-3 py-2 transition ${
+                inCart
+                  ? "border-gold text-gold cursor-default"
+                  : "border-border hover:border-gold hover:text-gold"
+              }`}
             >
-              <Plus className="h-3 w-3" /> {t("feat.add")}
+              {inCart ? <>✓ In cart</> : <><Plus className="h-3 w-3" /> {t("feat.add")}</>}
             </button>
           </div>
         </div>
