@@ -324,6 +324,8 @@ function AdminArtworksPage() {
               <CatalogCard
                 key={a.id}
                 a={a}
+                selected={selected.has(a.id)}
+                onToggle={() => toggleSel(a.id)}
                 onToggleSold={() => toggleCatalog(a.id, a.sold /* was sold → make available */)}
               />
             ))}
