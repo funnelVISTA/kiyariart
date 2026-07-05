@@ -187,6 +187,8 @@ function ArtworksPage() {
         open={active !== null}
         src={active?.image ?? null}
         alt={active?.title}
+        title={active?.title}
+        description={active ? blurb(active) : undefined}
         caption={active ? `${active.title} · ${active.collection}${active.price > 0 ? ` · $${active.price.toLocaleString()} CAD` : ""}` : undefined}
         onClose={() => setActiveIdx(null)}
         onPrev={activeIdx !== null && items.length > 1 ? () => setActiveIdx((activeIdx - 1 + items.length) % items.length) : undefined}
