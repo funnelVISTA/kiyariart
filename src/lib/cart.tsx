@@ -5,7 +5,8 @@ export type CartItem = { artwork: Artwork; qty: number };
 
 type CartCtx = {
   items: CartItem[];
-  add: (a: Artwork) => void;
+  add: (a: Artwork) => boolean;
+  has: (id: string) => boolean;
   remove: (id: string) => void;
   clear: () => void;
   count: number;
@@ -34,22 +35,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [items]);
 
-  const add = (a: Artwork) => {
+  // One-of-one model: adding an artwork already in the cart is a no-op.
+  // Returns true if the item was newly added, false if it was already present.
+  const add = (a: Artwork): boolean => {
+    let added = false;
     setItems((prev) => {
-      const existing = prev.find((i) => i.artwork.id === a.id);
-      if (existing) return prev.map((i) => i.artwork.id === a.id ? { ...i, qty: i.qty + 1 } : i);
+      if (prev.some((i) => i.artwork.id === a.id)) return prev;
+      added = true;
       return [...prev, { artwork: a, qty: 1 }];
     });
-    setOpen(true);
+    if (added) setOpen(true);
+    return added;
   };
+  const has = (id: string) => items.some((i) => i.artwork.id === id);
   const remove = (id: string) => setItems((p) => p.filter((i) => i.artwork.id !== id));
   const clear = () => setItems([]);
 
-  const count = items.reduce((s, i) => s + i.qty, 0);
-  const total = items.reduce((s, i) => s + i.qty * i.artwork.price, 0);
+  // Each piece is 1-of-1 — count equals distinct items and total ignores qty.
+  const count = items.length;
+  const total = items.reduce((s, i) => s + i.artwork.price, 0);
 
   return (
-    <Ctx.Provider value={{ items, add, remove, clear, count, total, open, setOpen }}>
+    <Ctx.Provider value={{ items, add, has, remove, clear, count, total, open, setOpen }}>
       {children}
     </Ctx.Provider>
   );
