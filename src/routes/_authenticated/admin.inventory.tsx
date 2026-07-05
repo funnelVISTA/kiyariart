@@ -29,7 +29,6 @@ import {
   adminReorderCustomArtworks,
   adminBulkSetArtworkSold,
   adminBulkDeleteArtworks,
-  adminBulkSetArtworkCollection,
 } from "@/lib/admin-content.functions";
 import { adminSetCatalogAvailability } from "@/lib/admin-extra.functions";
 import { listArtworkAvailability } from "@/lib/payments.functions";
@@ -104,6 +103,7 @@ function AdminArtworksPage() {
   };
 
   const rows: Row[] = order ?? (q.data?.artworks as Row[] | undefined) ?? [];
+  const catalogIds = useMemo(() => new Set(ARTWORKS.map((a) => a.id)), []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -137,39 +137,56 @@ function AdminArtworksPage() {
     });
   };
 
-  const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
+  const allIds = useMemo(
+    () => [...rows.map((r) => r.id), ...ARTWORKS.map((a) => a.id)],
+    [rows],
+  );
+  const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
   const toggleAll = () => {
-    setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
+    setSelected(allSelected ? new Set() : new Set(allIds));
   };
   const clearSel = () => setSelected(new Set());
 
   const bulkMark = async (sold: boolean) => {
     if (selected.size === 0) return;
+    const ids = [...selected];
+    const catalogSel = ids.filter((id) => catalogIds.has(id));
+    const customSel = ids.filter((id) => !catalogIds.has(id));
     try {
-      await adminBulkSetArtworkSold({ data: { ids: [...selected], sold } });
-      toast.success(`${selected.size} marked ${sold ? "sold" : "available"}`);
-      clearSel(); refresh();
-    } catch (e: any) { toast.error(e?.message ?? "Failed"); }
-  };
-
-  const bulkSetCollection = async (collection: string) => {
-    if (selected.size === 0) return;
-    try {
-      await adminBulkSetArtworkCollection({ data: { ids: [...selected], collection } });
-      toast.success(`${selected.size} moved to ${collection}`);
+      if (customSel.length > 0) {
+        await adminBulkSetArtworkSold({ data: { ids: customSel, sold } });
+      }
+      for (const id of catalogSel) {
+        await adminSetCatalogAvailability({ data: { artworkId: id, available: !sold } });
+      }
+      toast.success(`${ids.length} marked ${sold ? "sold" : "available"}`);
       clearSel(); refresh();
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
   };
 
   const runBulkDelete = async (ids: string[]) => {
+    const deletableIds = ids.filter((id) => !catalogIds.has(id));
+    const skippedCatalog = ids.length - deletableIds.length;
+    if (deletableIds.length === 0) {
+      toast.warning("Catalog originals can't be deleted", {
+        description: "Mark them as sold instead.",
+      });
+      clearSel();
+      return;
+    }
     try {
-      const res = await adminBulkDeleteArtworks({ data: { ids } });
+      const res = await adminBulkDeleteArtworks({ data: { ids: deletableIds } });
       const deleted = res?.deleted ?? 0;
       const blocked = res?.blocked?.length ?? 0;
       if (deleted > 0) toast.success(`${deleted} deleted`);
       if (blocked > 0) {
         toast.warning(`${blocked} skipped — order history`, {
           description: "Mark them as sold instead to keep the record.",
+        });
+      }
+      if (skippedCatalog > 0) {
+        toast.warning(`${skippedCatalog} catalog original(s) skipped`, {
+          description: "Catalog pieces can only be marked sold.",
         });
       }
       clearSel(); refresh();
