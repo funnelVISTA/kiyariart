@@ -20,6 +20,8 @@ export interface InternalSendInput {
   recipientEmail?: string
   templateData?: Record<string, any>
   idempotencyKey?: string
+  /** Optional From override, e.g. "Kiyari <hello@kiyari.art>". */
+  fromAddress?: string
 }
 
 export async function sendTransactionalEmailInternal(input: InternalSendInput) {
@@ -78,7 +80,7 @@ export async function sendTransactionalEmailInternal(input: InternalSendInput) {
     queue_name: 'transactional_emails',
     payload: {
       message_id: messageId, to,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+      from: input.fromAddress || `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
       sender_domain: SENDER_DOMAIN,
       subject, html, text,
       purpose: 'transactional',
