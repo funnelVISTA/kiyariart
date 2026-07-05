@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createArtworkCheckout } from "@/lib/payments.functions";
@@ -15,6 +15,9 @@ export const Route = createFileRoute("/checkout")({
 
 function CheckoutPage() {
   const { items, total } = useCart();
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const optInRef = useRef(false);
+  optInRef.current = marketingOptIn;
 
   const stripePromise = useMemo(() => getStripe(), []);
 
@@ -26,6 +29,7 @@ function CheckoutPage() {
           data: {
             environment: getStripeEnvironment(),
             returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
+            marketingOptIn: optInRef.current,
             items: items.map((i) => ({
               id: i.artwork.id,
               title: i.artwork.title,
@@ -85,9 +89,18 @@ function CheckoutPage() {
             <p className="mt-4 text-[11px] text-muted-foreground">
               Shipping calculated by destination. Each piece is one of a kind.
             </p>
+            <label className="mt-6 flex items-start gap-3 text-xs text-muted-foreground cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={(e) => setMarketingOptIn(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-gold cursor-pointer"
+              />
+              <span>Yes, keep me updated on new Kiyari creations and exhibitions.</span>
+            </label>
           </div>
           <div className="bg-card border border-border p-1">
-            <EmbeddedCheckoutProvider stripe={stripePromise} options={options}>
+            <EmbeddedCheckoutProvider key={marketingOptIn ? "opt-in" : "opt-out"} stripe={stripePromise} options={options}>
               <EmbeddedCheckout />
             </EmbeddedCheckoutProvider>
           </div>

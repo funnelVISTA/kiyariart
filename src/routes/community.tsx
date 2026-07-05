@@ -122,8 +122,8 @@ function CommunityPage() {
             <ContactCard
               icon={<Mail className="h-5 w-5" />}
               title={t("com.email")}
-              detail="hello@kiyari.ca"
-              href="mailto:hello@kiyari.ca"
+              detail="hello@kiyari.art"
+              href="mailto:hello@kiyari.art"
             />
             <div className="border border-border p-8">
               <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("com.studio")}</div>

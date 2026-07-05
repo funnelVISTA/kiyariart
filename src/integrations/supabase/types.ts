@@ -261,6 +261,7 @@ export type Database = {
           delivered_at: string | null
           id: string
           items: Json
+          marketing_opt_in: boolean
           notes: string | null
           payment_intent_id: string | null
           shipped_at: string | null
@@ -282,6 +283,7 @@ export type Database = {
           delivered_at?: string | null
           id?: string
           items?: Json
+          marketing_opt_in?: boolean
           notes?: string | null
           payment_intent_id?: string | null
           shipped_at?: string | null
@@ -303,6 +305,7 @@ export type Database = {
           delivered_at?: string | null
           id?: string
           items?: Json
+          marketing_opt_in?: boolean
           notes?: string | null
           payment_intent_id?: string | null
           shipped_at?: string | null
