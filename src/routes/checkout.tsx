@@ -5,7 +5,7 @@ import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createArtworkCheckout, listArtworkAvailability } from "@/lib/payments.functions";
 import { useCart } from "@/lib/cart";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/checkout")({
@@ -19,6 +19,8 @@ function CheckoutPage() {
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const optInRef = useRef(false);
   optInRef.current = marketingOptIn;
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   // Auto-prune: if any cart item was sold elsewhere while it sat in the
   // buyer's localStorage, drop it before Stripe rejects the whole session.
@@ -50,27 +52,34 @@ function CheckoutPage() {
     () => ({
       fetchClientSecret: async () => {
         if (items.length === 0) throw new Error("Cart is empty");
-        const result = await createArtworkCheckout({
-          data: {
-            environment: getStripeEnvironment(),
-            returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
-            marketingOptIn: optInRef.current,
-            items: items.map((i) => ({
-              id: i.artwork.id,
-              title: i.artwork.title,
-              image: i.artwork.image,
-              unit_amount_cad: i.artwork.price,
-              quantity: i.qty,
-            })),
-          },
-        });
-        if ("error" in result) throw new Error(result.error);
-        if (!result.clientSecret) throw new Error("No client secret returned");
-        return result.clientSecret;
+        try {
+          const result = await createArtworkCheckout({
+            data: {
+              environment: getStripeEnvironment(),
+              returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
+              marketingOptIn: optInRef.current,
+              items: items.map((i) => ({
+                id: i.artwork.id,
+                title: i.artwork.title,
+                image: i.artwork.image,
+                unit_amount_cad: i.artwork.price,
+                quantity: i.qty,
+              })),
+            },
+          });
+          if ("error" in result) throw new Error(result.error);
+          if (!result.clientSecret) throw new Error("No client secret returned");
+          setCheckoutError(null);
+          return result.clientSecret;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : "Could not start checkout";
+          setCheckoutError(msg);
+          throw e;
+        }
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [retryKey],
   );
 
   if (items.length === 0) {
@@ -125,9 +134,38 @@ function CheckoutPage() {
             </label>
           </div>
           <div className="bg-card border border-border p-1">
-            <EmbeddedCheckoutProvider stripe={stripePromise} options={options}>
-              <EmbeddedCheckout />
-            </EmbeddedCheckoutProvider>
+            {checkoutError ? (
+              <div className="p-8 text-center">
+                <AlertCircle className="h-10 w-10 text-accent mx-auto" />
+                <div className="mt-4 font-display text-2xl">Checkout unavailable</div>
+                <p className="mt-3 text-sm text-muted-foreground">{checkoutError}</p>
+                <div className="mt-6 flex flex-wrap gap-3 justify-center">
+                  <button
+                    onClick={() => {
+                      setCheckoutError(null);
+                      setRetryKey((k) => k + 1);
+                    }}
+                    className="border border-gold text-gold px-5 py-2.5 text-xs uppercase tracking-[0.2em] hover:bg-gold/10 transition"
+                  >
+                    Try again
+                  </button>
+                  <Link
+                    to="/artworks"
+                    className="border border-border px-5 py-2.5 text-xs uppercase tracking-[0.2em] hover:border-gold transition"
+                  >
+                    Back to artworks
+                  </Link>
+                </div>
+                <p className="mt-4 text-[11px] text-muted-foreground">
+                  If this keeps happening, email{" "}
+                  <a href="mailto:hello@kiyari.art" className="text-gold hover:underline">hello@kiyari.art</a>.
+                </p>
+              </div>
+            ) : (
+              <EmbeddedCheckoutProvider key={retryKey} stripe={stripePromise} options={options}>
+                <EmbeddedCheckout />
+              </EmbeddedCheckoutProvider>
+            )}
           </div>
         </div>
       </div>
