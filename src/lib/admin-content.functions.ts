@@ -126,6 +126,12 @@ export const adminDeleteCustomArtwork = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const history = await findArtworksWithOrderHistory(supabaseAdmin, [data.id]);
+    if (history.has(data.id)) {
+      throw new Error(
+        "This artwork has order history and can't be deleted. Mark it as sold instead to keep the record intact.",
+      );
+    }
     const { error } = await supabaseAdmin.from("artworks_custom").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -159,10 +165,45 @@ export const adminBulkDeleteArtworks = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("artworks_custom").delete().in("id", data.ids);
-    if (error) throw new Error(error.message);
-    return { ok: true, count: data.ids.length };
+    const blockedSet = await findArtworksWithOrderHistory(supabaseAdmin, data.ids);
+    const deletable = data.ids.filter((id) => !blockedSet.has(id));
+    let deleted = 0;
+    if (deletable.length > 0) {
+      const { error } = await supabaseAdmin.from("artworks_custom").delete().in("id", deletable);
+      if (error) throw new Error(error.message);
+      deleted = deletable.length;
+    }
+    return { ok: true, deleted, blocked: [...blockedSet] };
   });
+
+// Returns the subset of artwork ids that appear in sold_artworks or any order's items[].id.
+async function findArtworksWithOrderHistory(
+  supabaseAdmin: any,
+  ids: string[],
+): Promise<Set<string>> {
+  const blocked = new Set<string>();
+  if (ids.length === 0) return blocked;
+
+  const { data: sold } = await supabaseAdmin
+    .from("sold_artworks")
+    .select("artwork_id")
+    .in("artwork_id", ids);
+  for (const r of sold ?? []) blocked.add(r.artwork_id);
+
+  const remaining = ids.filter((id) => !blocked.has(id));
+  if (remaining.length === 0) return blocked;
+
+  const { data: orders } = await supabaseAdmin.from("orders").select("items");
+  const idSet = new Set(remaining);
+  for (const o of orders ?? []) {
+    const items = Array.isArray(o.items) ? o.items : [];
+    for (const it of items as any[]) {
+      const itemId = it?.id;
+      if (typeof itemId === "string" && idSet.has(itemId)) blocked.add(itemId);
+    }
+  }
+  return blocked;
+}
 
 // ===== Reordering (custom artworks) =====
 
@@ -283,4 +324,40 @@ export const adminDeleteExhibition = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("exhibitions").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+// ===== Bulk exhibition actions =====
+
+export const adminBulkSetExhibitionStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { ids: string[]; status: "upcoming" | "past" }) => {
+    if (!Array.isArray(d.ids) || d.ids.length === 0) throw new Error("No ids");
+    if (d.ids.length > 100) throw new Error("Too many");
+    const status = d.status === "past" ? "past" : "upcoming";
+    return { ids: d.ids.filter((x) => typeof x === "string"), status };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("exhibitions")
+      .update({ status: data.status })
+      .in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { ok: true, count: data.ids.length };
+  });
+
+export const adminBulkDeleteExhibitions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { ids: string[] }) => {
+    if (!Array.isArray(d.ids) || d.ids.length === 0) throw new Error("No ids");
+    if (d.ids.length > 100) throw new Error("Too many");
+    return { ids: d.ids.filter((x) => typeof x === "string") };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("exhibitions").delete().in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { ok: true, count: data.ids.length };
   });

@@ -121,16 +121,23 @@ function AdminArtworksPage() {
 
   const bulkDelete = async () => {
     if (selected.size === 0) return;
-    if (!confirm(`Delete ${selected.size} artwork(s)? This can't be undone.`)) return;
+    if (!confirm(`Delete ${selected.size} artwork(s)? Any with order history will be skipped. This can't be undone.`)) return;
     try {
-      await adminBulkDeleteArtworks({ data: { ids: [...selected] } });
-      toast.success(`${selected.size} deleted`);
+      const res = await adminBulkDeleteArtworks({ data: { ids: [...selected] } });
+      const deleted = res?.deleted ?? 0;
+      const blocked = res?.blocked?.length ?? 0;
+      if (deleted > 0) toast.success(`${deleted} deleted`);
+      if (blocked > 0) {
+        toast.warning(`${blocked} skipped — order history`, {
+          description: "Mark them as sold instead to keep the record.",
+        });
+      }
       clearSel(); refresh();
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
   };
 
   const onDelete = async (id: string, title: string) => {
-    if (!confirm(`Delete "${title}"? This can't be undone.`)) return;
+    if (!confirm(`Delete "${title}"? This can't be undone. Artworks with order history are protected — mark them as sold instead.`)) return;
     try {
       await adminDeleteCustomArtwork({ data: { id } });
       toast.success("Deleted");

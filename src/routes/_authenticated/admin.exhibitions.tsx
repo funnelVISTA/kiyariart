@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Calendar, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
+import { Calendar, CheckSquare, Pencil, Plus, Square, Trash2, Upload, X } from "lucide-react";
 import {
   adminListExhibitions,
   adminUpsertExhibition,
   adminDeleteExhibition,
   adminUploadImage,
+  adminBulkSetExhibitionStatus,
+  adminBulkDeleteExhibitions,
 } from "@/lib/admin-content.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/exhibitions")({
@@ -33,6 +35,7 @@ type Row = {
 function AdminExhibitionsPage() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const q = useQuery({
     queryKey: ["admin", "exhibitions"],
@@ -56,6 +59,37 @@ function AdminExhibitionsPage() {
   const upcoming = rows.filter((r) => r.status === "upcoming");
   const past = rows.filter((r) => r.status === "past");
 
+  const toggleSel = (id: string) => {
+    setSelected((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+  const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
+  const toggleAll = () =>
+    setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
+  const clearSel = () => setSelected(new Set());
+
+  const bulkStatus = async (status: "upcoming" | "past") => {
+    if (selected.size === 0) return;
+    try {
+      await adminBulkSetExhibitionStatus({ data: { ids: [...selected], status } });
+      toast.success(`${selected.size} moved to ${status}`);
+      clearSel(); refresh();
+    } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+  };
+
+  const bulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!confirm(`Delete ${selected.size} exhibition(s)? This can't be undone.`)) return;
+    try {
+      await adminBulkDeleteExhibitions({ data: { ids: [...selected] } });
+      toast.success(`${selected.size} deleted`);
+      clearSel(); refresh();
+    } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+  };
+
   return (
     <div className="pt-10 pb-20">
       <div className="container-page">
@@ -75,8 +109,37 @@ function AdminExhibitionsPage() {
           </button>
         </div>
 
-        <Section title="Upcoming" rows={upcoming} onEdit={setEditing} onDelete={onDelete} />
-        <Section title="Past" rows={past} onEdit={setEditing} onDelete={onDelete} />
+        {/* Selection toolbar */}
+        <div className="mt-6 flex flex-wrap items-center gap-2 border border-border bg-card/40 px-3 py-2">
+          <button
+            onClick={toggleAll}
+            className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground"
+          >
+            {allSelected ? <CheckSquare className="h-4 w-4 text-gold" /> : <Square className="h-4 w-4" />}
+            {allSelected ? "Clear" : "Select all"}
+          </button>
+          <span className="text-[11px] text-muted-foreground">{selected.size} selected</span>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <button
+              disabled={selected.size === 0}
+              onClick={() => bulkStatus("upcoming")}
+              className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border border-border hover:border-gold disabled:opacity-40"
+            >Mark upcoming</button>
+            <button
+              disabled={selected.size === 0}
+              onClick={() => bulkStatus("past")}
+              className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border border-border hover:border-gold disabled:opacity-40"
+            >Mark past</button>
+            <button
+              disabled={selected.size === 0}
+              onClick={bulkDelete}
+              className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border border-border hover:border-accent hover:text-accent disabled:opacity-40"
+            >Delete</button>
+          </div>
+        </div>
+
+        <Section title="Upcoming" rows={upcoming} selected={selected} onToggle={toggleSel} onEdit={setEditing} onDelete={onDelete} />
+        <Section title="Past" rows={past} selected={selected} onToggle={toggleSel} onEdit={setEditing} onDelete={onDelete} />
 
         {q.isLoading && <p className="mt-6 text-muted-foreground text-sm">Loading…</p>}
       </div>
@@ -98,11 +161,15 @@ function AdminExhibitionsPage() {
 function Section({
   title,
   rows,
+  selected,
+  onToggle,
   onEdit,
   onDelete,
 }: {
   title: string;
   rows: Row[];
+  selected: Set<string>;
+  onToggle: (id: string) => void;
   onEdit: (r: Row) => void;
   onDelete: (id: string, title: string) => void;
 }) {
@@ -112,8 +179,15 @@ function Section({
       <h2 className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-4">{title}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {rows.map((r) => (
-          <div key={r.id} className="border border-border bg-card/40 overflow-hidden flex">
+          <div key={r.id} className={`border bg-card/40 overflow-hidden flex ${selected.has(r.id) ? "border-gold ring-1 ring-gold/40" : "border-border"}`}>
             <div className="w-32 sm:w-40 shrink-0 bg-background relative">
+              <button
+                onClick={() => onToggle(r.id)}
+                aria-label={selected.has(r.id) ? "Deselect" : "Select"}
+                className="absolute top-2 left-2 z-10 grid h-8 w-8 place-items-center rounded-full bg-background/80 backdrop-blur border border-border hover:border-gold"
+              >
+                {selected.has(r.id) ? <CheckSquare className="h-4 w-4 text-gold" /> : <Square className="h-4 w-4" />}
+              </button>
               {r.image_url ? (
                 <img src={r.image_url} alt="" className="h-full w-full object-cover" />
               ) : (
