@@ -166,6 +166,19 @@ function ReturnPage() {
               </Link>
             </div>
 
+            {autoRedirect && (
+              <p className="mt-6 text-sm text-muted-foreground">
+                Redirecting to keep browsing in{" "}
+                <span className="text-gold font-medium tabular-nums">{countdown}</span> seconds…
+                <button
+                  onClick={() => setAutoRedirect(false)}
+                  className="ml-3 underline text-gold hover:no-underline"
+                >
+                  Cancel
+                </button>
+              </p>
+            )}
+
             <ShareCard items={state.items} />
           </>
         )}
