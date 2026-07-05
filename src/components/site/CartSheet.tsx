@@ -85,7 +85,7 @@ export function CartSheet() {
                             <img src={a.image} alt={a.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                             <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-background/95 to-transparent">
                               <div className="text-[11px] font-display">{a.title}</div>
-                              <div className="text-[10px] text-gold">${a.price.toLocaleString()}</div>
+                              <div className="text-[10px] text-gold">${a.price.toLocaleString()} CAD</div>
                             </div>
                           </Link>
                         ))}
