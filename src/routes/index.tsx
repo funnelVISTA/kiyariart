@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef, useState } from "react";
-import { ArrowRight, Plus, Search } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { ARTWORKS, HERO_IMAGE, type Artwork } from "@/lib/artworks";
 import { useI18n } from "@/lib/i18n";
 import { TiltCard } from "@/components/ui/TiltCard";
@@ -342,16 +342,6 @@ function FeaturedCard({ a, hero, isTouch, revealed, inCart, onToggleReveal, onOp
           style={{ transform: "translateZ(0)" }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/10 to-transparent opacity-70 group-hover:opacity-95 group-data-[reveal=true]:opacity-95 transition-opacity duration-500" />
-
-        <div className="absolute right-3 top-3 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 group-data-[reveal=true]:opacity-100 transition" style={{ transform: "translateZ(40px)" }}>
-          <button
-            aria-label="Zoom"
-            onClick={(e) => { e.stopPropagation(); onOpen(); }}
-            className="grid h-10 w-10 place-items-center rounded-full border border-border bg-background/70 backdrop-blur hover:border-gold transition"
-          >
-            <Search className="h-4 w-4" />
-          </button>
-        </div>
 
         {isTouch && !revealed && (
           <div
