@@ -32,7 +32,7 @@ import {
 } from "@/lib/admin-content.functions";
 import { ImageCropper } from "@/components/admin/ImageCropper";
 
-export const Route = createFileRoute("/_authenticated/admin/artworks")({
+export const Route = createFileRoute("/_authenticated/admin/inventory")({
   head: () => ({ meta: [{ title: "Artworks — Admin" }, { name: "robots", content: "noindex" }] }),
   component: AdminArtworksPage,
 });
