@@ -388,18 +388,21 @@ function SortableCard({
 
   return (
     <div ref={setNodeRef} style={style} className={`border bg-card/40 overflow-hidden ${selected ? "border-gold ring-1 ring-gold/40" : "border-border"}`}>
-      <div className="aspect-[4/5] bg-background relative overflow-hidden">
+      <div
+        onClick={onToggle}
+        className="aspect-[4/5] bg-background relative overflow-hidden cursor-pointer"
+      >
         <img src={a.image_url} alt={a.alt_text || a.title} className="h-full w-full object-cover" />
-        <button
-          onClick={onToggle}
-          aria-label={selected ? "Deselect" : "Select"}
-          className="absolute top-2 left-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 backdrop-blur border border-border hover:border-gold"
+        <div
+          aria-hidden
+          className="absolute top-2 left-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 backdrop-blur border border-border"
         >
           {selected ? <CheckSquare className="h-4 w-4 text-gold" /> : <Square className="h-4 w-4" />}
-        </button>
+        </div>
         <button
           {...attributes}
           {...listeners}
+          onClick={(e) => e.stopPropagation()}
           aria-label="Drag to reorder"
           className="absolute top-2 right-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 backdrop-blur border border-border cursor-grab active:cursor-grabbing touch-none"
         >
