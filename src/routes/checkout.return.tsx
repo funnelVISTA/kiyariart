@@ -158,8 +158,12 @@ function ReturnPage() {
                   View order status
                 </Link>
               )}
-              <Link to="/artworks" className="border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] hover:border-gold transition">
-                Keep browsing
+              <Link
+                to="/artworks"
+                onClick={() => setAutoRedirect(false)}
+                className="border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] hover:border-gold transition"
+              >
+                Continue shopping now
               </Link>
               <Link to="/" className="bg-gradient-gold text-primary-foreground px-6 py-3 text-xs uppercase tracking-[0.2em]">
                 Back home
