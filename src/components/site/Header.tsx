@@ -36,7 +36,7 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-4 lg:gap-9 text-sm tracking-[0.18em] uppercase min-w-0">
+        <nav className="hidden lg:flex items-center gap-9 text-sm tracking-[0.18em] uppercase min-w-0">
           {NAV.map((n) => (
             <Link
               key={n.to}
