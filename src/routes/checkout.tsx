@@ -100,7 +100,7 @@ function CheckoutPage() {
             </label>
           </div>
           <div className="bg-card border border-border p-1">
-            <EmbeddedCheckoutProvider stripe={stripePromise} options={options}>
+            <EmbeddedCheckoutProvider key={marketingOptIn ? "opt-in" : "opt-out"} stripe={stripePromise} options={options}>
               <EmbeddedCheckout />
             </EmbeddedCheckoutProvider>
           </div>
