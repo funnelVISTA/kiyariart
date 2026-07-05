@@ -31,17 +31,17 @@ export function Header() {
       <div className="container-page flex items-center justify-between py-5">
         <Link to="/" className="group flex items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center border border-gold text-gold font-display text-lg transition-transform group-hover:rotate-3">K</span>
-          <span className="font-display text-base md:text-lg lg:text-xl tracking-wide whitespace-nowrap">
+          <span className="font-display text-sm md:text-base lg:text-xl tracking-wide whitespace-nowrap">
             art by <span className="text-gradient-gold">KIYARI</span>
           </span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-9 text-sm tracking-[0.18em] uppercase min-w-0">
+        <nav className="hidden md:flex items-center gap-3 lg:gap-9 text-sm tracking-[0.12em] lg:tracking-[0.18em] uppercase">
           {NAV.map((n) => (
             <Link
               key={n.to}
               to={n.to}
-              className="link-underline text-muted-foreground hover:text-foreground transition-colors data-[status=active]:text-gold shrink-0"
+              className="link-underline text-muted-foreground hover:text-foreground transition-colors data-[status=active]:text-gold"
               activeOptions={{ exact: n.to === "/" }}
             >
               {t(n.key)}
@@ -71,7 +71,7 @@ export function Header() {
           <button
             onClick={() => setOpen((v) => !v)}
             aria-label="Menu"
-            className="lg:hidden grid h-10 w-10 place-items-center rounded-full border border-border hover:border-gold"
+            className="md:hidden grid h-10 w-10 place-items-center rounded-full border border-border hover:border-gold"
           >
             {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
@@ -84,7 +84,7 @@ export function Header() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="lg:hidden border-t border-border bg-background/95 backdrop-blur-xl"
+            className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl"
           >
             <nav className="container-page flex flex-col py-6">
               {NAV.map((n, i) => (
