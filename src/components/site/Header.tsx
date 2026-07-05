@@ -71,7 +71,7 @@ export function Header() {
           <button
             onClick={() => setOpen((v) => !v)}
             aria-label="Menu"
-            className="lg:hidden grid h-10 w-10 place-items-center rounded-full border border-border hover:border-gold"
+            className="md:hidden grid h-10 w-10 place-items-center rounded-full border border-border hover:border-gold"
           >
             {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
