@@ -174,9 +174,6 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
         mode: "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
-        // Keep test checkout on one path: card only, with Stripe Link hidden.
-        payment_method_types: ["card"],
-        wallet_options: { link: { display: "never" } },
         line_items: resolved.map((i) => ({
           quantity: 1,
           price_data: {
