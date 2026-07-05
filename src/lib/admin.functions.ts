@@ -76,9 +76,11 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
           templateName: "order-shipped",
           recipientEmail: row.customer_email,
           idempotencyKey: `shipped-${row.id}-${row.tracking_number ?? "notrack"}`,
+          fromAddress: "Kiyari <hello@kiyari.art>",
           templateData: {
             customerName: row.customer_name,
             orderId: row.id,
+            items: Array.isArray(row.items) ? row.items : [],
             trackingCarrier: row.tracking_carrier,
             trackingNumber: row.tracking_number,
             trackingUrl: row.tracking_url,
@@ -133,6 +135,47 @@ export const adminResendReceipt = createServerFn({ method: "POST" })
         statusUrl: `${origin}/orders/${row.id}?email=${encodeURIComponent(
           row.customer_email,
         )}`,
+      },
+    });
+    return { ok: true, sentTo: row.customer_email };
+  });
+
+export const adminResendShipped = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { orderId: string }) => {
+    if (!data.orderId) throw new Error("orderId required");
+    return data;
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("orders")
+      .select("id,customer_email,customer_name,items,tracking_carrier,tracking_number,tracking_url")
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("Order not found");
+    if (!row.customer_email) throw new Error("Order has no customer email");
+    if (!row.tracking_number) throw new Error("Add a tracking number before sending the shipped email");
+
+    const { sendTransactionalEmailInternal } = await import(
+      "@/lib/email/send-internal.server"
+    );
+    const origin = process.env.PUBLIC_SITE_ORIGIN || "https://kiyari.art";
+    await sendTransactionalEmailInternal({
+      templateName: "order-shipped",
+      recipientEmail: row.customer_email,
+      idempotencyKey: `shipped-${row.id}-${row.tracking_number}-${Date.now()}`,
+      fromAddress: "Kiyari <hello@kiyari.art>",
+      templateData: {
+        customerName: row.customer_name,
+        orderId: row.id,
+        items: Array.isArray(row.items) ? row.items : [],
+        trackingCarrier: row.tracking_carrier,
+        trackingNumber: row.tracking_number,
+        trackingUrl: row.tracking_url,
+        statusUrl: `${origin}/orders/${row.id}?email=${encodeURIComponent(row.customer_email)}`,
       },
     });
     return { ok: true, sentTo: row.customer_email };
