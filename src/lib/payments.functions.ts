@@ -15,33 +15,6 @@ type CreateResult = { clientSecret: string } | { error: string };
 
 export const MAX_CART_ITEMS = 20;
 
-// Cache of payment_method_configuration IDs (per env) that enable card and
-// explicitly disable Stripe Link. Listing only `card` in payment_method_types
-// isn't enough — Stripe still surfaces the Link accelerator UI unless Link is
-// turned off at the configuration level.
-const pmcCache = new Map<StripeEnv, string>();
-
-async function getCardOnlyPmcId(
-  stripe: ReturnType<typeof createStripeClient>,
-  env: StripeEnv,
-): Promise<string> {
-  const cached = pmcCache.get(env);
-  if (cached) return cached;
-  const existing = await stripe.paymentMethodConfigurations.list({ limit: 100 });
-  const match = existing.data.find((c) => c.name === "kiyari-card-only");
-  if (match) {
-    pmcCache.set(env, match.id);
-    return match.id;
-  }
-  const created = await stripe.paymentMethodConfigurations.create({
-    name: "kiyari-card-only",
-    card: { display_preference: { preference: "on" } },
-    link: { display_preference: { preference: "off" } },
-  } as any);
-  pmcCache.set(env, created.id);
-  return created.id;
-}
-
 // Flat shipping tiers (CAD). Buyer picks the region matching their address
 // inside Stripe Checkout. Cheapest option shows first.
 const SHIPPING_OPTIONS = [
@@ -197,16 +170,14 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
       }
 
       const stripe = createStripeClient(data.environment);
-      const pmcId = await getCardOnlyPmcId(stripe, data.environment);
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
-        // Card-only configuration with Stripe Link explicitly disabled.
-        // Listing only "card" in payment_method_types is NOT enough — Link
-        // still surfaces as a card accelerator. A payment_method_configuration
-        // is the only way to fully suppress the Link prompt.
-        payment_method_configuration: pmcId,
+        // Keep test checkout on one path: card only, with Stripe Link hidden.
+        payment_method_types: ["card"],
+        wallet_options: { link: { display: "never" } },
+        saved_payment_method_options: { payment_method_save: "disabled" },
         line_items: resolved.map((i) => ({
           quantity: 1,
           price_data: {
