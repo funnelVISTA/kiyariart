@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
 import { ARTWORKS } from "@/lib/artworks";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type CartLine = {
   id: string;
@@ -13,6 +14,44 @@ export type CartLine = {
 type CreateResult = { clientSecret: string } | { error: string };
 
 export const MAX_CART_ITEMS = 20;
+
+// Flat shipping tiers (CAD). Buyer picks the region matching their address
+// inside Stripe Checkout. Cheapest option shows first.
+const SHIPPING_OPTIONS = [
+  {
+    shipping_rate_data: {
+      display_name: "Shipping — Canada",
+      type: "fixed_amount" as const,
+      fixed_amount: { amount: 5000, currency: "cad" },
+      delivery_estimate: {
+        minimum: { unit: "business_day" as const, value: 3 },
+        maximum: { unit: "business_day" as const, value: 7 },
+      },
+    },
+  },
+  {
+    shipping_rate_data: {
+      display_name: "Shipping — United States",
+      type: "fixed_amount" as const,
+      fixed_amount: { amount: 10000, currency: "cad" },
+      delivery_estimate: {
+        minimum: { unit: "business_day" as const, value: 5 },
+        maximum: { unit: "business_day" as const, value: 10 },
+      },
+    },
+  },
+  {
+    shipping_rate_data: {
+      display_name: "Shipping — International",
+      type: "fixed_amount" as const,
+      fixed_amount: { amount: 20000, currency: "cad" },
+      delivery_estimate: {
+        minimum: { unit: "business_day" as const, value: 7 },
+        maximum: { unit: "business_day" as const, value: 21 },
+      },
+    },
+  },
+];
 
 // Pure validator — throws on tampered / malformed input. Exported for tests.
 export function validateCartInput(data: {
