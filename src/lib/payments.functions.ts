@@ -302,20 +302,61 @@ export const confirmCheckout = createServerFn({ method: "POST" })
 
       // 1-of-1 model: mark each artwork sold.
       if (!isReentry) {
+        // Detect double-sale: any artwork already claimed by a different order
+        // (or already flagged sold on a custom row from a different session).
+        // Payment already succeeded — flag it and email admin so they can refund.
+        const conflicts: string[] = [];
         for (const li of lineItems) {
           if (!li.artwork_id) continue;
           if (li.source === "custom") {
+            const { data: cur } = await supabaseAdmin
+              .from("artworks_custom")
+              .select("sold")
+              .eq("id", li.artwork_id)
+              .maybeSingle();
+            if (cur?.sold) conflicts.push(li.title);
             await supabaseAdmin
               .from("artworks_custom")
               .update({ sold: true })
               .eq("id", li.artwork_id);
           } else {
+            const { data: existingSold } = await supabaseAdmin
+              .from("sold_artworks")
+              .select("order_id")
+              .eq("artwork_id", li.artwork_id)
+              .maybeSingle();
+            if (existingSold && existingSold.order_id !== orderId) {
+              conflicts.push(li.title);
+            }
             await supabaseAdmin
               .from("sold_artworks")
               .upsert(
                 { artwork_id: li.artwork_id, order_id: orderId },
                 { onConflict: "artwork_id", ignoreDuplicates: true },
               );
+          }
+        }
+
+        if (conflicts.length) {
+          try {
+            const { sendTransactionalEmailInternal } = await import(
+              "@/lib/email/send-internal.server"
+            );
+            await sendTransactionalEmailInternal({
+              templateName: "order-double-sale-alert",
+              idempotencyKey: `double-sale-${orderId}`,
+              templateData: {
+                orderId,
+                customerName: name,
+                customerEmail: email,
+                customerPhone: phone,
+                conflictingTitles: conflicts,
+                amountTotal,
+                adminUrl: `${process.env.PUBLIC_SITE_ORIGIN || "https://kiyari.art"}/admin/orders/${orderId}`,
+              },
+            });
+          } catch (e) {
+            console.error("Double-sale alert enqueue failed", e);
           }
         }
       }
