@@ -26,6 +26,20 @@ function ReturnPage() {
   const { session_id } = Route.useSearch();
   const { clear } = useCart();
   const [state, setState] = useState<State>({ kind: "loading" });
+  const [countdown, setCountdown] = useState(5);
+  const [autoRedirect, setAutoRedirect] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (state.kind !== "paid" || !autoRedirect) return;
+    setCountdown(5);
+    const tick = setInterval(() => setCountdown((c) => (c > 0 ? c - 1 : 0)), 1000);
+    const redirect = setTimeout(() => navigate({ to: "/artworks", replace: true }), 5000);
+    return () => {
+      clearInterval(tick);
+      clearTimeout(redirect);
+    };
+  }, [state.kind, autoRedirect, navigate]);
 
   useEffect(() => {
     if (!session_id) {
