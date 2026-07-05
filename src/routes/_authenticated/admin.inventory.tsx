@@ -31,6 +31,9 @@ import {
   adminBulkDeleteArtworks,
   adminBulkSetArtworkCollection,
 } from "@/lib/admin-content.functions";
+import { adminSetCatalogAvailability } from "@/lib/admin-extra.functions";
+import { listArtworkAvailability } from "@/lib/payments.functions";
+import { ARTWORKS } from "@/lib/artworks";
 import { ImageCropper } from "@/components/admin/ImageCropper";
 import {
   AlertDialog,
