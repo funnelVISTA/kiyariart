@@ -125,6 +125,9 @@ function ReturnPage() {
                 )}
               </div>
             )}
+
+            <NextSteps email={state.email} orderId={state.orderId} />
+
             <div className="mt-10 flex flex-wrap gap-3 justify-center">
               {state.orderId && (
                 <Link
