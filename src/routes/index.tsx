@@ -68,7 +68,7 @@ function Home() {
             transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1] }}
             className="max-w-3xl"
           >
-            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl leading-[0.95]">
+            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95]">
               <span className="block overflow-hidden">
                 <motion.span
                   className="block pr-1 pb-1"
@@ -85,12 +85,20 @@ function Home() {
               </span>
               <span className="block overflow-hidden">
                 <motion.span
-                  className="block pr-4 pb-1"
+                  className="block pr-1 pb-1"
                   initial={{ y: "100%" }} animate={{ y: 0 }}
                   transition={{ duration: 1, delay: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
                 >
                   {t("hero.line3a")}
-                  <span className="italic text-gradient-gold">{t("hero.line3b")}</span>
+                </motion.span>
+              </span>
+              <span className="block overflow-hidden">
+                <motion.span
+                  className="block pr-4 pb-1"
+                  initial={{ y: "100%" }} animate={{ y: 0 }}
+                  transition={{ duration: 1, delay: 0.55, ease: [0.2, 0.8, 0.2, 1] }}
+                >
+                  <span className="relative z-20 italic text-gradient-gold">{t("hero.line3b")}</span>
                 </motion.span>
               </span>
             </h1>
