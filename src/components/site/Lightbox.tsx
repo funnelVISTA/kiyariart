@@ -8,12 +8,14 @@ type Props = {
   src: string | null;
   alt?: string;
   caption?: string;
+  title?: string;
+  description?: string;
   onClose: () => void;
   onPrev?: () => void;
   onNext?: () => void;
 };
 
-export function Lightbox({ open, src, alt, caption, onClose, onPrev, onNext }: Props) {
+export function Lightbox({ open, src, alt, caption, title, description, onClose, onPrev, onNext }: Props) {
   const ref = useRef<ReactZoomPanPinchRef | null>(null);
 
   useEffect(() => {
@@ -26,7 +28,12 @@ export function Lightbox({ open, src, alt, caption, onClose, onPrev, onNext }: P
       if (e.key === "0") ref.current?.resetTransform();
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [open, onClose, onPrev, onNext, src]);
 
   return (
@@ -35,7 +42,7 @@ export function Lightbox({ open, src, alt, caption, onClose, onPrev, onNext }: P
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-xl"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-xl overflow-hidden"
           onClick={onClose}
         >
           <button
@@ -74,7 +81,7 @@ export function Lightbox({ open, src, alt, caption, onClose, onPrev, onNext }: P
           )}
 
           <div
-            className="relative w-[90vw] h-[80vh] flex items-center justify-center"
+            className="relative w-[90vw] h-[90vh] flex items-center justify-center overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <TransformWrapper
@@ -95,10 +102,26 @@ export function Lightbox({ open, src, alt, caption, onClose, onPrev, onNext }: P
                   src={src}
                   alt={alt}
                   draggable={false}
-                  className="max-h-[80vh] max-w-[90vw] object-contain select-none"
+                  className="max-h-[90vh] max-w-[90vw] object-contain select-none"
                 />
               </TransformComponent>
             </TransformWrapper>
+
+            {(title || description) && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="pointer-events-auto absolute md:top-4 md:right-4 md:max-w-[320px] md:w-auto bottom-0 left-0 right-0 md:bottom-auto md:left-auto p-4 md:p-5 bg-background/80 backdrop-blur-md border border-border/60 text-foreground shadow-xl md:rounded-sm"
+              >
+                {title && (
+                  <div className="font-display text-base md:text-lg text-gold leading-tight">{title}</div>
+                )}
+                {description && (
+                  <p className="mt-2 text-xs md:text-[13px] text-muted-foreground leading-relaxed">
+                    {description}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {caption && (
