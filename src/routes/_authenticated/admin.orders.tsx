@@ -422,8 +422,7 @@ function OrderDetail({
   const resendReceipt = async () => {
     setResending(true);
     try {
-      const res = await adminResendReceipt({ data: { orderId: order.id } });
-      toast.success(`Receipt resent to ${res.sentTo}`);
+      toast.error("Receipts send automatically at checkout.");
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to resend");
     } finally {
@@ -539,14 +538,6 @@ function OrderDetail({
             >
               <Truck className="h-3.5 w-3.5" />
               {saving ? "Saving…" : "Mark shipped & notify"}
-            </button>
-            <button
-              onClick={resendReceipt}
-              disabled={resending || !order.customer_email}
-              className="px-4 py-2 text-[10px] uppercase tracking-[0.2em] border border-gold/40 text-gold hover:bg-gold/10 disabled:opacity-60 inline-flex items-center gap-2"
-            >
-              <Send className="h-3.5 w-3.5" />
-              {resending ? "Sending…" : "Resend receipt"}
             </button>
           </div>
         </div>
