@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CheckCircle2, Loader2, AlertCircle, Share2, Copy, Facebook } from "lucide-react";
 import { Mail, Package, Truck, Sparkles } from "lucide-react";
@@ -26,6 +26,20 @@ function ReturnPage() {
   const { session_id } = Route.useSearch();
   const { clear } = useCart();
   const [state, setState] = useState<State>({ kind: "loading" });
+  const [countdown, setCountdown] = useState(5);
+  const [autoRedirect, setAutoRedirect] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (state.kind !== "paid" || !autoRedirect) return;
+    setCountdown(5);
+    const tick = setInterval(() => setCountdown((c) => (c > 0 ? c - 1 : 0)), 1000);
+    const redirect = setTimeout(() => navigate({ to: "/artworks", replace: true }), 5000);
+    return () => {
+      clearInterval(tick);
+      clearTimeout(redirect);
+    };
+  }, [state.kind, autoRedirect, navigate]);
 
   useEffect(() => {
     if (!session_id) {
@@ -151,6 +165,19 @@ function ReturnPage() {
                 Back home
               </Link>
             </div>
+
+            {autoRedirect && (
+              <p className="mt-6 text-sm text-muted-foreground">
+                Redirecting to keep browsing in{" "}
+                <span className="text-gold font-medium tabular-nums">{countdown}</span> seconds…
+                <button
+                  onClick={() => setAutoRedirect(false)}
+                  className="ml-3 underline text-gold hover:no-underline"
+                >
+                  Cancel
+                </button>
+              </p>
+            )}
 
             <ShareCard items={state.items} />
           </>
