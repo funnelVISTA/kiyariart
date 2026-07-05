@@ -67,7 +67,7 @@
     "react-day-picker": "^9.14.0",
     "react-dom": "^19.2.0",
     "react-easy-crop": "^6.0.2",
-    "react-email": "6.6.6",
+    "react-email": "^6.6.6",
     "react-hook-form": "^7.71.2",
     "react-resizable-panels": "^4.6.5",
     "react-zoom-pan-pinch": "^4.0.3",
@@ -111,9 +111,11 @@
     }
   },
   "overrides": {
-    "js-yaml": "^4.2.0"
+    "js-yaml": "^4.2.0",
+    "brace-expansion": "1.1.15"
   },
   "resolutions": {
-    "js-yaml": "^4.2.0"
+    "js-yaml": "^4.2.0",
+    "brace-expansion": "1.1.15"
   }
 }
