@@ -19,6 +19,7 @@ export function validateCartInput(data: {
   items: CartLine[];
   returnUrl: string;
   environment: StripeEnv;
+  marketingOptIn?: boolean;
 }) {
   if (!Array.isArray(data.items) || data.items.length === 0) {
     throw new Error("Cart is empty");
@@ -37,6 +38,7 @@ export function validateCartInput(data: {
   if (data.environment !== "sandbox" && data.environment !== "live") {
     throw new Error("Invalid environment");
   }
+  data.marketingOptIn = data.marketingOptIn === true;
   return data;
 }
 
@@ -113,6 +115,7 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
     items: CartLine[];
     returnUrl: string;
     environment: StripeEnv;
+    marketingOptIn?: boolean;
   }) => validateCartInput(data))
   .handler(async ({ data }): Promise<CreateResult> => {
     try {
@@ -144,7 +147,10 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
             },
           },
         })),
-        metadata: { artwork_ids: ids.join(",") },
+        metadata: {
+          artwork_ids: ids.join(","),
+          marketing_opt_in: data.marketingOptIn ? "1" : "0",
+        },
         shipping_address_collection: {
           allowed_countries: ["CA", "US", "GB", "AU", "NZ", "DE", "FR", "NL", "IE", "ES", "IT", "BE", "DK", "SE", "NO", "FI", "CH", "AT", "PT"],
         },
