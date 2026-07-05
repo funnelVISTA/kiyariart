@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_activity_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_user_id: string | null
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_title: string | null
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_title?: string | null
+          entity_type?: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_title?: string | null
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
       artwork_display_order: {
         Row: {
           artwork_id: string
