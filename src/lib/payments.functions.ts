@@ -202,6 +202,11 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
 
       return { clientSecret: session.client_secret ?? "" };
     } catch (error) {
+      console.error("[createArtworkCheckout] handler threw", {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        raw: error,
+      });
       return { error: getStripeErrorMessage(error) };
     }
   });
