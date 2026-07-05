@@ -225,6 +225,7 @@ export const confirmCheckout = createServerFn({ method: "POST" })
         typeof session.payment_intent === "string"
           ? session.payment_intent
           : session.payment_intent?.id ?? null;
+      const marketingOptIn = session.metadata?.marketing_opt_in === "1";
 
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -246,6 +247,7 @@ export const confirmCheckout = createServerFn({ method: "POST" })
             total_cad: amountTotal,
             amount_total_cad: amountTotal,
             status: "paid",
+            marketing_opt_in: marketingOptIn,
           },
           { onConflict: "stripe_session_id" },
         )
