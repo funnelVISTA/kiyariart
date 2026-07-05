@@ -366,9 +366,9 @@ function AdminArtworksPage() {
 }
 
 function SortableCard({
-  a, selected, onToggle, onEdit, onDelete,
+  a, selected, onToggle, onEdit, onDelete, onToggleSold,
 }: {
-  a: Row; selected: boolean; onToggle: () => void; onEdit: () => void; onDelete: () => void;
+  a: Row; selected: boolean; onToggle: () => void; onEdit: () => void; onDelete: () => void; onToggleSold: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: a.id });
   const style = {
@@ -409,10 +409,17 @@ function SortableCard({
         {a.description && <p className="mt-2 text-xs text-muted-foreground line-clamp-3">{a.description}</p>}
         <div className="mt-4 flex gap-2">
           <button
-            onClick={onEdit}
+            onClick={onToggleSold}
             className="flex-1 inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
           >
-            <Pencil className="h-3 w-3" /> Edit
+            {a.sold ? "Mark available" : "Mark sold"}
+          </button>
+          <button
+            onClick={onEdit}
+            aria-label="Edit"
+            className="inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
+          >
+            <Pencil className="h-3 w-3" />
           </button>
           <button
             onClick={onDelete}
@@ -420,6 +427,49 @@ function SortableCard({
             className="inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-accent hover:text-accent transition"
           >
             <Trash2 className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CatalogCard({
+  a,
+  onToggleSold,
+}: {
+  a: { id: string; title: string; image: string; price: number; sold: boolean; collection: string };
+  onToggleSold: () => void;
+}) {
+  return (
+    <div className="border border-border bg-card/40 overflow-hidden">
+      <div className="aspect-[4/5] bg-background relative overflow-hidden">
+        <img src={a.image} alt={a.title} className="h-full w-full object-cover" />
+        <div
+          className={`absolute bottom-2 right-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 ${
+            a.sold
+              ? "bg-background/80 border border-border text-muted-foreground"
+              : "bg-gold/90 text-primary-foreground"
+          }`}
+        >
+          {a.sold ? "Sold" : "Available"}
+        </div>
+        <div className="absolute top-2 left-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 bg-background/80 border border-border text-muted-foreground">
+          Catalog
+        </div>
+      </div>
+      <div className="p-4">
+        <div className="font-display text-xl truncate">{a.title}</div>
+        <div className="text-[11px] text-muted-foreground uppercase tracking-[0.2em]">{a.collection}</div>
+        <div className="mt-1 text-sm text-gold">
+          {a.price > 0 ? `$${Number(a.price).toLocaleString()} CAD` : "—"}
+        </div>
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={onToggleSold}
+            className="flex-1 inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
+          >
+            {a.sold ? "Mark available" : "Mark sold"}
           </button>
         </div>
       </div>
