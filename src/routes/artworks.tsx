@@ -287,7 +287,11 @@ function ArtCard({ a, index, isTouch, revealed, onToggleReveal, onOpen, onAdd, b
                 {a.price > 0 && <span className="text-[9px] opacity-60">CAD</span>}
               </div>
               <button
-                onClick={(e) => { e.stopPropagation(); onAdd(); }}
+                onPointerDown={(e) => { e.stopPropagation(); }}
+                onMouseDown={(e) => { e.stopPropagation(); }}
+                onTouchStart={(e) => { e.stopPropagation(); }}
+                onTouchEnd={(e) => { e.stopPropagation(); }}
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAdd(); }}
                 disabled={a.sold}
                 aria-label={a.sold ? t("art.sold") : t("feat.add")}
                 className={`inline-flex items-center gap-1 px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-semibold transition-all duration-300 ${
