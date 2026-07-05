@@ -29,7 +29,6 @@ import {
   adminReorderCustomArtworks,
   adminBulkSetArtworkSold,
   adminBulkDeleteArtworks,
-  adminBulkSetArtworkCollection,
 } from "@/lib/admin-content.functions";
 import { adminSetCatalogAvailability } from "@/lib/admin-extra.functions";
 import { listArtworkAvailability } from "@/lib/payments.functions";
@@ -104,6 +103,7 @@ function AdminArtworksPage() {
   };
 
   const rows: Row[] = order ?? (q.data?.artworks as Row[] | undefined) ?? [];
+  const catalogIds = useMemo(() => new Set(ARTWORKS.map((a) => a.id)), []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -137,39 +137,56 @@ function AdminArtworksPage() {
     });
   };
 
-  const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
+  const allIds = useMemo(
+    () => [...rows.map((r) => r.id), ...ARTWORKS.map((a) => a.id)],
+    [rows],
+  );
+  const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
   const toggleAll = () => {
-    setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
+    setSelected(allSelected ? new Set() : new Set(allIds));
   };
   const clearSel = () => setSelected(new Set());
 
   const bulkMark = async (sold: boolean) => {
     if (selected.size === 0) return;
+    const ids = [...selected];
+    const catalogSel = ids.filter((id) => catalogIds.has(id));
+    const customSel = ids.filter((id) => !catalogIds.has(id));
     try {
-      await adminBulkSetArtworkSold({ data: { ids: [...selected], sold } });
-      toast.success(`${selected.size} marked ${sold ? "sold" : "available"}`);
-      clearSel(); refresh();
-    } catch (e: any) { toast.error(e?.message ?? "Failed"); }
-  };
-
-  const bulkSetCollection = async (collection: string) => {
-    if (selected.size === 0) return;
-    try {
-      await adminBulkSetArtworkCollection({ data: { ids: [...selected], collection } });
-      toast.success(`${selected.size} moved to ${collection}`);
+      if (customSel.length > 0) {
+        await adminBulkSetArtworkSold({ data: { ids: customSel, sold } });
+      }
+      for (const id of catalogSel) {
+        await adminSetCatalogAvailability({ data: { artworkId: id, available: !sold } });
+      }
+      toast.success(`${ids.length} marked ${sold ? "sold" : "available"}`);
       clearSel(); refresh();
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
   };
 
   const runBulkDelete = async (ids: string[]) => {
+    const deletableIds = ids.filter((id) => !catalogIds.has(id));
+    const skippedCatalog = ids.length - deletableIds.length;
+    if (deletableIds.length === 0) {
+      toast.warning("Catalog originals can't be deleted", {
+        description: "Mark them as sold instead.",
+      });
+      clearSel();
+      return;
+    }
     try {
-      const res = await adminBulkDeleteArtworks({ data: { ids } });
+      const res = await adminBulkDeleteArtworks({ data: { ids: deletableIds } });
       const deleted = res?.deleted ?? 0;
       const blocked = res?.blocked?.length ?? 0;
       if (deleted > 0) toast.success(`${deleted} deleted`);
       if (blocked > 0) {
         toast.warning(`${blocked} skipped — order history`, {
           description: "Mark them as sold instead to keep the record.",
+        });
+      }
+      if (skippedCatalog > 0) {
+        toast.warning(`${skippedCatalog} catalog original(s) skipped`, {
+          description: "Catalog pieces can only be marked sold.",
         });
       }
       clearSel(); refresh();
@@ -255,16 +272,6 @@ function AdminArtworksPage() {
             >Mark available</button>
             <button
               disabled={selected.size === 0}
-              onClick={() => bulkSetCollection("Our Essence")}
-              className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border border-border hover:border-gold disabled:opacity-40"
-            >→ Our Essence</button>
-            <button
-              disabled={selected.size === 0}
-              onClick={() => bulkSetCollection("The Legends")}
-              className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border border-border hover:border-gold disabled:opacity-40"
-            >→ The Legends</button>
-            <button
-              disabled={selected.size === 0}
               onClick={() => setConfirmDelete({ kind: "bulk", ids: [...selected] })}
               className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border border-border hover:border-accent hover:text-accent disabled:opacity-40"
             >Delete</button>
@@ -317,6 +324,8 @@ function AdminArtworksPage() {
               <CatalogCard
                 key={a.id}
                 a={a}
+                selected={selected.has(a.id)}
+                onToggle={() => toggleSel(a.id)}
                 onToggleSold={() => toggleCatalog(a.id, a.sold /* was sold → make available */)}
               />
             ))}
@@ -379,18 +388,21 @@ function SortableCard({
 
   return (
     <div ref={setNodeRef} style={style} className={`border bg-card/40 overflow-hidden ${selected ? "border-gold ring-1 ring-gold/40" : "border-border"}`}>
-      <div className="aspect-[4/5] bg-background relative overflow-hidden">
+      <div
+        onClick={onToggle}
+        className="aspect-[4/5] bg-background relative overflow-hidden cursor-pointer"
+      >
         <img src={a.image_url} alt={a.alt_text || a.title} className="h-full w-full object-cover" />
-        <button
-          onClick={onToggle}
-          aria-label={selected ? "Deselect" : "Select"}
-          className="absolute top-2 left-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 backdrop-blur border border-border hover:border-gold"
+        <div
+          aria-hidden
+          className="absolute top-2 left-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 backdrop-blur border border-border"
         >
           {selected ? <CheckSquare className="h-4 w-4 text-gold" /> : <Square className="h-4 w-4" />}
-        </button>
+        </div>
         <button
           {...attributes}
           {...listeners}
+          onClick={(e) => e.stopPropagation()}
           aria-label="Drag to reorder"
           className="absolute top-2 right-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 backdrop-blur border border-border cursor-grab active:cursor-grabbing touch-none"
         >
@@ -436,15 +448,28 @@ function SortableCard({
 
 function CatalogCard({
   a,
+  selected,
+  onToggle,
   onToggleSold,
 }: {
   a: { id: string; title: string; image: string; price: number; sold: boolean; collection: string };
+  selected: boolean;
+  onToggle: () => void;
   onToggleSold: () => void;
 }) {
   return (
-    <div className="border border-border bg-card/40 overflow-hidden">
+    <div
+      onClick={onToggle}
+      className={`border bg-card/40 overflow-hidden cursor-pointer transition ${selected ? "border-gold ring-1 ring-gold/40" : "border-border hover:border-muted-foreground/40"}`}
+    >
       <div className="aspect-[4/5] bg-background relative overflow-hidden">
         <img src={a.image} alt={a.title} className="h-full w-full object-cover" />
+        <div
+          aria-hidden
+          className="absolute top-2 left-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 backdrop-blur border border-border"
+        >
+          {selected ? <CheckSquare className="h-4 w-4 text-gold" /> : <Square className="h-4 w-4" />}
+        </div>
         <div
           className={`absolute bottom-2 right-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 ${
             a.sold
@@ -454,7 +479,7 @@ function CatalogCard({
         >
           {a.sold ? "Sold" : "Available"}
         </div>
-        <div className="absolute top-2 left-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 bg-background/80 border border-border text-muted-foreground">
+        <div className="absolute top-2 right-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 bg-background/80 border border-border text-muted-foreground">
           Catalog
         </div>
       </div>
@@ -466,7 +491,7 @@ function CatalogCard({
         </div>
         <div className="mt-4 flex gap-2">
           <button
-            onClick={onToggleSold}
+            onClick={(e) => { e.stopPropagation(); onToggleSold(); }}
             className="flex-1 inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
           >
             {a.sold ? "Mark available" : "Mark sold"}
