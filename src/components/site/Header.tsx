@@ -36,12 +36,12 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-9 text-sm tracking-[0.18em] uppercase">
+        <nav className="hidden md:flex items-center gap-5 lg:gap-9 text-sm tracking-[0.18em] uppercase min-w-0">
           {NAV.map((n) => (
             <Link
               key={n.to}
               to={n.to}
-              className="link-underline text-muted-foreground hover:text-foreground transition-colors data-[status=active]:text-gold"
+              className="link-underline text-muted-foreground hover:text-foreground transition-colors data-[status=active]:text-gold shrink-0"
               activeOptions={{ exact: n.to === "/" }}
             >
               {t(n.key)}
