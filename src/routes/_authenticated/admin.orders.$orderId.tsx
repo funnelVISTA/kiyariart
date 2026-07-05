@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, ExternalLink, Mail, Send, Truck, RotateCcw } from "lucide-react";
-import { adminUpdateOrder, adminResendReceipt, adminResendShipped } from "@/lib/admin.functions";
+import { adminUpdateOrder, adminResendShipped } from "@/lib/admin.functions";
 import { adminGetOrder } from "@/lib/admin-extra.functions";
 import { adminRefundOrder } from "@/lib/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
@@ -145,7 +145,6 @@ function OrderDetailPage() {
                 }
               />
             )}
-            <ResendButton orderId={orderId} />
             <RefundButton
               orderId={orderId}
               status={order.status}
@@ -397,30 +396,6 @@ function TrackingEditor({ order, onSaved }: { order: any; onSaved: () => void })
         )}
       </div>
     </div>
-  );
-}
-
-function ResendButton({ orderId }: { orderId: string }) {
-  const [busy, setBusy] = useState(false);
-  const send = async () => {
-    setBusy(true);
-    try {
-      const r = await adminResendReceipt({ data: { orderId } });
-      toast.success(`Receipt resent to ${r.sentTo}`);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Failed");
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <button
-      onClick={send}
-      disabled={busy}
-      className="mt-3 w-full inline-flex items-center justify-center gap-2 border border-gold/40 text-gold px-3 py-2 text-[11px] uppercase tracking-[0.2em] hover:bg-gold/10 transition disabled:opacity-50"
-    >
-      <Send className="h-3.5 w-3.5" /> {busy ? "Sending…" : "Resend receipt"}
-    </button>
   );
 }
 

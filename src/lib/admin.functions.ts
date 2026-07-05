@@ -97,49 +97,6 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
     return { ok: true, order: row };
   });
 
-export const adminResendReceipt = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: { orderId: string }) => {
-    if (!data.orderId) throw new Error("orderId required");
-    return data;
-  })
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row, error } = await supabaseAdmin
-      .from("orders")
-      .select(
-        "id,customer_email,customer_name,items,amount_total_cad,total_cad,shipping_address",
-      )
-      .eq("id", data.orderId)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!row) throw new Error("Order not found");
-    if (!row.customer_email) throw new Error("Order has no customer email");
-
-    const { sendTransactionalEmailInternal } = await import(
-      "@/lib/email/send-internal.server"
-    );
-    const origin = process.env.PUBLIC_SITE_ORIGIN || "https://kiyari.art";
-    await sendTransactionalEmailInternal({
-      templateName: "order-receipt",
-      recipientEmail: row.customer_email,
-      // New idempotency key on every resend so it actually re-enqueues.
-      idempotencyKey: `receipt-${row.id}-${Date.now()}`,
-      templateData: {
-        customerName: row.customer_name,
-        orderId: row.id,
-        items: Array.isArray(row.items) ? row.items : [],
-        amountTotal: Number(row.amount_total_cad ?? row.total_cad ?? 0),
-        shippingAddress: row.shipping_address,
-        statusUrl: `${origin}/orders/${row.id}?email=${encodeURIComponent(
-          row.customer_email,
-        )}`,
-      },
-    });
-    return { ok: true, sentTo: row.customer_email };
-  });
-
 export const adminResendShipped = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { orderId: string }) => {

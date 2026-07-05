@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { sendTransactionalEmail } from "@/lib/email/send";
-import { adminUpdateOrder, adminResendReceipt } from "@/lib/admin.functions";
+import { adminUpdateOrder } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/orders")({
   head: () => ({
@@ -382,7 +382,6 @@ function OrderDetail({
   const [number, setNumber] = useState(order.tracking_number ?? "");
   const [url, setUrl] = useState(order.tracking_url ?? "");
   const [saving, setSaving] = useState(false);
-  const [resending, setResending] = useState(false);
 
   const computedUrl = url || carrierTrackingUrl(carrier, number);
 
@@ -416,18 +415,6 @@ function OrderDetail({
       toast.error(e?.message ?? "Save failed");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const resendReceipt = async () => {
-    setResending(true);
-    try {
-      const res = await adminResendReceipt({ data: { orderId: order.id } });
-      toast.success(`Receipt resent to ${res.sentTo}`);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Failed to resend");
-    } finally {
-      setResending(false);
     }
   };
 
@@ -539,14 +526,6 @@ function OrderDetail({
             >
               <Truck className="h-3.5 w-3.5" />
               {saving ? "Saving…" : "Mark shipped & notify"}
-            </button>
-            <button
-              onClick={resendReceipt}
-              disabled={resending || !order.customer_email}
-              className="px-4 py-2 text-[10px] uppercase tracking-[0.2em] border border-gold/40 text-gold hover:bg-gold/10 disabled:opacity-60 inline-flex items-center gap-2"
-            >
-              <Send className="h-3.5 w-3.5" />
-              {resending ? "Sending…" : "Resend receipt"}
             </button>
           </div>
         </div>
