@@ -111,9 +111,13 @@
     }
   },
   "overrides": {
-    "js-yaml": "^4.2.0"
+    "js-yaml": "^4.2.0",
+    "brace-expansion@1": "1.1.15",
+    "brace-expansion@2": "2.0.3"
   },
   "resolutions": {
-    "js-yaml": "^4.2.0"
+    "js-yaml": "^4.2.0",
+    "brace-expansion@1": "1.1.15",
+    "brace-expansion@2": "2.0.3"
   }
 }
