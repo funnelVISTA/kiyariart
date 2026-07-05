@@ -1,0 +1,47 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  playwright:
+    name: Playwright (Stripe checkout + sold-out UX)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      # Vite reads VITE_* at build time. The sandbox Stripe publishable
+      # token is safe to expose — it's the same value baked into
+      # .env.development for local dev. Real go-live keys live in
+      # .env.production and are never used in CI.
+      VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+      E2E_START_SERVER: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: bunx playwright test --reporter=list
+
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: |
+            test-results/**/trace.zip
+            test-results/**/video.webm
+          retention-days: 7
