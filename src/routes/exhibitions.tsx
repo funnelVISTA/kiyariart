@@ -69,8 +69,22 @@ function ExhibitionsPage() {
     },
   });
 
-  const dbUpcoming = useMemo(() => (dbRows ?? []).filter((r) => r.status === "upcoming"), [dbRows]);
-  const dbPast = useMemo(() => (dbRows ?? []).filter((r) => r.status === "past"), [dbRows]);
+  const dbUpcoming = useMemo(
+    () =>
+      (dbRows ?? [])
+        .filter((r) => r.status === "upcoming")
+        .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? "")),
+    [dbRows],
+  );
+  const dbPast = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return (dbRows ?? [])
+      .filter((r) => {
+        if (r.status !== "past" || !r.event_date) return false;
+        return new Date(r.event_date).getFullYear() === currentYear;
+      })
+      .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
+  }, [dbRows]);
 
 
   return (
