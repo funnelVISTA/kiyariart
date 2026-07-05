@@ -135,6 +135,9 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
         mode: "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
+        // Explicit card-only — disables Stripe Link and any auto-selected
+        // wallet default. Shoppers see the card form with nothing pre-picked.
+        payment_method_types: ["card"],
         line_items: resolved.map((i) => ({
           quantity: 1,
           price_data: {
