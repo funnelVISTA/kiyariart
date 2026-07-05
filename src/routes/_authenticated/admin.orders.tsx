@@ -105,6 +105,48 @@ function AdminOrdersPage() {
     });
   }, [ordersQ.data, filter, search]);
 
+  // When search is active, aggregate matched orders by customer (email preferred, else name).
+  const customerSummary = useMemo(() => {
+    if (!search.trim()) return null;
+    const groups = new Map<
+      string,
+      { key: string; name: string; email: string; count: number; lifetime: number; firstOrder: string; lastOrder: string }
+    >();
+    for (const o of filtered) {
+      const key = (o.customer_email ?? o.customer_name ?? "unknown").toLowerCase();
+      const existing = groups.get(key);
+      const amt = Number(o.amount_total_cad ?? o.total_cad ?? 0);
+      if (existing) {
+        existing.count++;
+        if (o.status !== "cancelled") existing.lifetime += amt;
+        if (o.created_at < existing.firstOrder) existing.firstOrder = o.created_at;
+        if (o.created_at > existing.lastOrder) existing.lastOrder = o.created_at;
+      } else {
+        groups.set(key, {
+          key,
+          name: o.customer_name ?? "—",
+          email: o.customer_email ?? "—",
+          count: 1,
+          lifetime: o.status === "cancelled" ? 0 : amt,
+          firstOrder: o.created_at,
+          lastOrder: o.created_at,
+        });
+      }
+    }
+    return Array.from(groups.values()).sort((a, b) => b.count - a.count);
+  }, [filtered, search]);
+
+  // Full lifetime order count per customer key (across ALL orders, not just filtered),
+  // so each row can show "Nth order from this customer".
+  const customerOrderCount = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const o of ordersQ.data ?? []) {
+      const key = (o.customer_email ?? o.customer_name ?? "unknown").toLowerCase();
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    return map;
+  }, [ordersQ.data]);
+
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: 0, pending: 0, paid: 0, shipped: 0, delivered: 0, cancelled: 0 };
     (ordersQ.data ?? []).forEach((o) => {
@@ -220,8 +262,41 @@ function AdminOrdersPage() {
             <p className="text-muted-foreground text-sm py-10 text-center">No orders match.</p>
           )}
 
+          {customerSummary && customerSummary.length > 0 && (
+            <div className="border border-gold/30 bg-gold/5 p-4 mb-2">
+              <div className="text-[10px] uppercase tracking-[0.3em] text-gold mb-3">
+                Matching customers ({customerSummary.length})
+              </div>
+              <div className="grid gap-2 md:grid-cols-2">
+                {customerSummary.map((c) => (
+                  <div key={c.key} className="flex items-center justify-between gap-3 border border-border/60 bg-background/60 px-3 py-2 text-sm">
+                    <div className="min-w-0">
+                      <div className="font-display text-base truncate">{c.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{c.email}</div>
+                      <div className="text-[10px] text-muted-foreground mt-1">
+                        First: {new Date(c.firstOrder).toLocaleDateString()} · Last:{" "}
+                        {new Date(c.lastOrder).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-gold font-display text-lg leading-none">{c.count}</div>
+                      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">
+                        {c.count === 1 ? "order" : "orders"}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        ${c.lifetime.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {filtered.map((o) => {
             const isOpen = expanded === o.id;
+            const custKey = (o.customer_email ?? o.customer_name ?? "unknown").toLowerCase();
+            const lifetime = customerOrderCount.get(custKey) ?? 1;
             return (
               <div key={o.id} className="border border-border bg-card/40">
                 <button
@@ -229,7 +304,17 @@ function AdminOrdersPage() {
                   className="w-full grid grid-cols-12 gap-3 p-4 text-left hover:bg-card/80 transition"
                 >
                   <div className="col-span-12 md:col-span-4">
-                    <div className="font-display text-lg">{o.customer_name ?? "—"}</div>
+                    <div className="font-display text-lg flex items-center gap-2">
+                      {o.customer_name ?? "—"}
+                      {lifetime > 1 && (
+                        <span
+                          className="text-[9px] uppercase tracking-[0.2em] text-gold border border-gold/40 px-1.5 py-0.5"
+                          title={`This customer has ${lifetime} orders total`}
+                        >
+                          ×{lifetime}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground">{o.customer_email ?? "—"}</div>
                   </div>
                   <div className="col-span-6 md:col-span-2 text-sm">
