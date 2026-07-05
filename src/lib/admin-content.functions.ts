@@ -12,6 +12,33 @@ async function assertAdmin(context: { supabase: any; userId: string }) {
   if (!data) throw new Error("Forbidden");
 }
 
+// Fire-and-forget audit logger. Never blocks or fails the caller.
+async function logActivity(
+  supabaseAdmin: any,
+  context: { userId: string; claims?: any },
+  entry: {
+    action: string;
+    entity_type?: string;
+    entity_id?: string | null;
+    entity_title?: string | null;
+    details?: Record<string, any> | null;
+  },
+) {
+  try {
+    await supabaseAdmin.from("admin_activity_log").insert({
+      actor_user_id: context.userId,
+      actor_email: context.claims?.email ?? null,
+      action: entry.action,
+      entity_type: entry.entity_type ?? "artwork",
+      entity_id: entry.entity_id ?? null,
+      entity_title: entry.entity_title ?? null,
+      details: entry.details ?? null,
+    });
+  } catch (e) {
+    console.error("admin activity log failed", e);
+  }
+}
+
 // ===== Image upload =====
 
 const SIGNED_TTL = 60 * 60 * 24 * 365 * 10;
@@ -106,14 +133,37 @@ export const adminUpsertCustomArtwork = createServerFn({ method: "POST" })
       created_by: context.userId,
     };
     if (data.id) {
+      const { data: before } = await supabaseAdmin
+        .from("artworks_custom").select("*").eq("id", data.id).maybeSingle();
       const { data: row, error } = await supabaseAdmin
         .from("artworks_custom").update(payload).eq("id", data.id).select("*").single();
       if (error) throw new Error(error.message);
+      const changed: Record<string, { from: any; to: any }> = {};
+      if (before) {
+        for (const k of Object.keys(payload)) {
+          if (k === "created_by") continue;
+          if (JSON.stringify((before as any)[k]) !== JSON.stringify((payload as any)[k])) {
+            changed[k] = { from: (before as any)[k], to: (payload as any)[k] };
+          }
+        }
+      }
+      await logActivity(supabaseAdmin, context, {
+        action: "artwork.edited",
+        entity_id: row.id,
+        entity_title: row.title,
+        details: { changed_fields: Object.keys(changed), changes: changed },
+      });
       return { artwork: row };
     }
     const { data: row, error } = await supabaseAdmin
       .from("artworks_custom").insert(payload).select("*").single();
     if (error) throw new Error(error.message);
+    await logActivity(supabaseAdmin, context, {
+      action: "artwork.added",
+      entity_id: row.id,
+      entity_title: row.title,
+      details: { title: row.title, price: row.price, collection: row.collection },
+    });
     return { artwork: row };
   });
 
@@ -132,8 +182,15 @@ export const adminDeleteCustomArtwork = createServerFn({ method: "POST" })
         "This artwork has order history and can't be deleted. Mark it as sold instead to keep the record intact.",
       );
     }
+    const { data: before } = await supabaseAdmin
+      .from("artworks_custom").select("title").eq("id", data.id).maybeSingle();
     const { error } = await supabaseAdmin.from("artworks_custom").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
+    await logActivity(supabaseAdmin, context, {
+      action: "artwork.deleted",
+      entity_id: data.id,
+      entity_title: before?.title ?? null,
+    });
     return { ok: true };
   });
 
@@ -152,6 +209,12 @@ export const adminBulkSetArtworkSold = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin
       .from("artworks_custom").update({ sold: data.sold }).in("id", data.ids);
     if (error) throw new Error(error.message);
+    await logActivity(supabaseAdmin, context, {
+      action: data.sold ? "artwork.marked_sold" : "artwork.marked_available",
+      entity_id: null,
+      entity_title: `${data.ids.length} artwork(s)`,
+      details: { ids: data.ids, count: data.ids.length },
+    });
     return { ok: true, count: data.ids.length };
   });
 
@@ -172,6 +235,14 @@ export const adminBulkDeleteArtworks = createServerFn({ method: "POST" })
       const { error } = await supabaseAdmin.from("artworks_custom").delete().in("id", deletable);
       if (error) throw new Error(error.message);
       deleted = deletable.length;
+    }
+    if (deleted > 0) {
+      await logActivity(supabaseAdmin, context, {
+        action: "artwork.bulk_deleted",
+        entity_id: null,
+        entity_title: `${deleted} artwork(s)`,
+        details: { deleted_ids: deletable, blocked_ids: [...blockedSet] },
+      });
     }
     return { ok: true, deleted, blocked: [...blockedSet] };
   });
