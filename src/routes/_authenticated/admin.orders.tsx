@@ -382,7 +382,6 @@ function OrderDetail({
   const [number, setNumber] = useState(order.tracking_number ?? "");
   const [url, setUrl] = useState(order.tracking_url ?? "");
   const [saving, setSaving] = useState(false);
-  const [resending, setResending] = useState(false);
 
   const computedUrl = url || carrierTrackingUrl(carrier, number);
 
