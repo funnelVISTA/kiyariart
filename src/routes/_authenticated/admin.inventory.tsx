@@ -33,7 +33,7 @@ import {
 import { ImageCropper } from "@/components/admin/ImageCropper";
 
 export const Route = createFileRoute("/_authenticated/admin/inventory")({
-  head: () => ({ meta: [{ title: "Artworks — Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Inventory — Admin · art by KIYARI" }, { name: "robots", content: "noindex" }] }),
   component: AdminArtworksPage,
 });
 
@@ -153,7 +153,7 @@ function AdminArtworksPage() {
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:flex-wrap sm:justify-between">
           <div className="min-w-0">
             <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Studio</div>
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl truncate">Artworks</h1>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl truncate">Inventory</h1>
             <p className="mt-2 text-sm text-muted-foreground max-w-xl">
               Drag tiles to reorder. Bulk select to mark sold / delete. Each piece is one-of-one — Stripe purchases mark sold automatically.
             </p>
