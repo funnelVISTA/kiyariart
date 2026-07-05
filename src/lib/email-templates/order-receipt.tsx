@@ -59,13 +59,27 @@ const OrderReceipt = ({ customerName, orderId, items = [], amountTotal = 0, stat
           </Section>
 
           <Text style={body}>
-            Each piece is one of one, and yours is now reserved for you. Kiyari will personally
-            prepare and ship your creation, and you'll receive a shipping confirmation with tracking
-            as soon as it's on its way.
+            Each piece is one of one, and yours is now reserved for you.
           </Text>
 
+          <Section style={stepsWrap}>
+            <Text style={stepsHeader}>What happens next</Text>
+            <Section style={step}>
+              <Text style={stepTitle}><span style={stepNum}>01</span>&nbsp; Kiyari prepares your piece</Text>
+              <Text style={stepBody}>Your work is inspected, signed, and packaged by hand within 2–3 business days.</Text>
+            </Section>
+            <Section style={step}>
+              <Text style={stepTitle}><span style={stepNum}>02</span>&nbsp; Shipping details</Text>
+              <Text style={stepBody}>You'll receive a separate email from Kiyari with tracking information as soon as your piece ships.</Text>
+            </Section>
+            <Section style={step}>
+              <Text style={stepTitle}><span style={stepNum}>03</span>&nbsp; Delivery & unboxing</Text>
+              <Text style={stepBody}>Your artwork arrives insured and ready to display. We'd love to see it in its new home — tag @kiyari.art.</Text>
+            </Section>
+          </Section>
+
           <Text style={body}>
-            If you have any questions, just reply to this email — we read every message.
+            Questions about your order? Just reply to this email — we read every message.
           </Text>
 
           <Text style={sign}>With gratitude,<br />Art by Kiyari</Text>
@@ -114,3 +128,9 @@ const totalLabel: React.CSSProperties = { fontSize: '12px', color: '#8a8170', te
 const totalValue: React.CSSProperties = { fontSize: '22px', color: '#C9A24B', margin: '4px 0 18px', fontFamily: 'Cormorant Garamond, Georgia, serif' }
 const muted: React.CSSProperties = { fontSize: '12px', color: '#8a8170', margin: '18px 0 0' }
 const link: React.CSSProperties = { color: '#C9A24B', textDecoration: 'underline' }
+const stepsWrap: React.CSSProperties = { backgroundColor: '#1a1714', border: '1px solid #2a2622', padding: '18px 18px 6px', margin: '18px 0 8px' }
+const stepsHeader: React.CSSProperties = { fontSize: '11px', color: '#C9A24B', textTransform: 'uppercase', letterSpacing: '0.3em', margin: '0 0 12px' }
+const step: React.CSSProperties = { margin: '0 0 12px' }
+const stepTitle: React.CSSProperties = { fontSize: '14px', color: '#F4ECDD', margin: '0 0 4px', fontFamily: 'Cormorant Garamond, Georgia, serif' }
+const stepNum: React.CSSProperties = { color: '#8a8170', fontSize: '11px', letterSpacing: '0.15em', fontFamily: 'Inter, Arial, sans-serif' }
+const stepBody: React.CSSProperties = { fontSize: '13px', lineHeight: 1.6, color: '#B8AE96', margin: 0 }
