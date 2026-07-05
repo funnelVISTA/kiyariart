@@ -86,10 +86,21 @@ function AdminArtworksPage() {
     queryFn: () => adminListCustomArtworks(),
   });
 
+  const availQ = useQuery({
+    queryKey: ["artwork-availability"],
+    queryFn: () => listArtworkAvailability(),
+  });
+  const soldSet = useMemo(() => new Set(availQ.data?.soldIds ?? []), [availQ.data]);
+  const overrideSet = useMemo(
+    () => new Set(availQ.data?.availableOverrideIds ?? []),
+    [availQ.data],
+  );
+
   const refresh = () => {
     setOrder(null);
     qc.invalidateQueries({ queryKey: ["admin", "custom-artworks"] });
     qc.invalidateQueries({ queryKey: ["artworks-custom"] });
+    qc.invalidateQueries({ queryKey: ["artwork-availability"] });
   };
 
   const rows: Row[] = order ?? (q.data?.artworks as Row[] | undefined) ?? [];
@@ -174,6 +185,33 @@ function AdminArtworksPage() {
       toast.error(e?.message ?? "Delete failed");
     }
   };
+
+  const toggleCatalog = async (id: string, available: boolean) => {
+    try {
+      await adminSetCatalogAvailability({ data: { artworkId: id, available } });
+      toast.success(available ? "Marked available" : "Marked sold");
+      refresh();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed");
+    }
+  };
+
+  const toggleCustom = async (id: string, sold: boolean) => {
+    try {
+      await adminBulkSetArtworkSold({ data: { ids: [id], sold } });
+      toast.success(sold ? "Marked sold" : "Marked available");
+      refresh();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed");
+    }
+  };
+
+  const catalogRows = useMemo(() => {
+    return ARTWORKS.map((a) => ({
+      ...a,
+      sold: overrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
+    }));
+  }, [soldSet, overrideSet]);
 
   return (
     <div className="pt-10 pb-20">
