@@ -2,11 +2,13 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, ExternalLink, Mail, Send, Truck } from "lucide-react";
+import { ArrowLeft, ExternalLink, Mail, Send, Truck, RotateCcw } from "lucide-react";
 import { adminUpdateOrder, adminResendReceipt, adminResendShipped } from "@/lib/admin.functions";
 import { adminGetOrder } from "@/lib/admin-extra.functions";
+import { adminRefundOrder } from "@/lib/payments.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 
-const STATUSES = ["pending", "paid", "shipped", "delivered", "cancelled"] as const;
+const STATUSES = ["pending", "paid", "shipped", "delivered", "cancelled", "refunded"] as const;
 type Status = (typeof STATUSES)[number];
 
 const CARRIERS = ["Canada Post", "UPS", "FedEx", "Purolator", "DHL", "USPS", "Other"];
