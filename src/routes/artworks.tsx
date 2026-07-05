@@ -163,7 +163,7 @@ function ArtworksPage() {
           ))}
         </div>
 
-        <motion.div layout className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 [perspective:1500px]">
+        <motion.div layout className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 [perspective:1500px]">
           <AnimatePresence mode="popLayout">
             {items.map((a, i) => (
               <ArtCard
@@ -217,90 +217,98 @@ function ArtCard({ a, index, isTouch, revealed, onToggleReveal, onOpen, onAdd, b
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.5, delay: (index % 8) * 0.04 }}
-      className="group"
+      className="group cursor-pointer"
       data-reveal={revealed}
       {...(isTouch ? swipe : { onClick: onOpen })}
     >
-      <TiltCard max={12} scale={1.04} glare className="relative">
-        <div className="relative aspect-[4/5] overflow-hidden bg-card">
+      <TiltCard max={10} scale={1.03} className="relative">
+        <div className="relative aspect-[3/4] overflow-hidden bg-card border border-white/5 group-hover:border-gold/40 transition-colors duration-500">
+          {/* Image with slow ken-burns zoom */}
           <img
-            src={thumb(a.image, 700)}
+            src={thumb(a.image, 800)}
             alt={a.title}
             loading="lazy"
             decoding="async"
             sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
-            className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
+            className="h-full w-full object-cover transition-transform duration-[1.4s] ease-out group-hover:scale-110 group-data-[reveal=true]:scale-105"
             style={{ transform: "translateZ(0)" }}
           />
-          {a.sold ? (
-            <div className="absolute top-3 left-3 px-3 py-1 text-[10px] uppercase tracking-[0.2em] bg-background/80 backdrop-blur border border-border z-10" style={{ transform: "translateZ(40px)" }}>
-              {t("art.sold")}
-            </div>
-          ) : (
-            <div className="absolute top-3 left-3 z-10" style={{ transform: "translateZ(40px)" }}>
-              <span className="px-3 py-1 text-[10px] uppercase tracking-[0.2em] bg-gold/90 text-primary-foreground">
+
+          {/* Corner accent — top-right */}
+          <div className="pointer-events-none absolute top-0 right-0 w-8 h-8 md:w-10 md:h-10 border-t border-r border-gold/40 opacity-70 group-hover:opacity-100 group-hover:w-12 group-hover:h-12 transition-all duration-500" style={{ transform: "translateZ(40px)" }} />
+          <div className="pointer-events-none absolute bottom-0 left-0 w-8 h-8 md:w-10 md:h-10 border-b border-l border-gold/40 opacity-70 group-hover:opacity-100 group-hover:w-12 group-hover:h-12 transition-all duration-500" style={{ transform: "translateZ(40px)" }} />
+
+          {/* Status badge */}
+          <div className="absolute top-3 left-3 z-10" style={{ transform: "translateZ(40px)" }}>
+            {a.sold ? (
+              <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-background/85 backdrop-blur border border-border">
+                {t("art.sold")}
+              </span>
+            ) : (
+              <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-gold/95 text-primary-foreground font-medium shadow-glow">
                 {t("art.available")}
               </span>
-            </div>
-          )}
+            )}
+          </div>
 
+          {/* Zoom button */}
           <button
             aria-label="Zoom"
             onClick={(e) => { e.stopPropagation(); onOpen(); }}
-            className="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full border border-border bg-background/60 backdrop-blur opacity-100 md:opacity-0 md:group-hover:opacity-100 transition z-10"
+            className="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full border border-border/60 bg-background/70 backdrop-blur opacity-0 md:group-hover:opacity-100 group-data-[reveal=true]:opacity-100 hover:border-gold hover:text-gold transition-all duration-300 z-10"
             style={{ transform: "translateZ(40px)" }}
           >
             <Search className="h-4 w-4" />
           </button>
 
-          {isTouch && (
-            <div
-              className="absolute bottom-3 right-3 px-2 py-1 text-[9px] uppercase tracking-[0.2em] bg-background/70 backdrop-blur border border-border/60 rounded-full opacity-80 group-data-[reveal=true]:opacity-0 transition z-10 pointer-events-none"
-              style={{ transform: "translateZ(40px)" }}
-            >
-              ← {t("art.swipe") || "swipe"}
-            </div>
-          )}
-
+          {/* Immersive info overlay — always dark gradient, content slides up on hover/reveal */}
           <div
-            className="absolute inset-x-0 bottom-0 p-4 md:p-5 bg-gradient-to-t from-background via-background/90 to-transparent translate-y-full group-hover:translate-y-0 group-data-[reveal=true]:translate-y-0 transition-transform duration-500 ease-out pointer-events-none group-data-[reveal=true]:pointer-events-auto md:group-hover:pointer-events-auto"
-            style={{ transform: "translateZ(60px)" }}
+            className="absolute inset-0 flex flex-col justify-end p-3 md:p-5 z-[5] bg-gradient-to-t from-background via-background/50 to-transparent md:from-background/95 md:via-background/20 md:to-transparent transition-opacity duration-500"
+            style={{ transform: "translateZ(30px)" }}
           >
-            <div className="font-display text-lg md:text-xl leading-tight">{a.title}</div>
-            <p className="mt-1.5 text-[11px] md:text-xs text-muted-foreground leading-relaxed line-clamp-3">
+            {/* Collection kicker — always visible */}
+            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gold font-medium">
+              {a.collection}
+            </div>
+            {/* Title — always visible */}
+            <div className="mt-1 font-display text-base md:text-2xl leading-tight text-foreground">
+              {a.title}
+            </div>
+
+            {/* Blurb — hidden on mobile, revealed on hover/reveal */}
+            <p className="hidden md:block mt-2 text-[11px] text-muted-foreground leading-relaxed line-clamp-2 max-h-0 opacity-0 group-hover:max-h-16 group-hover:opacity-100 group-data-[reveal=true]:max-h-16 group-data-[reveal=true]:opacity-100 overflow-hidden transition-all duration-500">
               {blurb}
             </p>
-            <div className="mt-3 flex items-center justify-between gap-2">
-              <div className={`text-xs ${a.sold ? "text-muted-foreground line-through" : "text-gold"}`}>
-                {a.price > 0 ? `$${a.price.toLocaleString()} CAD` : t("art.inquire")}
+
+            {/* Price + CTA row */}
+            <div className="mt-2 md:mt-4 flex items-center justify-between gap-2 translate-y-1 md:translate-y-2 md:opacity-0 md:group-hover:opacity-100 md:group-hover:translate-y-0 group-data-[reveal=true]:opacity-100 group-data-[reveal=true]:translate-y-0 transition-all duration-500 pointer-events-none md:group-hover:pointer-events-auto group-data-[reveal=true]:pointer-events-auto">
+              <div className={`text-xs md:text-sm font-medium ${a.sold ? "text-muted-foreground line-through" : "text-gold"}`}>
+                {a.price > 0 ? `$${a.price.toLocaleString()} ` : t("art.inquire")}
+                {a.price > 0 && <span className="text-[9px] opacity-60">CAD</span>}
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); onAdd(); }}
                 disabled={a.sold}
-                className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] uppercase tracking-[0.2em] border transition ${
+                aria-label={a.sold ? t("art.sold") : t("feat.add")}
+                className={`inline-flex items-center gap-1 px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-semibold transition-all duration-300 ${
                   a.sold
-                    ? "border-border text-muted-foreground cursor-not-allowed"
-                    : "border-gold text-gold hover:bg-gold hover:text-primary-foreground"
+                    ? "border border-border text-muted-foreground cursor-not-allowed"
+                    : "bg-gradient-gold text-primary-foreground hover:shadow-glow active:scale-95"
                 }`}
               >
                 {a.sold ? <><Check className="h-3 w-3" /> {t("art.sold")}</> : <><Plus className="h-3 w-3" /> {t("feat.add")}</>}
               </button>
             </div>
+
+            {/* Touch hint */}
+            {isTouch && !revealed && (
+              <div className="absolute top-3 right-14 px-2 py-1 text-[8px] uppercase tracking-[0.2em] bg-background/70 backdrop-blur border border-border/60 rounded-full opacity-70 transition z-10 pointer-events-none">
+                ← {t("art.swipe") || "swipe"}
+              </div>
+            )}
           </div>
         </div>
       </TiltCard>
-
-      <div className="mt-3 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="font-display text-lg leading-tight truncate">{a.title}</div>
-          <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            {a.collection}
-          </div>
-        </div>
-        <div className={`text-sm shrink-0 ${a.sold ? "text-muted-foreground line-through" : "text-gold"}`}>
-          {a.price > 0 ? `$${a.price.toLocaleString()}` : t("art.inquire")}
-        </div>
-      </div>
     </motion.article>
   );
 }
