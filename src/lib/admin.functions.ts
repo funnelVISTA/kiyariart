@@ -36,7 +36,7 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
 
     const previous = await supabaseAdmin
       .from("orders")
-      .select("status,customer_email,customer_name,tracking_number")
+      .select("status,customer_email,customer_name,tracking_number,tracking_carrier")
       .eq("id", data.orderId)
       .maybeSingle();
 
@@ -53,6 +53,24 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
     if (data.tracking_number !== undefined) patch.tracking_number = data.tracking_number;
     if (data.tracking_url !== undefined) patch.tracking_url = data.tracking_url;
     if (data.notes !== undefined) patch.notes = data.notes;
+
+    // Block "shipped" transitions until tracking info is saved.
+    if (data.status === "shipped" && previous.data?.status !== "shipped") {
+      const nextTrackingNumber =
+        data.tracking_number !== undefined
+          ? data.tracking_number
+          : previous.data?.tracking_number ?? null;
+      const nextTrackingCarrier =
+        data.tracking_carrier !== undefined
+          ? data.tracking_carrier
+          : previous.data?.tracking_carrier ?? null;
+      if (!nextTrackingNumber || !String(nextTrackingNumber).trim()) {
+        throw new Error("Add a tracking number before marking this order as shipped.");
+      }
+      if (!nextTrackingCarrier || !String(nextTrackingCarrier).trim()) {
+        throw new Error("Choose a carrier before marking this order as shipped.");
+      }
+    }
 
     const { data: row, error } = await supabaseAdmin
       .from("orders")

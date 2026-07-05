@@ -439,20 +439,28 @@ function OrderDetail({
 
         <div className="text-xs uppercase tracking-[0.2em] text-gold mt-6 mb-3">Update status</div>
         <div className="flex flex-wrap gap-2">
-          {STATUSES.map((s) => (
-            <button
-              key={s}
-              onClick={() => setStatus(order.id, s)}
-              disabled={order.status === s}
-              className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border transition ${
-                order.status === s
-                  ? "border-gold text-gold bg-gold/10 cursor-default"
-                  : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
-              }`}
-            >
-              {s}
-            </button>
-          ))}
+          {STATUSES.map((s) => {
+            const needsTracking =
+              s === "shipped" && (!order.tracking_number || !order.tracking_carrier);
+            const isCurrent = order.status === s;
+            return (
+              <button
+                key={s}
+                onClick={() => setStatus(order.id, s)}
+                disabled={isCurrent || needsTracking}
+                title={needsTracking ? "Save carrier and tracking number first" : undefined}
+                className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border transition ${
+                  isCurrent
+                    ? "border-gold text-gold bg-gold/10 cursor-default"
+                    : needsTracking
+                      ? "border-border text-muted-foreground/50 cursor-not-allowed"
+                      : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
+                }`}
+              >
+                {s}
+              </button>
+            );
+          })}
         </div>
 
         <div className="text-xs uppercase tracking-[0.2em] text-gold mt-6 mb-3">

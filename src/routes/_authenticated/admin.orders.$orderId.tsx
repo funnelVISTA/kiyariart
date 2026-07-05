@@ -158,21 +158,34 @@ function OrderDetailPage() {
           <div className="border border-border bg-card/40 p-5">
             <div className="text-xs uppercase tracking-[0.2em] text-gold mb-3">Status</div>
             <div className="flex flex-wrap gap-2">
-              {STATUSES.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setStatus(s)}
-                  disabled={order.status === s}
-                  className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border transition ${
-                    order.status === s
-                      ? "border-gold text-gold bg-gold/10 cursor-default"
-                      : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
+              {STATUSES.map((s) => {
+                const needsTracking =
+                  s === "shipped" && (!order.tracking_number || !order.tracking_carrier);
+                const isCurrent = order.status === s;
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setStatus(s)}
+                    disabled={isCurrent || needsTracking}
+                    title={needsTracking ? "Save carrier and tracking number first" : undefined}
+                    className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border transition ${
+                      isCurrent
+                        ? "border-gold text-gold bg-gold/10 cursor-default"
+                        : needsTracking
+                          ? "border-border text-muted-foreground/50 cursor-not-allowed"
+                          : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
             </div>
+            {(!order.tracking_number || !order.tracking_carrier) && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Save a carrier and tracking number below before marking this order shipped.
+              </p>
+            )}
             <Timeline order={order} />
           </div>
 
