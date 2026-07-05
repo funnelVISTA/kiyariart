@@ -17,7 +17,7 @@ export const Route = createFileRoute("/checkout/return")({
 
 type State =
   | { kind: "loading" }
-  | { kind: "paid"; orderId?: string; email?: string | null; amount?: number; items?: Array<{ title: string; quantity: number }> }
+  | { kind: "paid"; orderId?: string; email?: string | null; amount?: number; items?: Array<{ title: string; quantity: number; unit_amount?: number }> }
   | { kind: "pending" }
   | { kind: "error"; message: string };
 
@@ -78,23 +78,50 @@ function ReturnPage() {
               Your payment was received{state.email ? `. A receipt has been sent to ${state.email}` : ""}. Kiyari will reach out shortly with shipping details.
             </p>
             {state.items && state.items.length > 0 && (
-              <div className="mt-8 border-t border-border pt-6 text-left">
-                {state.items.map((i, idx) => (
-                  <div key={idx} className="flex justify-between text-sm py-1">
-                    <span>{i.title} <span className="text-muted-foreground">× {i.quantity}</span></span>
+              <div className="mt-8 border border-border p-5 text-left bg-card/40">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Order</div>
+                    <div className="font-mono text-sm text-gold mt-1">
+                      {state.orderId ? `#${state.orderId.slice(0, 8).toUpperCase()}` : "—"}
+                    </div>
                   </div>
-                ))}
+                  <div className="text-right">
+                    <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Date</div>
+                    <div className="text-sm mt-1">{new Date().toLocaleDateString()}</div>
+                  </div>
+                </div>
+                <div className="border-t border-border pt-4 space-y-3">
+                  {state.items.map((i, idx) => (
+                    <div key={idx} className="flex justify-between text-sm gap-4">
+                      <span className="flex-1">
+                        {i.title}
+                        {i.quantity > 1 && <span className="text-muted-foreground"> × {i.quantity}</span>}
+                      </span>
+                      {i.unit_amount !== undefined && (
+                        <span className="text-muted-foreground tabular-nums">
+                          ${(i.unit_amount * i.quantity).toLocaleString()} CAD
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
                 {state.amount !== undefined && (
-                  <div className="mt-4 pt-4 border-t border-border flex justify-between">
-                    <span className="text-muted-foreground">Total paid</span>
-                    <span className="text-gold font-medium">${state.amount.toLocaleString()} CAD</span>
+                  <div className="mt-4 pt-4 border-t border-border space-y-1.5">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Subtotal</span>
+                      <span className="tabular-nums">${state.amount.toLocaleString()} CAD</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Shipping</span>
+                      <span>Kiyari will personally ship your creation</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-border mt-2">
+                      <span className="text-sm">Total paid</span>
+                      <span className="text-gold font-medium tabular-nums">${state.amount.toLocaleString()} CAD</span>
+                    </div>
                   </div>
                 )}
-              </div>
-            )}
-            {state.orderId && (
-              <div className="mt-6 text-[11px] text-muted-foreground">
-                Order reference: <span className="font-mono">{state.orderId.slice(0, 8)}</span>
               </div>
             )}
             <div className="mt-10 flex flex-wrap gap-3 justify-center">
