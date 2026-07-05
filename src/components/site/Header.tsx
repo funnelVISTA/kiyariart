@@ -28,15 +28,17 @@ export function Header() {
 
   return (
     <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${scrolled ? "backdrop-blur-xl bg-background/80 border-b border-border" : "bg-transparent"}`}>
-      <div className="container-page flex items-center justify-between py-5">
-        <Link to="/" className="group flex items-center gap-3">
+      <div className="container-page flex items-center justify-between gap-4 md:gap-8 lg:gap-12 py-5">
+        <Link to="/" className="group flex items-center gap-3 shrink-0">
           <span className="grid h-10 w-10 shrink-0 place-items-center border border-gold text-gold font-display text-lg transition-transform group-hover:rotate-3">K</span>
-          <span className="font-display text-sm md:text-base lg:text-xl tracking-wide whitespace-nowrap">
-            art by <span className="text-gradient-gold">KIYARI</span>
+          {/* Two-line stack on tablet where horizontal room is tight; single line on desktop */}
+          <span className="font-display tracking-wide leading-tight whitespace-nowrap flex flex-col md:leading-[1.05] lg:flex-row lg:gap-1 lg:leading-none">
+            <span className="text-sm md:text-[13px] lg:text-xl">art by</span>
+            <span className="text-sm md:text-base lg:text-xl text-gradient-gold">KIYARI</span>
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-3 lg:gap-9 text-sm tracking-[0.12em] lg:tracking-[0.18em] uppercase">
+        <nav className="hidden md:flex items-center gap-4 lg:gap-9 text-sm tracking-[0.12em] lg:tracking-[0.18em] uppercase">
           {NAV.map((n) => (
             <Link
               key={n.to}

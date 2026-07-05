@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { z } from "zod";
 import { Mail, MessageCircle, Send } from "lucide-react";
@@ -7,6 +7,9 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/community")({
+  validateSearch: (s: Record<string, unknown>): { inquiry?: string } => ({
+    inquiry: typeof s.inquiry === "string" ? s.inquiry : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Community — art by KIYARI" },
@@ -20,9 +23,24 @@ export const Route = createFileRoute("/community")({
 
 function CommunityPage() {
   const { t } = useI18n();
-  const [form, setForm] = useState({ name: "", email: "", message: "", subscribe: true });
+  const { inquiry } = Route.useSearch();
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    message: inquiry ? `Inquiry about: ${inquiry}\n\n` : "",
+    subscribe: true,
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sending, setSending] = useState(false);
+  const formRef = useRef<HTMLFormElement | null>(null);
+
+  useEffect(() => {
+    if (inquiry) {
+      setForm((f) => ({ ...f, message: `Inquiry about: ${inquiry}\n\n${f.message.startsWith("Inquiry about:") ? "" : f.message}` }));
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inquiry]);
 
   const schema = z.object({
     name: z.string().trim().min(1, t("com.err.name")).max(80),
@@ -62,6 +80,7 @@ function CommunityPage() {
 
         <div className="mt-20 grid lg:grid-cols-12 gap-12">
           <motion.form
+            ref={formRef}
             onSubmit={submit}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
