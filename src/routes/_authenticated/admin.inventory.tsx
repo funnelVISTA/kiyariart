@@ -29,8 +29,22 @@ import {
   adminReorderCustomArtworks,
   adminBulkSetArtworkSold,
   adminBulkDeleteArtworks,
+  adminBulkSetArtworkCollection,
 } from "@/lib/admin-content.functions";
 import { ImageCropper } from "@/components/admin/ImageCropper";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024; // 15 MB
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
 export const Route = createFileRoute("/_authenticated/admin/inventory")({
   head: () => ({ meta: [{ title: "Inventory — Admin · art by KIYARI" }, { name: "robots", content: "noindex" }] }),
@@ -58,6 +72,11 @@ function AdminArtworksPage() {
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [order, setOrder] = useState<Row[] | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<
+    | { kind: "single"; id: string; title: string }
+    | { kind: "bulk"; ids: string[] }
+    | null
+  >(null);
 
   const q = useQuery({
     queryKey: ["admin", "custom-artworks"],
@@ -119,11 +138,18 @@ function AdminArtworksPage() {
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
   };
 
-  const bulkDelete = async () => {
+  const bulkSetCollection = async (collection: string) => {
     if (selected.size === 0) return;
-    if (!confirm(`Delete ${selected.size} artwork(s)? Any with order history will be skipped. This can't be undone.`)) return;
     try {
-      const res = await adminBulkDeleteArtworks({ data: { ids: [...selected] } });
+      await adminBulkSetArtworkCollection({ data: { ids: [...selected], collection } });
+      toast.success(`${selected.size} moved to ${collection}`);
+      clearSel(); refresh();
+    } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+  };
+
+  const runBulkDelete = async (ids: string[]) => {
+    try {
+      const res = await adminBulkDeleteArtworks({ data: { ids } });
       const deleted = res?.deleted ?? 0;
       const blocked = res?.blocked?.length ?? 0;
       if (deleted > 0) toast.success(`${deleted} deleted`);
@@ -136,8 +162,7 @@ function AdminArtworksPage() {
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
   };
 
-  const onDelete = async (id: string, title: string) => {
-    if (!confirm(`Delete "${title}"? This can't be undone. Artworks with order history are protected — mark them as sold instead.`)) return;
+  const runSingleDelete = async (id: string) => {
     try {
       await adminDeleteCustomArtwork({ data: { id } });
       toast.success("Deleted");
@@ -189,7 +214,17 @@ function AdminArtworksPage() {
             >Mark available</button>
             <button
               disabled={selected.size === 0}
-              onClick={bulkDelete}
+              onClick={() => bulkSetCollection("Our Essence")}
+              className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border border-border hover:border-gold disabled:opacity-40"
+            >→ Our Essence</button>
+            <button
+              disabled={selected.size === 0}
+              onClick={() => bulkSetCollection("The Legends")}
+              className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border border-border hover:border-gold disabled:opacity-40"
+            >→ The Legends</button>
+            <button
+              disabled={selected.size === 0}
+              onClick={() => setConfirmDelete({ kind: "bulk", ids: [...selected] })}
               className="px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border border-border hover:border-accent hover:text-accent disabled:opacity-40"
             >Delete</button>
           </div>
@@ -215,7 +250,7 @@ function AdminArtworksPage() {
                   selected={selected.has(a.id)}
                   onToggle={() => toggleSel(a.id)}
                   onEdit={() => setEditing(a)}
-                  onDelete={() => onDelete(a.id, a.title)}
+                  onDelete={() => setConfirmDelete({ kind: "single", id: a.id, title: a.title })}
                 />
               ))}
             </div>
@@ -230,6 +265,36 @@ function AdminArtworksPage() {
           onSaved={() => { setEditing(null); refresh(); }}
         />
       )}
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmDelete?.kind === "bulk"
+                ? `Delete ${confirmDelete.ids.length} artwork(s)?`
+                : `Delete "${confirmDelete?.kind === "single" ? confirmDelete.title : ""}"?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This can't be undone. Artworks with order history are protected and will be skipped — mark them as sold instead to keep the record.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                const c = confirmDelete;
+                setConfirmDelete(null);
+                if (!c) return;
+                if (c.kind === "single") await runSingleDelete(c.id);
+                else await runBulkDelete(c.ids);
+              }}
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -340,6 +405,18 @@ function ArtworkEditor({
   };
 
   const onFile = (file: File) => {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Unsupported file type", {
+        description: "Use JPEG, PNG, WebP, or AVIF.",
+      });
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast.error("Image too large", {
+        description: `Max ${Math.round(MAX_UPLOAD_BYTES / (1024 * 1024))}MB — yours is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`,
+      });
+      return;
+    }
     // Open cropper with local preview URL
     const url = URL.createObjectURL(file);
     setCropSrc(url);
