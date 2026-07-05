@@ -189,8 +189,8 @@ function OrderStatusPage() {
 
             <div className="text-xs text-muted-foreground border-t border-border pt-6">
               Questions? Reply to your receipt email or reach Kiyari at{" "}
-              <a href="mailto:kiyarisart@gmail.com" className="text-gold underline">
-                kiyarisart@gmail.com
+              <a href="mailto:hello@kiyari.art" className="text-gold underline">
+                hello@kiyari.art
               </a>.
             </div>
           </div>

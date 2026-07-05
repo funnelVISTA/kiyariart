@@ -66,7 +66,7 @@ const OrderReceipt = ({ customerName, orderId, items = [], amountTotal = 0, ship
 
         <Text style={muted}>
           Questions? Reply to this email or write to{' '}
-          <Link href="mailto:kiyarisart@gmail.com" style={link}>kiyarisart@gmail.com</Link>.
+          <Link href="mailto:hello@kiyari.art" style={link}>hello@kiyari.art</Link>.
         </Text>
       </Container>
     </Body>
