@@ -423,3 +423,63 @@ function ResendButton({ orderId }: { orderId: string }) {
     </button>
   );
 }
+
+function RefundButton({ orderId, status, onRefunded }: { orderId: string; status: Status; onRefunded: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  if (status === "refunded" || status === "cancelled" || status === "pending") return null;
+
+  const run = async () => {
+    setBusy(true);
+    try {
+      const res = await adminRefundOrder({
+        data: { orderId, environment: getStripeEnvironment() },
+      });
+      if ("error" in res) throw new Error(res.error);
+      toast.success("Refund issued. Stripe will confirm via webhook.");
+      onRefunded();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Refund failed");
+    } finally {
+      setBusy(false);
+      setConfirming(false);
+    }
+  };
+
+  if (confirming) {
+    return (
+      <div className="mt-3 border border-accent/40 bg-accent/5 p-3 text-xs space-y-2">
+        <div className="text-accent">Refund the full order in Stripe?</div>
+        <div className="text-muted-foreground">
+          Artworks will be marked available again. This can't be undone from the app.
+        </div>
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={run}
+            disabled={busy}
+            className="px-3 py-1.5 border border-accent text-accent hover:bg-accent/10 uppercase tracking-[0.2em] text-[10px] disabled:opacity-50"
+          >
+            {busy ? "Refunding…" : "Yes, refund"}
+          </button>
+          <button
+            onClick={() => setConfirming(false)}
+            disabled={busy}
+            className="px-3 py-1.5 border border-border uppercase tracking-[0.2em] text-[10px]"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setConfirming(true)}
+      className="mt-3 inline-flex items-center gap-2 px-3 py-2 border border-accent/50 text-accent hover:bg-accent/10 uppercase tracking-[0.2em] text-[10px] transition"
+    >
+      <RotateCcw className="h-3.5 w-3.5" /> Refund order
+    </button>
+  );
+}
