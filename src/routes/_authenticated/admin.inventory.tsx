@@ -445,15 +445,28 @@ function SortableCard({
 
 function CatalogCard({
   a,
+  selected,
+  onToggle,
   onToggleSold,
 }: {
   a: { id: string; title: string; image: string; price: number; sold: boolean; collection: string };
+  selected: boolean;
+  onToggle: () => void;
   onToggleSold: () => void;
 }) {
   return (
-    <div className="border border-border bg-card/40 overflow-hidden">
+    <div
+      onClick={onToggle}
+      className={`border bg-card/40 overflow-hidden cursor-pointer transition ${selected ? "border-gold ring-1 ring-gold/40" : "border-border hover:border-muted-foreground/40"}`}
+    >
       <div className="aspect-[4/5] bg-background relative overflow-hidden">
         <img src={a.image} alt={a.title} className="h-full w-full object-cover" />
+        <div
+          aria-hidden
+          className="absolute top-2 left-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 backdrop-blur border border-border"
+        >
+          {selected ? <CheckSquare className="h-4 w-4 text-gold" /> : <Square className="h-4 w-4" />}
+        </div>
         <div
           className={`absolute bottom-2 right-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 ${
             a.sold
@@ -463,7 +476,7 @@ function CatalogCard({
         >
           {a.sold ? "Sold" : "Available"}
         </div>
-        <div className="absolute top-2 left-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 bg-background/80 border border-border text-muted-foreground">
+        <div className="absolute top-2 right-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 bg-background/80 border border-border text-muted-foreground">
           Catalog
         </div>
       </div>
@@ -475,7 +488,7 @@ function CatalogCard({
         </div>
         <div className="mt-4 flex gap-2">
           <button
-            onClick={onToggleSold}
+            onClick={(e) => { e.stopPropagation(); onToggleSold(); }}
             className="flex-1 inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
           >
             {a.sold ? "Mark available" : "Mark sold"}
