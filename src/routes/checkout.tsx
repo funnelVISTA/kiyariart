@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
@@ -11,8 +11,14 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/checkout")({
   ssr: false,
   head: () => ({ meta: [{ title: "Checkout — art by KIYARI" }] }),
-  component: CheckoutPage,
+  component: CheckoutRouteShell,
 });
+
+function CheckoutRouteShell() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  if (pathname.startsWith("/checkout/")) return <Outlet />;
+  return <CheckoutPage />;
+}
 
 function CheckoutPage() {
   const { items, total, remove } = useCart();
