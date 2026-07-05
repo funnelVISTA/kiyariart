@@ -39,7 +39,7 @@ function Home() {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
   const { t } = useI18n();
   const isTouch = useIsTouch();
-  const { add } = useCart();
+  const { add, has } = useCart();
   const [lightbox, setLightbox] = useState<Artwork | null>(null);
   const [revealedId, setRevealedId] = useState<string | null>(null);
 
