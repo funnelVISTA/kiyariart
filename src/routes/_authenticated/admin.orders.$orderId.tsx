@@ -8,8 +8,11 @@ import { adminGetOrder } from "@/lib/admin-extra.functions";
 import { adminRefundOrder } from "@/lib/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 
-const STATUSES = ["pending", "paid", "shipped", "delivered", "cancelled", "refunded"] as const;
-type Status = (typeof STATUSES)[number];
+// Statuses admins can set manually. Refunded is set by the Refund button
+// (which triggers Stripe + webhook), not by clicking a status pill.
+const STATUSES = ["pending", "paid", "shipped", "delivered", "cancelled"] as const;
+type ManualStatus = (typeof STATUSES)[number];
+type Status = ManualStatus | "refunded";
 
 const CARRIERS = ["Canada Post", "UPS", "FedEx", "Purolator", "DHL", "USPS", "Other"];
 
@@ -44,7 +47,7 @@ function OrderDetailPage() {
   const emails = q.data!.emails;
   const items = Array.isArray(order.items) ? order.items : [];
 
-  const setStatus = async (status: Status) => {
+  const setStatus = async (status: ManualStatus) => {
     try {
       await adminUpdateOrder({ data: { orderId, status } });
       toast.success(`Marked ${status}`);
@@ -229,6 +232,7 @@ function StatusPill({ status }: { status: Status }) {
     shipped: "border-foreground text-foreground",
     delivered: "border-emerald-500/50 text-emerald-400",
     cancelled: "border-accent/50 text-accent",
+    refunded: "border-accent/60 text-accent bg-accent/5",
   };
   return (
     <span className={`px-3 py-1.5 text-[11px] uppercase tracking-[0.2em] border ${tone[status]}`}>{status}</span>
