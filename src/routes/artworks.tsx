@@ -36,7 +36,7 @@ function ArtworksPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
   const [revealedId, setRevealedId] = useState<string | null>(null);
-  const { add } = useCart();
+  const { add, has } = useCart();
 
   const { data: availability } = useQuery({
     queryKey: ["artwork-availability"],
@@ -116,6 +116,10 @@ function ArtworksPage() {
       toast.error(t("art.soldToast"), { description: t("art.soldDesc") });
       return;
     }
+    if (has(a.id)) {
+      toast.info(`${a.title} — already in your cart`);
+      return;
+    }
     add(a);
     toast.success(`${a.title} ${t("art.addedToast")}`, { description: t("art.addedDesc") });
   };
@@ -172,6 +176,7 @@ function ArtworksPage() {
                 index={i}
                 isTouch={isTouch}
                 revealed={revealedId === a.id}
+                inCart={has(a.id)}
                 onToggleReveal={() => setRevealedId(revealedId === a.id ? null : a.id)}
                 onOpen={() => setActiveIdx(i)}
                 onAdd={() => handleAdd(a)}
@@ -203,6 +208,7 @@ type ArtCardProps = {
   index: number;
   isTouch: boolean;
   revealed: boolean;
+  inCart: boolean;
   onToggleReveal: () => void;
   onOpen: () => void;
   onAdd: () => void;
@@ -210,7 +216,7 @@ type ArtCardProps = {
   t: (k: string) => string;
 };
 
-function ArtCard({ a, index, isTouch, revealed, onToggleReveal, onOpen, onAdd, blurb, t }: ArtCardProps) {
+function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, onAdd, blurb, t }: ArtCardProps) {
   const swipe = useTapSwipe({ onTap: onOpen, onSwipe: onToggleReveal });
   return (
     <motion.article
