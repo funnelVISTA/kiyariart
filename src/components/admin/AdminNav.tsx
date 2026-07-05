@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { KeyRound, LogOut, Package, LayoutDashboard, Palette, BarChart3, Users, Settings, Calendar } from "lucide-react";
+import { KeyRound, LogOut, Package, LayoutDashboard, Palette, BarChart3, Users, Settings, Calendar, History } from "lucide-react";
 
 const items = [
   { to: "/admin/orders", label: "Orders", icon: Package },
@@ -9,6 +9,7 @@ const items = [
   { to: "/admin/inventory", label: "Inventory", icon: Palette },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/admin/subscribers", label: "Subscribers", icon: Users },
+  { to: "/admin/activity", label: "Activity", icon: History },
   { to: "/admin/settings", label: "Settings", icon: Settings },
   { to: "/account", label: "Account", icon: KeyRound },
 ] as const;
