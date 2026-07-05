@@ -59,6 +59,18 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           return Response.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
+        // Require admin role — this endpoint sends branded emails to arbitrary
+        // addresses, so restrict to admins only.
+        const { data: roleRow, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .maybeSingle()
+        if (roleError || !roleRow) {
+          return Response.json({ error: 'Forbidden' }, { status: 403 })
+        }
+
         // Parse request body
         let templateName: string
         let recipientEmail: string
