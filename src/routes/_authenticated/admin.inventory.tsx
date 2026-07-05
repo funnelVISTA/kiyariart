@@ -31,6 +31,9 @@ import {
   adminBulkDeleteArtworks,
   adminBulkSetArtworkCollection,
 } from "@/lib/admin-content.functions";
+import { adminSetCatalogAvailability } from "@/lib/admin-extra.functions";
+import { listArtworkAvailability } from "@/lib/payments.functions";
+import { ARTWORKS } from "@/lib/artworks";
 import { ImageCropper } from "@/components/admin/ImageCropper";
 import {
   AlertDialog,
@@ -83,10 +86,21 @@ function AdminArtworksPage() {
     queryFn: () => adminListCustomArtworks(),
   });
 
+  const availQ = useQuery({
+    queryKey: ["artwork-availability"],
+    queryFn: () => listArtworkAvailability(),
+  });
+  const soldSet = useMemo(() => new Set(availQ.data?.soldIds ?? []), [availQ.data]);
+  const overrideSet = useMemo(
+    () => new Set(availQ.data?.availableOverrideIds ?? []),
+    [availQ.data],
+  );
+
   const refresh = () => {
     setOrder(null);
     qc.invalidateQueries({ queryKey: ["admin", "custom-artworks"] });
     qc.invalidateQueries({ queryKey: ["artworks-custom"] });
+    qc.invalidateQueries({ queryKey: ["artwork-availability"] });
   };
 
   const rows: Row[] = order ?? (q.data?.artworks as Row[] | undefined) ?? [];
@@ -172,6 +186,33 @@ function AdminArtworksPage() {
     }
   };
 
+  const toggleCatalog = async (id: string, available: boolean) => {
+    try {
+      await adminSetCatalogAvailability({ data: { artworkId: id, available } });
+      toast.success(available ? "Marked available" : "Marked sold");
+      refresh();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed");
+    }
+  };
+
+  const toggleCustom = async (id: string, sold: boolean) => {
+    try {
+      await adminBulkSetArtworkSold({ data: { ids: [id], sold } });
+      toast.success(sold ? "Marked sold" : "Marked available");
+      refresh();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed");
+    }
+  };
+
+  const catalogRows = useMemo(() => {
+    return ARTWORKS.map((a) => ({
+      ...a,
+      sold: overrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
+    }));
+  }, [soldSet, overrideSet]);
+
   return (
     <div className="pt-10 pb-20">
       <div className="container-page">
@@ -251,11 +292,36 @@ function AdminArtworksPage() {
                   onToggle={() => toggleSel(a.id)}
                   onEdit={() => setEditing(a)}
                   onDelete={() => setConfirmDelete({ kind: "single", id: a.id, title: a.title })}
+                  onToggleSold={() => toggleCustom(a.id, !a.sold)}
                 />
               ))}
             </div>
           </SortableContext>
         </DndContext>
+
+        {/* Catalog originals — hardcoded pieces from the store catalog */}
+        <section className="mt-16">
+          <div className="flex items-end justify-between border-b border-border pb-3">
+            <div>
+              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-1">Catalog</div>
+              <h2 className="font-display text-2xl sm:text-3xl">Catalog originals</h2>
+              <p className="mt-1 text-xs text-muted-foreground max-w-xl">
+                Founding pieces from the store catalog. Toggle availability to control
+                whether they appear as purchasable on the public store.
+              </p>
+            </div>
+            <div className="text-[11px] text-muted-foreground">{catalogRows.length} pieces</div>
+          </div>
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {catalogRows.map((a) => (
+              <CatalogCard
+                key={a.id}
+                a={a}
+                onToggleSold={() => toggleCatalog(a.id, a.sold /* was sold → make available */)}
+              />
+            ))}
+          </div>
+        </section>
       </div>
 
       {editing && (
@@ -300,9 +366,9 @@ function AdminArtworksPage() {
 }
 
 function SortableCard({
-  a, selected, onToggle, onEdit, onDelete,
+  a, selected, onToggle, onEdit, onDelete, onToggleSold,
 }: {
-  a: Row; selected: boolean; onToggle: () => void; onEdit: () => void; onDelete: () => void;
+  a: Row; selected: boolean; onToggle: () => void; onEdit: () => void; onDelete: () => void; onToggleSold: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: a.id });
   const style = {
@@ -343,10 +409,17 @@ function SortableCard({
         {a.description && <p className="mt-2 text-xs text-muted-foreground line-clamp-3">{a.description}</p>}
         <div className="mt-4 flex gap-2">
           <button
-            onClick={onEdit}
+            onClick={onToggleSold}
             className="flex-1 inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
           >
-            <Pencil className="h-3 w-3" /> Edit
+            {a.sold ? "Mark available" : "Mark sold"}
+          </button>
+          <button
+            onClick={onEdit}
+            aria-label="Edit"
+            className="inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
+          >
+            <Pencil className="h-3 w-3" />
           </button>
           <button
             onClick={onDelete}
@@ -354,6 +427,49 @@ function SortableCard({
             className="inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-accent hover:text-accent transition"
           >
             <Trash2 className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CatalogCard({
+  a,
+  onToggleSold,
+}: {
+  a: { id: string; title: string; image: string; price: number; sold: boolean; collection: string };
+  onToggleSold: () => void;
+}) {
+  return (
+    <div className="border border-border bg-card/40 overflow-hidden">
+      <div className="aspect-[4/5] bg-background relative overflow-hidden">
+        <img src={a.image} alt={a.title} className="h-full w-full object-cover" />
+        <div
+          className={`absolute bottom-2 right-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 ${
+            a.sold
+              ? "bg-background/80 border border-border text-muted-foreground"
+              : "bg-gold/90 text-primary-foreground"
+          }`}
+        >
+          {a.sold ? "Sold" : "Available"}
+        </div>
+        <div className="absolute top-2 left-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 bg-background/80 border border-border text-muted-foreground">
+          Catalog
+        </div>
+      </div>
+      <div className="p-4">
+        <div className="font-display text-xl truncate">{a.title}</div>
+        <div className="text-[11px] text-muted-foreground uppercase tracking-[0.2em]">{a.collection}</div>
+        <div className="mt-1 text-sm text-gold">
+          {a.price > 0 ? `$${Number(a.price).toLocaleString()} CAD` : "—"}
+        </div>
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={onToggleSold}
+            className="flex-1 inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
+          >
+            {a.sold ? "Mark available" : "Mark sold"}
           </button>
         </div>
       </div>
