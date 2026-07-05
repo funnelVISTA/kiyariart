@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { X, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { TransformWrapper, TransformComponent, type ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
+import { useTapSwipe } from "@/hooks/useTapSwipe";
 
 type Props = {
   open: boolean;
@@ -17,6 +18,13 @@ type Props = {
 
 export function Lightbox({ open, src, alt, caption, title, description, onClose, onPrev, onNext }: Props) {
   const ref = useRef<ReactZoomPanPinchRef | null>(null);
+  const swipe = useTapSwipe({
+    onSwipe: (dir) => {
+      if (dir === "left" && onNext) onNext();
+      if (dir === "right" && onPrev) onPrev();
+    },
+    threshold: 50,
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -83,6 +91,7 @@ export function Lightbox({ open, src, alt, caption, title, description, onClose,
           <div
             className="relative w-[90vw] h-[90vh] flex items-center justify-center overflow-hidden"
             onClick={(e) => e.stopPropagation()}
+            {...swipe}
           >
             <TransformWrapper
               ref={ref}
@@ -102,27 +111,28 @@ export function Lightbox({ open, src, alt, caption, title, description, onClose,
                   src={src}
                   alt={alt}
                   draggable={false}
-                  className="max-h-[90vh] max-w-[90vw] object-contain select-none"
+                  className="max-h-[80vh] md:max-h-[85vh] max-w-full md:max-w-[65vw] object-contain select-none"
                 />
               </TransformComponent>
             </TransformWrapper>
-
-            {(title || description) && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="pointer-events-auto absolute md:top-4 md:right-4 md:max-w-[320px] md:w-auto bottom-0 left-0 right-0 md:bottom-auto md:left-auto p-4 md:p-5 bg-background/80 backdrop-blur-md border border-border/60 text-foreground shadow-xl md:rounded-sm"
-              >
-                {title && (
-                  <div className="font-display text-base md:text-lg text-gold leading-tight">{title}</div>
-                )}
-                {description && (
-                  <p className="mt-2 text-xs md:text-[13px] text-muted-foreground leading-relaxed">
-                    {description}
-                  </p>
-                )}
-              </div>
-            )}
           </div>
+
+          {/* Info block sits on the dark backdrop, off the image */}
+          {(title || description) && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="pointer-events-auto absolute z-20 md:top-20 md:right-6 md:max-w-[300px] md:w-auto bottom-16 left-4 right-4 md:bottom-auto md:left-auto p-4 md:p-0 md:bg-transparent md:border-0 md:shadow-none bg-background/60 backdrop-blur-sm border border-border/40 rounded-sm"
+            >
+              {title && (
+                <div className="font-display text-lg md:text-2xl text-gold leading-tight">{title}</div>
+              )}
+              {description && (
+                <p className="mt-2 text-xs md:text-sm text-foreground/85 leading-relaxed">
+                  {description}
+                </p>
+              )}
+            </div>
+          )}
 
           {caption && (
             <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground text-center">
