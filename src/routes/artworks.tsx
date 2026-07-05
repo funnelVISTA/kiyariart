@@ -300,15 +300,23 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
                 onTouchStart={(e) => { e.stopPropagation(); }}
                 onTouchEnd={(e) => { e.stopPropagation(); }}
                 onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAdd(); }}
-                disabled={a.sold}
-                aria-label={a.sold ? t("art.sold") : t("feat.add")}
+                disabled={a.sold || inCart}
+                aria-label={a.sold ? t("art.sold") : inCart ? "In cart" : t("feat.add")}
                 className={`inline-flex items-center gap-1 px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-semibold transition-all duration-300 ${
                   a.sold
                     ? "border border-border text-muted-foreground cursor-not-allowed"
+                    : inCart
+                    ? "border border-gold text-gold cursor-default"
                     : "bg-gradient-gold text-primary-foreground hover:shadow-glow active:scale-95"
                 }`}
               >
-                {a.sold ? <><Check className="h-3 w-3" /> {t("art.sold")}</> : <><Plus className="h-3 w-3" /> {t("feat.add")}</>}
+                {a.sold ? (
+                  <><Check className="h-3 w-3" /> {t("art.sold")}</>
+                ) : inCart ? (
+                  <><Check className="h-3 w-3" /> In cart</>
+                ) : (
+                  <><Plus className="h-3 w-3" /> {t("feat.add")}</>
+                )}
               </button>
             </div>
 
