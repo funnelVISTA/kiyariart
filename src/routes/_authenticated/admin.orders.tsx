@@ -419,17 +419,6 @@ function OrderDetail({
     }
   };
 
-  const resendReceipt = async () => {
-    setResending(true);
-    try {
-      toast.error("Receipts send automatically at checkout.");
-    } catch (e: any) {
-      toast.error(e?.message ?? "Failed to resend");
-    } finally {
-      setResending(false);
-    }
-  };
-
   return (
     <div className="border-t border-border p-5 grid lg:grid-cols-2 gap-6">
       <div>
