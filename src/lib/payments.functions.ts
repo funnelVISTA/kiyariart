@@ -499,3 +499,71 @@ export const getOrderForCustomer = createServerFn({ method: "POST" })
       },
     };
   });
+
+// -------- Admin: refund an order --------
+// Verifies caller is an admin, refunds the PaymentIntent in Stripe, and
+// relies on the `charge.refunded` webhook to flip status + un-mark artworks.
+// Optimistically flips status to 'refunded' immediately for admin feedback.
+export const adminRefundOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { orderId: string; environment: StripeEnv; reason?: string }) => {
+    if (!data.orderId) throw new Error("orderId required");
+    if (data.environment !== "sandbox" && data.environment !== "live") {
+      throw new Error("Invalid environment");
+    }
+    return data;
+  })
+  .handler(async ({ data, context }): Promise<{ ok: true } | { error: string }> => {
+    try {
+      // Admin gate
+      const { data: role } = await context.supabase
+        .from("user_roles").select("role")
+        .eq("user_id", context.userId).eq("role", "admin").maybeSingle();
+      if (!role) return { error: "Forbidden" };
+
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: order, error } = await supabaseAdmin
+        .from("orders")
+        .select("id,status,payment_intent_id,stripe_session_id,items")
+        .eq("id", data.orderId)
+        .maybeSingle();
+      if (error) throw error;
+      if (!order) return { error: "Order not found" };
+      if (order.status === "refunded") return { error: "Order already refunded" };
+      if (!order.payment_intent_id) return { error: "No payment intent on this order" };
+
+      const stripe = createStripeClient(data.environment);
+      await stripe.refunds.create({
+        payment_intent: order.payment_intent_id,
+        reason: "requested_by_customer",
+        metadata: { orderId: data.orderId, note: data.reason ?? "" },
+      });
+
+      // Optimistic local update — webhook `charge.refunded` also does this.
+      await supabaseAdmin
+        .from("orders")
+        .update({ status: "refunded" as any, updated_at: new Date().toISOString() })
+        .eq("id", data.orderId);
+
+      // Un-mark artworks as sold so they can be re-listed.
+      const items = Array.isArray(order.items) ? (order.items as any[]) : [];
+      for (const li of items) {
+        const artId = li.artwork_id ?? li.id;
+        if (!artId) continue;
+        const isCustom = !ARTWORKS.find((a) => a.id === artId);
+        if (isCustom) {
+          await supabaseAdmin.from("artworks_custom").update({ sold: false }).eq("id", artId);
+        } else {
+          await supabaseAdmin.from("sold_artworks").delete().eq("artwork_id", artId).eq("order_id", data.orderId);
+        }
+      }
+
+      return { ok: true };
+    } catch (e) {
+      return { error: getStripeErrorMessage(e) };
+    }
+  });
+
+// -------- Public: fetch sold ids for cart auto-prune --------
+// Thin wrapper around listArtworkAvailability for the checkout page's
+// stale-cart cleanup. Same data — separate name for cache clarity.
