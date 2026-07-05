@@ -73,8 +73,10 @@ test("checkout page creates a Stripe session and mounts the embedded form", asyn
   // Reach into the iframe and confirm Stripe's own UI has rendered content
   // (at least a heading or the "Pay with Link" wallet button). This proves
   // the clientSecret was valid — a rejected secret shows an empty iframe.
+  // Stripe renders either a "Shipping information" step (physical goods)
+  // or a "Payment" step first — both are proof the clientSecret was accepted.
   const inside = stripeIframe.contentFrame();
   await expect(
-    inside.getByRole("heading").first().or(inside.locator("main").first()),
+    inside.getByRole("heading", { name: /shipping information|payment|contact/i }).first(),
   ).toBeVisible({ timeout: 30_000 });
 });
