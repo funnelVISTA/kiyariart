@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CheckCircle2, Loader2, AlertCircle, Share2, Copy, Facebook } from "lucide-react";
+import { Mail, Package, Truck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { confirmCheckout } from "@/lib/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
