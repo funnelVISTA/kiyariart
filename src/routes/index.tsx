@@ -251,9 +251,17 @@ function Home() {
                 hero={i === 0}
                 isTouch={isTouch}
                 revealed={revealedId === a.id}
+                inCart={has(a.id)}
                 onToggleReveal={() => setRevealedId(revealedId === a.id ? null : a.id)}
                 onOpen={() => setLightbox(a)}
-                onAdd={() => { add(a); toast.success(`${a.title} ${t("art.addedToast")}`); }}
+                onAdd={() => {
+                  if (has(a.id)) {
+                    toast.info(`${a.title} — already in your cart`);
+                    return;
+                  }
+                  add(a);
+                  toast.success(`${a.title} ${t("art.addedToast")}`);
+                }}
                 t={t}
               />
             </Reveal>
@@ -306,13 +314,14 @@ type FeaturedCardProps = {
   hero: boolean;
   isTouch: boolean;
   revealed: boolean;
+  inCart: boolean;
   onToggleReveal: () => void;
   onOpen: () => void;
   onAdd: () => void;
   t: (k: string) => string;
 };
 
-function FeaturedCard({ a, hero, isTouch, revealed, onToggleReveal, onOpen, onAdd, t }: FeaturedCardProps) {
+function FeaturedCard({ a, hero, isTouch, revealed, inCart, onToggleReveal, onOpen, onAdd, t }: FeaturedCardProps) {
   const swipe = useTapSwipe({ onTap: onOpen, onSwipe: onToggleReveal });
   return (
     <TiltCard
