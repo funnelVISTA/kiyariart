@@ -346,11 +346,44 @@ function AdminArtworksPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>
               {confirmDelete?.kind === "bulk"
-                ? `Delete ${confirmDelete.ids.length} artwork(s)?`
+                ? `Delete ${confirmDelete.ids.length} selected artwork${confirmDelete.ids.length === 1 ? "" : "s"}?`
                 : `Delete "${confirmDelete?.kind === "single" ? confirmDelete.title : ""}"?`}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              This can't be undone. Artworks with order history are protected and will be skipped — mark them as sold instead to keep the record.
+            <AlertDialogDescription className="space-y-2">
+              <p>This can't be undone. Artworks with order history are protected and will be skipped — mark them as sold instead to keep the record.</p>
+              {confirmDelete?.kind === "bulk" && (
+                <>
+                  {(() => {
+                    const names = confirmDelete.ids
+                      .map((id) => rows.find((r) => r.id === id)?.title || ARTWORKS.find((a) => a.id === id)?.title)
+                      .filter(Boolean) as string[];
+                    const catalogCount = confirmDelete.ids.filter((id) => catalogIds.has(id)).length;
+                    const deletableCount = confirmDelete.ids.length - catalogCount;
+                    return (
+                      <div className="rounded border border-border bg-muted/30 p-3 text-xs">
+                        <div className="font-medium uppercase tracking-wider text-foreground mb-1.5">
+                          Selected ({confirmDelete.ids.length})
+                        </div>
+                        <ul className="space-y-1 max-h-32 overflow-y-auto list-disc pl-4 text-muted-foreground">
+                          {names.map((n, i) => (
+                            <li key={i}>{n}</li>
+                          ))}
+                        </ul>
+                        {catalogCount > 0 && (
+                          <p className="mt-2 text-accent">
+                            {catalogCount} catalog piece{catalogCount === 1 ? "" : "s"} can’t be deleted — mark {catalogCount === 1 ? "it" : "them"} sold instead.
+                          </p>
+                        )}
+                        {deletableCount > 0 && (
+                          <p className="mt-2 text-gold">
+                            {deletableCount} custom piece{deletableCount === 1 ? "" : "s"} will be deleted.
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
