@@ -352,11 +352,11 @@ function FeaturedCard({ a, hero, isTouch, revealed, inCart, onToggleReveal, onOp
           </div>
         )}
 
-        <div className="absolute inset-x-0 bottom-0 p-6 translate-y-2 group-hover:translate-y-0 group-data-[reveal=true]:translate-y-0 transition-transform duration-500 pointer-events-none group-data-[reveal=true]:pointer-events-auto md:group-hover:pointer-events-auto" style={{ transform: "translateZ(30px)" }}>
+        <div className="absolute inset-x-0 bottom-0 p-6 translate-y-2 group-hover:translate-y-0 group-data-[reveal=true]:translate-y-0 transition-transform duration-500 pointer-events-auto" style={{ transform: "translateZ(30px)" }}>
           <div className="font-display text-2xl md:text-3xl">{a.title}</div>
           <div className="mt-1 flex items-center justify-between gap-4">
             <div className="text-xs uppercase tracking-[0.2em] text-gold">
-              {a.price > 0 ? `$${a.price.toLocaleString()} CAD` : t("art.inquire")} · {a.collection}
+              {a.price > 0 ? `$${a.price.toLocaleString()} CAD` : t("art.inquire")}
             </div>
             <button
               onPointerDown={(e) => e.stopPropagation()}
