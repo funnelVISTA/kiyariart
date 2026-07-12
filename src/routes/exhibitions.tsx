@@ -149,22 +149,6 @@ function ExhibitionsPage() {
           </section>
         )}
 
-        {dbPast.length > 0 && (
-          <section className="mt-24">
-            <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">{t("ex.past")}</div>
-            <div className="grid md:grid-cols-3 gap-6">
-              {dbPast.map((p) => (
-                <div key={p.id} className="border border-border p-8 hover:border-gold transition group">
-                  <div className="font-display text-2xl group-hover:text-gold transition">{p.title}</div>
-                  <div className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    {[p.venue, p.city].filter(Boolean).join(" · ") || ""}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
 
         <section className="mt-24">
           <div className="flex items-end justify-between mb-8">
