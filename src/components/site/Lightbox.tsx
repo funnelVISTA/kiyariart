@@ -89,50 +89,48 @@ export function Lightbox({ open, src, alt, caption, title, description, onClose,
           )}
 
           <div
-            className="relative w-[90vw] h-[90vh] flex items-center justify-center overflow-hidden"
+            className="relative w-[92vw] h-[88vh] flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 px-2 md:px-6"
             onClick={(e) => e.stopPropagation()}
             {...swipe}
           >
-            <TransformWrapper
-              ref={ref}
-              initialScale={1}
-              minScale={1}
-              maxScale={5}
-              centerOnInit
-              doubleClick={{ mode: "toggle", step: 1.5 }}
-              wheel={{ step: 0.15 }}
-              pinch={{ step: 5 }}
-            >
-              <TransformComponent
-                wrapperStyle={{ width: "100%", height: "100%" }}
-                contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
+            <div className="relative flex-1 min-h-0 w-full flex items-center justify-center overflow-hidden">
+              <TransformWrapper
+                ref={ref}
+                initialScale={1}
+                minScale={1}
+                maxScale={5}
+                centerOnInit
+                doubleClick={{ mode: "toggle", step: 1.5 }}
+                wheel={{ step: 0.15 }}
+                pinch={{ step: 5 }}
               >
-                <img
-                  src={src}
-                  alt={alt}
-                  draggable={false}
-                  className="max-h-[80vh] md:max-h-[85vh] max-w-full md:max-w-[65vw] object-contain select-none"
-                />
-              </TransformComponent>
-            </TransformWrapper>
-          </div>
-
-          {/* Info block sits on the dark backdrop, off the image */}
-          {(title || description) && (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="pointer-events-auto absolute z-20 md:top-20 md:right-6 md:max-w-[300px] md:w-auto bottom-16 left-4 right-4 md:bottom-auto md:left-auto p-4 md:p-0 md:bg-transparent md:border-0 md:shadow-none bg-background/60 backdrop-blur-sm border border-border/40 rounded-sm"
-            >
-              {title && (
-                <div className="font-display text-lg md:text-2xl text-gold leading-tight">{title}</div>
-              )}
-              {description && (
-                <p className="mt-2 text-xs md:text-sm text-foreground/85 leading-relaxed">
-                  {description}
-                </p>
-              )}
+                <TransformComponent
+                  wrapperStyle={{ width: "100%", height: "100%" }}
+                  contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  <img
+                    src={src}
+                    alt={alt}
+                    draggable={false}
+                    className="max-h-full max-w-full object-contain select-none"
+                  />
+                </TransformComponent>
+              </TransformWrapper>
             </div>
-          )}
+
+            {(title || description) && (
+              <div className="w-full md:w-[300px] shrink-0 md:self-start md:pt-16 text-left">
+                {title && (
+                  <div className="font-display text-lg md:text-2xl text-gold leading-tight">{title}</div>
+                )}
+                {description && (
+                  <p className="mt-2 text-xs md:text-sm text-foreground/85 leading-relaxed">
+                    {description}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           {caption && (
             <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground text-center">

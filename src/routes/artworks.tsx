@@ -28,7 +28,7 @@ export const Route = createFileRoute("/artworks")({
   component: ArtworksPage,
 });
 
-type Filter = "all" | "available" | "sold" | "essence" | "legends";
+type Filter = "all" | "available" | "sold";
 
 function ArtworksPage() {
   const { t } = useI18n();
@@ -83,12 +83,13 @@ function ArtworksPage() {
       image: r.image_url,
       price: Number(r.price ?? 0),
       sold: !!r.sold,
-      collection: (r.collection === "The Legends" ? "The Legends" : "Our Essence"),
+      collection: "Our Essence",
       medium: r.medium ?? undefined,
       description: r.description ?? undefined,
     }));
     const fromCatalog: Artwork[] = ARTWORKS.map((a) => ({
       ...a,
+      collection: "Our Essence",
       sold: availableOverrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
     }));
     const merged = [...fromCustom, ...fromCatalog];
@@ -101,7 +102,6 @@ function ArtworksPage() {
 
   const blurb = (a: Artwork) => {
     if (a.description) return a.description;
-    if (a.collection === "The Legends") return `${a.title} ${t("artworks.blurb.legend")}`;
     return `${a.title} — ${t("artworks.blurb.essence")}`;
   };
 
@@ -109,8 +109,6 @@ function ArtworksPage() {
     return catalog.filter((a) => {
       if (filter === "available") return !a.sold;
       if (filter === "sold") return a.sold;
-      if (filter === "essence") return a.collection === "Our Essence";
-      if (filter === "legends") return a.collection === "The Legends";
       return true;
     });
   }, [filter, catalog]);
@@ -131,8 +129,6 @@ function ArtworksPage() {
   const filters: { id: Filter; label: string }[] = [
     { id: "all", label: t("artworks.filter.all") },
     { id: "available", label: t("artworks.filter.available") },
-    { id: "essence", label: t("artworks.filter.essence") },
-    { id: "legends", label: t("artworks.filter.legends") },
     { id: "sold", label: t("artworks.filter.sold") },
   ];
 
@@ -268,10 +264,6 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
             className="absolute inset-0 flex flex-col justify-end p-3 md:p-5 z-[5] bg-gradient-to-t from-background via-background/50 to-transparent md:from-background/95 md:via-background/20 md:to-transparent transition-opacity duration-500"
             style={{ transform: "translateZ(30px)" }}
           >
-            {/* Collection kicker — always visible */}
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-gold font-medium">
-              {a.collection}
-            </div>
             {/* Title — always visible, strong contrast against any image */}
             <div className="mt-1 font-display text-base md:text-2xl leading-tight text-foreground font-semibold drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
               {a.title}
@@ -283,16 +275,11 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
             </p>
 
             {/* Price + CTA row */}
-            <div className="mt-2 md:mt-4 flex items-center justify-between gap-2 translate-y-1 md:translate-y-2 md:opacity-0 md:group-hover:opacity-100 md:group-hover:translate-y-0 group-data-[reveal=true]:opacity-100 group-data-[reveal=true]:translate-y-0 transition-all duration-500 pointer-events-none md:group-hover:pointer-events-auto group-data-[reveal=true]:pointer-events-auto">
+            <div className="mt-2 md:mt-4 flex items-center justify-between gap-2 translate-y-1 md:translate-y-2 md:opacity-0 md:group-hover:opacity-100 md:group-hover:translate-y-0 group-data-[reveal=true]:opacity-100 group-data-[reveal=true]:translate-y-0 transition-all duration-500 pointer-events-auto">
               {a.sold ? (
-                <Link
-                  to="/community"
-                  search={{ inquiry: a.title }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 text-xs md:text-sm font-medium text-gold hover:text-foreground transition-colors underline-offset-4 hover:underline"
-                >
-                  <Mail className="h-3 w-3" /> {t("art.inquire")}
-                </Link>
+                <div className="text-xs md:text-sm font-medium text-muted-foreground uppercase tracking-[0.2em]">
+                  {t("art.sold")}
+                </div>
               ) : (
                 <div className="text-xs md:text-sm font-medium text-gold">
                   {a.price > 0 ? `$${a.price.toLocaleString()} ` : t("art.inquire")}

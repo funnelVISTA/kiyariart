@@ -2,7 +2,6 @@ import { AnimatePresence, motion } from "motion/react";
 import { X, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCart } from "@/lib/cart";
-import { ARTWORKS } from "@/lib/artworks";
 
 export function CartSheet() {
   const { items, remove, total, open, setOpen } = useCart();
@@ -14,10 +13,6 @@ export function CartSheet() {
     setOpen(false);
     navigate({ to: "/checkout" });
   };
-
-  // For empty state suggestions: 4 available, not already in cart.
-  const inCart = new Set(items.map((i) => i.artwork.id));
-  const suggestions = ARTWORKS.filter((a) => !a.sold && a.price > 0 && !inCart.has(a.id)).slice(0, 4);
 
   return (
     <AnimatePresence>
@@ -70,28 +65,6 @@ export function CartSheet() {
                       Browse artworks <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                   </div>
-
-                  {suggestions.length > 0 && (
-                    <div className="mt-10">
-                      <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-3">Available now</div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {suggestions.map((a) => (
-                          <Link
-                            key={a.id}
-                            to="/artworks"
-                            onClick={close}
-                            className="group relative aspect-[4/5] overflow-hidden bg-card border border-border hover:border-gold transition"
-                          >
-                            <img src={a.image} alt={a.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                            <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-background/95 to-transparent">
-                              <div className="text-[11px] font-display">{a.title}</div>
-                              <div className="text-[10px] text-gold">${a.price.toLocaleString()} CAD</div>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               ) : (
                 items.map((i) => (
