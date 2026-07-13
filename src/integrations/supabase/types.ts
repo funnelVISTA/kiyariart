@@ -241,6 +241,7 @@ export type Database = {
           created_by: string | null
           end_date: string | null
           event_date: string | null
+          gallery_images: Json
           id: string
           image_url: string | null
           link_url: string | null
@@ -258,6 +259,7 @@ export type Database = {
           created_by?: string | null
           end_date?: string | null
           event_date?: string | null
+          gallery_images?: Json
           id?: string
           image_url?: string | null
           link_url?: string | null
@@ -275,6 +277,7 @@ export type Database = {
           created_by?: string | null
           end_date?: string | null
           event_date?: string | null
+          gallery_images?: Json
           id?: string
           image_url?: string | null
           link_url?: string | null
