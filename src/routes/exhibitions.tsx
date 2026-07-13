@@ -153,39 +153,91 @@ function ExhibitionsPage() {
         )}
 
 
-        <section className="mt-24">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("ex.gallery")}</div>
-              <h2 className="font-display text-5xl">Afro World Expo · 2024</h2>
+        {hasCuratedPast ? (
+          dbPastGalleries.map((show, showIdx) => {
+            const yearLabel = show.event_date ? new Date(show.event_date).getFullYear() : null;
+            const priorCount = dbPastGalleries
+              .slice(0, showIdx)
+              .reduce((sum, s) => sum + (s.gallery_images?.length ?? 0), 0);
+            return (
+              <section key={show.id} className="mt-24">
+                <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("ex.gallery")}</div>
+                    <h2 className="font-display text-5xl">
+                      {show.title}{yearLabel ? ` · ${yearLabel}` : ""}
+                    </h2>
+                    {(show.venue || show.city) && (
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        {[show.venue, show.city].filter(Boolean).join(", ")}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4 [perspective:1400px]">
+                  {(show.gallery_images ?? []).map((src, i) => {
+                    const flatIdx = priorCount + i;
+                    return (
+                      <motion.button
+                        key={src + i}
+                        onClick={() => setActive(flatIdx)}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-50px" }}
+                        transition={{ duration: 0.5, delay: (i % 8) * 0.05 }}
+                        className="block w-full break-inside-avoid group relative cursor-zoom-in"
+                      >
+                        <TiltCard max={18} scale={1.06} glare className="overflow-hidden shadow-elegant">
+                          <img
+                            src={src}
+                            alt={`${show.title} — photo ${i + 1}`}
+                            loading="lazy"
+                            className="w-full h-auto"
+                            style={{ transform: "translateZ(0)" }}
+                          />
+                          <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition" style={{ transform: "translateZ(30px)" }} />
+                        </TiltCard>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })
+        ) : (
+          <section className="mt-24">
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("ex.gallery")}</div>
+                <h2 className="font-display text-5xl">Afro World Expo · 2024</h2>
+              </div>
             </div>
-          </div>
-
-          <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4 [perspective:1400px]">
-            {GALLERY.map((src, i) => (
-              <motion.button
-                key={src + i}
-                onClick={() => setActive(i)}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: (i % 8) * 0.05 }}
-                className="block w-full break-inside-avoid group relative cursor-zoom-in"
-              >
-                <TiltCard max={18} scale={1.06} glare className="overflow-hidden shadow-elegant">
-                  <img
-                    src={src}
-                    alt={`Exhibition moment ${i + 1}`}
-                    loading="lazy"
-                    className="w-full h-auto"
-                    style={{ transform: "translateZ(0)" }}
-                  />
-                  <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition" style={{ transform: "translateZ(30px)" }} />
-                </TiltCard>
-              </motion.button>
-            ))}
-          </div>
-        </section>
+            <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4 [perspective:1400px]">
+              {GALLERY.map((src, i) => (
+                <motion.button
+                  key={src + i}
+                  onClick={() => setActive(i)}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.5, delay: (i % 8) * 0.05 }}
+                  className="block w-full break-inside-avoid group relative cursor-zoom-in"
+                >
+                  <TiltCard max={18} scale={1.06} glare className="overflow-hidden shadow-elegant">
+                    <img
+                      src={src}
+                      alt={`Exhibition moment ${i + 1}`}
+                      loading="lazy"
+                      className="w-full h-auto"
+                      style={{ transform: "translateZ(0)" }}
+                    />
+                    <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition" style={{ transform: "translateZ(30px)" }} />
+                  </TiltCard>
+                </motion.button>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       <AnimatePresence>
