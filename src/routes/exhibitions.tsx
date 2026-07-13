@@ -50,6 +50,7 @@ type DbEx = {
   link_url: string | null;
   status: "upcoming" | "past";
   sort_order: number;
+  gallery_images: string[] | null;
 };
 
 function ExhibitionsPage() {
@@ -76,15 +77,17 @@ function ExhibitionsPage() {
         .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? "")),
     [dbRows],
   );
-  const dbPast = useMemo(() => {
-    const currentYear = new Date().getFullYear();
+  const dbPastGalleries = useMemo(() => {
     return (dbRows ?? [])
-      .filter((r) => {
-        if (r.status !== "past" || !r.event_date) return false;
-        return new Date(r.event_date).getFullYear() === currentYear;
-      })
+      .filter((r) => r.status === "past" && Array.isArray(r.gallery_images) && r.gallery_images.length > 0)
       .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
   }, [dbRows]);
+  // Flat list of every past-show image, in gallery order, for the lightbox.
+  const pastLightboxImages = useMemo(
+    () => dbPastGalleries.flatMap((g) => g.gallery_images ?? []),
+    [dbPastGalleries],
+  );
+  const hasCuratedPast = dbPastGalleries.length > 0;
 
 
   return (
