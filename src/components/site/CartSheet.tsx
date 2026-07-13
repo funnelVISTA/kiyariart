@@ -105,7 +105,16 @@ export function CartSheet() {
                         <div className="text-[10px] text-muted-foreground/80 mt-0.5 line-clamp-1">{i.artwork.medium}</div>
                       )}
                       <div className="mt-1 text-gold text-sm">
-                        {i.artwork.price > 0 ? `$${i.artwork.price.toLocaleString()} CAD` : "Inquiry"}
+                        {i.artwork.price > 0 ? (
+                          i.artwork.onSale && i.artwork.originalPrice ? (
+                            <>
+                              <span className="line-through text-muted-foreground mr-1.5 opacity-70">${i.artwork.originalPrice.toLocaleString()}</span>
+                              <span className="text-accent">${i.artwork.price.toLocaleString()}</span> <span className="text-muted-foreground text-xs">CAD</span>
+                            </>
+                          ) : (
+                            `$${i.artwork.price.toLocaleString()} CAD`
+                          )
+                        ) : "Inquiry"}
                       </div>
                     </div>
                     <button
