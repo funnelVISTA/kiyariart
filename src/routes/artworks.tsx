@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, Plus, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ARTWORKS, type Artwork } from "@/lib/artworks";
 import { useCart } from "@/lib/cart";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { Lightbox } from "@/components/site/Lightbox";
+import { AddToCartButton } from "@/components/site/AddToCartButton";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { listArtworkAvailability } from "@/lib/payments.functions";
@@ -194,7 +195,8 @@ function ArtworksPage() {
         alt={active?.title}
         title={active?.title}
         description={active ? blurb(active) : undefined}
-        caption={active ? `${active.title} · ${active.collection}${active.price > 0 ? ` · $${active.price.toLocaleString()} CAD` : ""}` : undefined}
+        price={active?.price}
+        caption={active ? active.title : undefined}
         onClose={() => setActiveIdx(null)}
         onPrev={activeIdx !== null && items.length > 1 ? () => setActiveIdx((activeIdx - 1 + items.length) % items.length) : undefined}
         onNext={activeIdx !== null && items.length > 1 ? () => setActiveIdx((activeIdx + 1) % items.length) : undefined}
