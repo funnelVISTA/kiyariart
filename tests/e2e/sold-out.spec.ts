@@ -14,11 +14,13 @@ test.describe("sold-out UX", () => {
   }) => {
     test.setTimeout(60_000);
 
-    await page.goto("/artworks", { waitUntil: "domcontentloaded" });
+    await page.goto("/artworks", { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-    // Filter to Sold to isolate the invariant.
-    const soldFilter = page.getByRole("button", { name: /^sold$/i }).first();
+    // Filter to Sold to isolate the invariant. Filter labels are rendered
+    // as regular text inside <button> elements; match on visible text.
+    const soldFilter = page.locator("button", { hasText: /^sold$/i }).first();
+    await soldFilter.waitFor({ state: "visible", timeout: 20_000 });
     await soldFilter.click();
 
     // At least one sold card should be visible after filtering.
