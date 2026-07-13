@@ -442,7 +442,7 @@ function SortableCard({
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </button>
         <div className={`absolute bottom-2 right-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 ${a.sold ? "bg-background/80 border border-border text-muted-foreground" : "bg-gold/90 text-primary-foreground"}`}>
-          {a.sold ? "Sold" : a.price > 0 ? "Available" : "Inquiry"}
+          {a.sold ? "Sold" : "Available"}
         </div>
       </div>
       <div className="p-4">
@@ -510,7 +510,7 @@ function CatalogCard({
               : "bg-gold/90 text-primary-foreground"
           }`}
         >
-          {a.sold ? "Sold" : a.price > 0 ? "Available" : "Inquiry"}
+          {a.sold ? "Sold" : "Available"}
         </div>
         <div className="absolute top-2 right-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 bg-background/80 border border-border text-muted-foreground">
           Catalog
