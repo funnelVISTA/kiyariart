@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef, useState } from "react";
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { ARTWORKS, HERO_IMAGE, type Artwork } from "@/lib/artworks";
 import { useI18n } from "@/lib/i18n";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { Reveal, RevealText } from "@/components/ui/Reveal";
 import { Lightbox } from "@/components/site/Lightbox";
+import { AddToCartButton } from "@/components/site/AddToCartButton";
 import { useCart } from "@/lib/cart";
 import { useIsTouch } from "@/hooks/useIsTouch";
 import { useTapSwipe } from "@/hooks/useTapSwipe";
@@ -293,7 +294,10 @@ function Home() {
         open={!!lightbox}
         src={lightbox?.image ?? null}
         alt={lightbox?.title}
-        caption={lightbox ? `${lightbox.title} — ${lightbox.collection}` : undefined}
+        title={lightbox?.title}
+        description={lightbox?.description}
+        price={lightbox?.price}
+        caption={lightbox ? lightbox.title : undefined}
         onClose={() => setLightbox(null)}
       />
     </div>
