@@ -331,6 +331,14 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
           <div className="pointer-events-none absolute top-0 right-0 w-8 h-8 md:w-10 md:h-10 border-t border-r border-gold/40 opacity-70 group-hover:opacity-100 transition-all duration-500" />
           <div className="pointer-events-none absolute bottom-0 left-0 w-8 h-8 md:w-10 md:h-10 border-b border-l border-gold/40 opacity-70 group-hover:opacity-100 transition-all duration-500" />
 
+          {/* SALE badge (in addition to status) */}
+          {!a.sold && a.onSale && (
+            <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+              <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-accent text-accent-foreground font-medium">
+                Sale
+              </span>
+            </div>
+          )}
           {/* Status badge — top-right (SOLD) or top-left (Available). Sold artworks show ONLY this indicator. */}
           {a.sold ? (
             <div className="absolute top-3 right-3 z-10">
@@ -338,13 +346,13 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
                 {t("art.sold")}
               </span>
             </div>
-          ) : isArtworkPurchasable(a) ? (
+          ) : isArtworkPurchasable(a) && !a.onSale ? (
             <div className="absolute top-3 left-3 z-10">
               <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-gold/95 text-primary-foreground font-medium shadow-glow">
                 {t("art.available")}
               </span>
             </div>
-          ) : (
+          ) : isArtworkPurchasable(a) ? null : (
             <div className="absolute top-3 right-3 z-10">
               <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-background/85 backdrop-blur border border-gold text-gold">
                 {t("art.inquire")}
@@ -361,7 +369,14 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
             <div className="font-display text-sm md:text-lg leading-tight truncate">{a.title}</div>
              {isArtworkPurchasable(a) && (
               <div className="mt-1 text-[10px] md:text-xs text-gold uppercase tracking-[0.15em]">
-                ${a.price.toLocaleString()} <span className="opacity-60">CAD</span>
+                {a.onSale && a.originalPrice ? (
+                  <>
+                    <span className="line-through text-muted-foreground mr-1.5 opacity-70">${a.originalPrice.toLocaleString()}</span>
+                    <span className="text-accent">${a.price.toLocaleString()}</span> <span className="opacity-60">CAD</span>
+                  </>
+                ) : (
+                  <>${a.price.toLocaleString()} <span className="opacity-60">CAD</span></>
+                )}
               </div>
             )}
           </div>
