@@ -331,6 +331,14 @@ function ExhibitionEditor({
       toast.error("Date is required");
       return;
     }
+    if (mode === "event" && form.event_date && form.event_date < todayISO()) {
+      toast.error("Upcoming events can't be in the past. Use Add Media for past shows.");
+      return;
+    }
+    if (mode === "media" && form.event_date && form.event_date > todayISO()) {
+      toast.error("Past exhibitions can't have a future date.");
+      return;
+    }
     setSaving(true);
     try {
       await adminUpsertExhibition({
@@ -554,6 +562,14 @@ function ExhibitionEditor({
                     >
                       <ImagePlus className="h-3.5 w-3.5" /> {uploading ? "Uploading…" : "Add photos"}
                     </button>
+                    {uploadProgress && (
+                      <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-center">
+                        Uploading {uploadProgress.done} / {uploadProgress.total}…
+                      </p>
+                    )}
+                    <p className="mt-2 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60 text-center">
+                      Up to {MAX_GALLERY_BATCH} images per batch · auto-resized to 1600px
+                    </p>
                   </>
                 )}
               </div>
