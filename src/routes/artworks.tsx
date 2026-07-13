@@ -282,19 +282,7 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
           </div>
           <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
             {!isArtworkPurchasable(a) ? (
-              <Link
-                to="/community"
-                search={{ inquiry: a.title }}
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                onTouchEnd={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
-                aria-label={`Inquire about ${a.title}`}
-                className="inline-flex items-center gap-1 px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-semibold border border-gold text-gold hover:bg-gold hover:text-primary-foreground transition-all duration-300 cursor-pointer"
-              >
-                <Mail className="h-3 w-3" /> {t("art.inquire")}
-              </Link>
+              <InquireButton title={a.title} label={t("art.inquire")} onGo={() => navigate({ to: "/community", search: { inquiry: a.title } })} />
             ) : (
               <AddToCartButton onAdd={onAdd} inCart={inCart} label={t("feat.add")} size="sm" />
             )}
