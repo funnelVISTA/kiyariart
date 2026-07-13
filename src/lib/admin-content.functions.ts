@@ -484,6 +484,13 @@ type CatalogOverrideUpsert = {
   priceOverride?: number | null;
   onSale?: boolean;
   salePrice?: number | null;
+  title?: string | null;
+  description?: string | null;
+  medium?: string | null;
+  image_url?: string | null;
+  alt_text?: string | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
 };
 
 export const adminUpsertCatalogOverride = createServerFn({ method: "POST" })
@@ -508,23 +515,43 @@ export const adminUpsertCatalogOverride = createServerFn({ method: "POST" })
       if (sp >= effectiveList) throw new Error("Sale price must be less than the regular price");
       salePrice = Math.round(sp * 100) / 100;
     }
-    return { artworkId: d.artworkId, priceOverride, onSale, salePrice };
+    const norm = (v: unknown) => {
+      if (v === undefined) return undefined;
+      if (v === null) return null;
+      const s = String(v);
+      return s.trim() === "" ? null : s;
+    };
+    return {
+      artworkId: d.artworkId,
+      priceOverride,
+      onSale,
+      salePrice,
+      title: norm(d.title),
+      description: norm(d.description),
+      medium: norm(d.medium),
+      image_url: norm(d.image_url),
+      alt_text: norm(d.alt_text),
+      seo_title: norm(d.seo_title),
+      seo_description: norm(d.seo_description),
+    };
   })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const row: Record<string, unknown> = {
+      artwork_id: data.artworkId,
+      price_override: data.priceOverride,
+      on_sale: data.onSale,
+      sale_price: data.salePrice,
+      updated_at: new Date().toISOString(),
+    };
+    // Only include text override fields if the client sent them (undefined = leave as-is).
+    for (const k of ["title","description","medium","image_url","alt_text","seo_title","seo_description"] as const) {
+      if ((data as any)[k] !== undefined) row[k] = (data as any)[k];
+    }
     const { error } = await supabaseAdmin
       .from("artwork_catalog_overrides")
-      .upsert(
-        {
-          artwork_id: data.artworkId,
-          price_override: data.priceOverride,
-          on_sale: data.onSale,
-          sale_price: data.salePrice,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "artwork_id" },
-      );
+      .upsert(row as any, { onConflict: "artwork_id" });
     if (error) throw new Error(error.message);
     await logActivity(supabaseAdmin, context, {
       action: "artwork.catalog_override_saved",
