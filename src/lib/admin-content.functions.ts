@@ -88,6 +88,8 @@ type ArtworkUpsert = {
   seo_title?: string | null;
   seo_description?: string | null;
   alt_text?: string | null;
+  on_sale?: boolean;
+  sale_price?: number | null;
 };
 
 export const adminListCustomArtworks = createServerFn({ method: "GET" })
@@ -112,7 +114,16 @@ export const adminUpsertCustomArtwork = createServerFn({ method: "POST" })
     const price = Number(d.price);
     if (!Number.isFinite(price) || price < 0) throw new Error("Invalid price");
     if (!d.collection) throw new Error("Collection required");
-    return { ...d, price };
+    const onSale = !!d.on_sale;
+    let salePrice: number | null = null;
+    if (onSale) {
+      const sp = Number(d.sale_price);
+      if (!Number.isFinite(sp) || sp <= 0) throw new Error("Sale price must be a positive number");
+      if (!(price > 0)) throw new Error("Set a regular price before enabling sale");
+      if (sp >= price) throw new Error("Sale price must be less than the regular price");
+      salePrice = Math.round(sp * 100) / 100;
+    }
+    return { ...d, price, on_sale: onSale, sale_price: salePrice };
   })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -131,6 +142,8 @@ export const adminUpsertCustomArtwork = createServerFn({ method: "POST" })
       seo_description: data.seo_description?.trim() || null,
       alt_text: data.alt_text?.trim() || null,
       created_by: context.userId,
+      on_sale: !!data.on_sale,
+      sale_price: data.sale_price ?? null,
     };
     if (data.id) {
       const { data: before } = await supabaseAdmin
