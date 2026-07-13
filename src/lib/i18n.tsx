@@ -88,7 +88,7 @@ export const DICT: Dict = {
   "artworks.filter.available": { en: "Available", fr: "Disponibles" },
   "artworks.filter.essence": { en: "Our Essence", fr: "Notre Essence" },
   "artworks.filter.legends": { en: "Legends", fr: "Légendes" },
-  "artworks.filter.sold": { en: "Archive", fr: "Archives" },
+  "artworks.filter.sold": { en: "Sold", fr: "Vendues" },
   "artworks.details": {
     en: "Acrylic, oil & mixed media on canvas. Signed by the artist. Each piece is unique and ships fully insured from Calgary, AB.",
     fr: "Acrylique, huile et techniques mixtes sur toile. Signée par l'artiste. Chaque pièce est unique et expédiée entièrement assurée depuis Calgary, AB.",
