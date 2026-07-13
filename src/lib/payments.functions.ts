@@ -490,12 +490,24 @@ export const confirmCheckout = createServerFn({ method: "POST" })
 
 // Public: list sold-out artwork IDs (from both catalog overrides and custom).
 export const listArtworkAvailability = createServerFn({ method: "GET" }).handler(
-  async (): Promise<{ soldIds: string[]; availableOverrideIds: string[] }> => {
+  async (): Promise<{
+    soldIds: string[];
+    availableOverrideIds: string[];
+    catalogOverrides: Array<{
+      artwork_id: string;
+      price_override: number | null;
+      on_sale: boolean;
+      sale_price: number | null;
+    }>;
+  }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data: sold }, { data: customSold }, { data: stock }] = await Promise.all([
+    const [{ data: sold }, { data: customSold }, { data: stock }, { data: overrides }] = await Promise.all([
       supabaseAdmin.from("sold_artworks").select("artwork_id"),
       supabaseAdmin.from("artworks_custom").select("id").eq("sold", true),
       supabaseAdmin.from("artwork_stock").select("artwork_id,total_units,sold_units"),
+      supabaseAdmin
+        .from("artwork_catalog_overrides")
+        .select("artwork_id,price_override,on_sale,sale_price"),
     ]);
     const soldSet = new Set<string>();
     for (const r of sold ?? []) soldSet.add(r.artwork_id);
@@ -507,7 +519,16 @@ export const listArtworkAvailability = createServerFn({ method: "GET" }).handler
         soldSet.delete(r.artwork_id);
       }
     }
-    return { soldIds: Array.from(soldSet), availableOverrideIds: Array.from(availableOverride) };
+    return {
+      soldIds: Array.from(soldSet),
+      availableOverrideIds: Array.from(availableOverride),
+      catalogOverrides: (overrides ?? []).map((r: any) => ({
+        artwork_id: r.artwork_id,
+        price_override: r.price_override != null ? Number(r.price_override) : null,
+        on_sale: !!r.on_sale,
+        sale_price: r.sale_price != null ? Number(r.sale_price) : null,
+      })),
+    };
   },
 );
 
