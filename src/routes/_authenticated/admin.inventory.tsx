@@ -74,11 +74,10 @@ function AdminArtworksPage() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
   const [editingCatalog, setEditingCatalog] = useState<null | {
-    id: string;
-    title: string;
-    image: string;
+    artworkId: string;
     originalPrice: number;
-    priceOverride: number | null;
+    originalSold: boolean;
+    initial: Partial<Row>;
     onSale: boolean;
     salePrice: number | null;
   }>(null);
@@ -105,9 +104,31 @@ function AdminArtworksPage() {
     [availQ.data],
   );
   const catalogOverrideMap = useMemo(() => {
-    const m = new Map<string, { price_override: number | null; on_sale: boolean; sale_price: number | null }>();
+    const m = new Map<string, {
+      price_override: number | null;
+      on_sale: boolean;
+      sale_price: number | null;
+      title: string | null;
+      description: string | null;
+      medium: string | null;
+      image_url: string | null;
+      alt_text: string | null;
+      seo_title: string | null;
+      seo_description: string | null;
+    }>();
     for (const r of availQ.data?.catalogOverrides ?? []) {
-      m.set(r.artwork_id, { price_override: r.price_override, on_sale: r.on_sale, sale_price: r.sale_price });
+      m.set(r.artwork_id, {
+        price_override: r.price_override,
+        on_sale: r.on_sale,
+        sale_price: r.sale_price,
+        title: (r as any).title ?? null,
+        description: (r as any).description ?? null,
+        medium: (r as any).medium ?? null,
+        image_url: (r as any).image_url ?? null,
+        alt_text: (r as any).alt_text ?? null,
+        seo_title: (r as any).seo_title ?? null,
+        seo_description: (r as any).seo_description ?? null,
+      });
     }
     return m;
   }, [availQ.data]);
