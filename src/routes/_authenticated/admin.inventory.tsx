@@ -29,6 +29,7 @@ import {
   adminReorderCustomArtworks,
   adminBulkSetArtworkSold,
   adminBulkDeleteArtworks,
+  adminUpsertCatalogOverride,
 } from "@/lib/admin-content.functions";
 import { adminSetCatalogAvailability } from "@/lib/admin-extra.functions";
 import { listArtworkAvailability } from "@/lib/payments.functions";
@@ -72,6 +73,15 @@ type Row = {
 function AdminArtworksPage() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
+  const [editingCatalog, setEditingCatalog] = useState<null | {
+    id: string;
+    title: string;
+    image: string;
+    originalPrice: number;
+    priceOverride: number | null;
+    onSale: boolean;
+    salePrice: number | null;
+  }>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [order, setOrder] = useState<Row[] | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<
@@ -94,6 +104,13 @@ function AdminArtworksPage() {
     () => new Set(availQ.data?.availableOverrideIds ?? []),
     [availQ.data],
   );
+  const catalogOverrideMap = useMemo(() => {
+    const m = new Map<string, { price_override: number | null; on_sale: boolean; sale_price: number | null }>();
+    for (const r of availQ.data?.catalogOverrides ?? []) {
+      m.set(r.artwork_id, { price_override: r.price_override, on_sale: r.on_sale, sale_price: r.sale_price });
+    }
+    return m;
+  }, [availQ.data]);
 
   const refresh = () => {
     setOrder(null);
@@ -224,11 +241,24 @@ function AdminArtworksPage() {
   };
 
   const catalogRows = useMemo(() => {
-    return ARTWORKS.map((a) => ({
-      ...a,
-      sold: overrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
-    }));
-  }, [soldSet, overrideSet]);
+    return ARTWORKS.map((a) => {
+      const ov = catalogOverrideMap.get(a.id);
+      const listPrice = ov?.price_override ?? a.price;
+      const onSale = !!ov?.on_sale && ov?.sale_price != null;
+      const salePrice = onSale ? Number(ov!.sale_price) : null;
+      const effective = onSale && salePrice != null ? salePrice : listPrice;
+      return {
+        ...a,
+        sold: overrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
+        priceListing: listPrice,
+        priceEffective: effective,
+        onSale,
+        salePrice,
+        originalPrice: a.price,
+        priceOverride: ov?.price_override ?? null,
+      };
+    });
+  }, [soldSet, overrideSet, catalogOverrideMap]);
 
   return (
     <div className="pt-10 pb-20">
@@ -327,6 +357,17 @@ function AdminArtworksPage() {
                 selected={selected.has(a.id)}
                 onToggle={() => toggleSel(a.id)}
                 onToggleSold={() => toggleCatalog(a.id, a.sold /* was sold → make available */)}
+                onEdit={() =>
+                  setEditingCatalog({
+                    id: a.id,
+                    title: a.title,
+                    image: a.image,
+                    originalPrice: a.originalPrice,
+                    priceOverride: a.priceOverride,
+                    onSale: a.onSale,
+                    salePrice: a.salePrice,
+                  })
+                }
               />
             ))}
           </div>
@@ -338,6 +379,14 @@ function AdminArtworksPage() {
           initial={editing}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); refresh(); }}
+        />
+      )}
+
+      {editingCatalog && (
+        <CatalogOverrideEditor
+          initial={editingCatalog}
+          onClose={() => setEditingCatalog(null)}
+          onSaved={() => { setEditingCatalog(null); refresh(); }}
         />
       )}
 
