@@ -52,27 +52,48 @@ export type Database = {
       }
       artwork_catalog_overrides: {
         Row: {
+          alt_text: string | null
           artwork_id: string
           created_at: string
+          description: string | null
+          image_url: string | null
+          medium: string | null
           on_sale: boolean
           price_override: number | null
           sale_price: number | null
+          seo_description: string | null
+          seo_title: string | null
+          title: string | null
           updated_at: string
         }
         Insert: {
+          alt_text?: string | null
           artwork_id: string
           created_at?: string
+          description?: string | null
+          image_url?: string | null
+          medium?: string | null
           on_sale?: boolean
           price_override?: number | null
           sale_price?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          title?: string | null
           updated_at?: string
         }
         Update: {
+          alt_text?: string | null
           artwork_id?: string
           created_at?: string
+          description?: string | null
+          image_url?: string | null
+          medium?: string | null
           on_sale?: boolean
           price_override?: number | null
           sale_price?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          title?: string | null
           updated_at?: string
         }
         Relationships: []

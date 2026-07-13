@@ -74,11 +74,10 @@ function AdminArtworksPage() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
   const [editingCatalog, setEditingCatalog] = useState<null | {
-    id: string;
-    title: string;
-    image: string;
+    artworkId: string;
     originalPrice: number;
-    priceOverride: number | null;
+    originalSold: boolean;
+    initial: Partial<Row>;
     onSale: boolean;
     salePrice: number | null;
   }>(null);
@@ -105,9 +104,31 @@ function AdminArtworksPage() {
     [availQ.data],
   );
   const catalogOverrideMap = useMemo(() => {
-    const m = new Map<string, { price_override: number | null; on_sale: boolean; sale_price: number | null }>();
+    const m = new Map<string, {
+      price_override: number | null;
+      on_sale: boolean;
+      sale_price: number | null;
+      title: string | null;
+      description: string | null;
+      medium: string | null;
+      image_url: string | null;
+      alt_text: string | null;
+      seo_title: string | null;
+      seo_description: string | null;
+    }>();
     for (const r of availQ.data?.catalogOverrides ?? []) {
-      m.set(r.artwork_id, { price_override: r.price_override, on_sale: r.on_sale, sale_price: r.sale_price });
+      m.set(r.artwork_id, {
+        price_override: r.price_override,
+        on_sale: r.on_sale,
+        sale_price: r.sale_price,
+        title: (r as any).title ?? null,
+        description: (r as any).description ?? null,
+        medium: (r as any).medium ?? null,
+        image_url: (r as any).image_url ?? null,
+        alt_text: (r as any).alt_text ?? null,
+        seo_title: (r as any).seo_title ?? null,
+        seo_description: (r as any).seo_description ?? null,
+      });
     }
     return m;
   }, [availQ.data]);
@@ -249,6 +270,10 @@ function AdminArtworksPage() {
       const effective = onSale && salePrice != null ? salePrice : listPrice;
       return {
         ...a,
+        title: ov?.title ?? a.title,
+        image: ov?.image_url ?? a.image,
+        description: ov?.description ?? a.description,
+        medium: ov?.medium ?? a.medium,
         sold: overrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
         priceListing: listPrice,
         priceEffective: effective,
@@ -256,6 +281,9 @@ function AdminArtworksPage() {
         salePrice,
         originalPrice: a.price,
         priceOverride: ov?.price_override ?? null,
+        altText: ov?.alt_text ?? null,
+        seoTitle: ov?.seo_title ?? null,
+        seoDescription: ov?.seo_description ?? null,
       };
     });
   }, [soldSet, overrideSet, catalogOverrideMap]);
@@ -359,13 +387,25 @@ function AdminArtworksPage() {
                 onToggleSold={() => toggleCatalog(a.id, a.sold /* was sold → make available */)}
                 onEdit={() =>
                   setEditingCatalog({
-                    id: a.id,
-                    title: a.title,
-                    image: a.image,
+                    artworkId: a.id,
                     originalPrice: a.originalPrice,
-                    priceOverride: a.priceOverride,
+                    originalSold: a.sold,
                     onSale: a.onSale,
                     salePrice: a.salePrice,
+                    initial: {
+                      id: a.id,
+                      title: a.title,
+                      description: a.description ?? null,
+                      medium: a.medium ?? null,
+                      price: a.priceListing ?? a.price,
+                      image_url: a.image,
+                      collection: "Our Essence",
+                      sold: a.sold,
+                      alt_text: a.altText ?? null,
+                      seo_title: a.seoTitle ?? null,
+                      seo_description: a.seoDescription ?? null,
+                      ...( { on_sale: a.onSale, sale_price: a.salePrice } as any ),
+                    },
                   })
                 }
               />
@@ -383,8 +423,13 @@ function AdminArtworksPage() {
       )}
 
       {editingCatalog && (
-        <CatalogOverrideEditor
-          initial={editingCatalog}
+        <ArtworkEditor
+          initial={editingCatalog.initial}
+          catalog={{
+            artworkId: editingCatalog.artworkId,
+            originalPrice: editingCatalog.originalPrice,
+            originalSold: editingCatalog.originalSold,
+          }}
           onClose={() => setEditingCatalog(null)}
           onSaved={() => { setEditingCatalog(null); refresh(); }}
         />
@@ -625,9 +670,12 @@ function CatalogCard({
 }
 
 function ArtworkEditor({
-  initial, onClose, onSaved,
+  initial, onClose, onSaved, catalog,
 }: {
-  initial: Partial<Row>; onClose: () => void; onSaved: () => void;
+  initial: Partial<Row>;
+  onClose: () => void;
+  onSaved: () => void;
+  catalog?: { artworkId: string; originalPrice: number; originalSold: boolean };
 }) {
   const [form, setForm] = useState<Partial<Row>>(initial);
   // Local editable string for the price so users can clear the field without
@@ -745,6 +793,32 @@ function ArtworkEditor({
     }
     setSaving(true);
     try {
+      if (catalog) {
+        await adminUpsertCatalogOverride({
+          data: {
+            artworkId: catalog.artworkId,
+            originalPrice: catalog.originalPrice,
+            priceOverride: parsedPrice,
+            onSale,
+            salePrice,
+            title: form.title ?? null,
+            description: form.description ?? null,
+            medium: form.medium ?? null,
+            image_url: form.image_url ?? null,
+            alt_text: form.alt_text ?? null,
+            seo_title: form.seo_title ?? null,
+            seo_description: form.seo_description ?? null,
+          },
+        });
+        if (!!form.sold !== catalog.originalSold) {
+          await adminSetCatalogAvailability({
+            data: { artworkId: catalog.artworkId, available: !form.sold },
+          });
+        }
+        toast.success("Artwork updated");
+        onSaved();
+        return;
+      }
       await adminUpsertCustomArtwork({
         data: {
           id: form.id,

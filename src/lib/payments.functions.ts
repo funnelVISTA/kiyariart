@@ -139,19 +139,21 @@ export async function resolveCartItems(
   // Catalog price/sale overrides (for hardcoded ARTWORKS ids).
   const catalogOverrideMap = new Map<
     string,
-    { price_override: number | null; on_sale: boolean; sale_price: number | null }
+    { price_override: number | null; on_sale: boolean; sale_price: number | null; title: string | null; image_url: string | null }
   >();
   if (catalogIds.length) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: ovRows } = await supabaseAdmin
       .from("artwork_catalog_overrides")
-      .select("artwork_id,price_override,on_sale,sale_price")
+      .select("artwork_id,price_override,on_sale,sale_price,title,image_url")
       .in("artwork_id", catalogIds);
     for (const r of ovRows ?? []) {
       catalogOverrideMap.set(r.artwork_id, {
         price_override: r.price_override != null ? Number(r.price_override) : null,
         on_sale: !!r.on_sale,
         sale_price: r.sale_price != null ? Number(r.sale_price) : null,
+        title: (r as any).title ?? null,
+        image_url: (r as any).image_url ?? null,
       });
     }
   }
@@ -166,7 +168,9 @@ export async function resolveCartItems(
       const effective = ov?.on_sale && ov.sale_price != null ? ov.sale_price : listPrice;
       if (!(effective > 0)) throw new Error(`"${art.title}" is not for sale`);
       return {
-        id: art.id, title: art.title, image: art.image,
+        id: art.id,
+        title: ov?.title ?? art.title,
+        image: ov?.image_url ?? art.image,
         unit_amount_cad: effective, quantity: 1 as const, source: "catalog" as const,
       };
     }
@@ -498,6 +502,13 @@ export const listArtworkAvailability = createServerFn({ method: "GET" }).handler
       price_override: number | null;
       on_sale: boolean;
       sale_price: number | null;
+      title: string | null;
+      description: string | null;
+      medium: string | null;
+      image_url: string | null;
+      alt_text: string | null;
+      seo_title: string | null;
+      seo_description: string | null;
     }>;
   }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -507,7 +518,7 @@ export const listArtworkAvailability = createServerFn({ method: "GET" }).handler
       supabaseAdmin.from("artwork_stock").select("artwork_id,total_units,sold_units"),
       supabaseAdmin
         .from("artwork_catalog_overrides")
-        .select("artwork_id,price_override,on_sale,sale_price"),
+        .select("artwork_id,price_override,on_sale,sale_price,title,description,medium,image_url,alt_text,seo_title,seo_description"),
     ]);
     const soldSet = new Set<string>();
     for (const r of sold ?? []) soldSet.add(r.artwork_id);
@@ -527,6 +538,13 @@ export const listArtworkAvailability = createServerFn({ method: "GET" }).handler
         price_override: r.price_override != null ? Number(r.price_override) : null,
         on_sale: !!r.on_sale,
         sale_price: r.sale_price != null ? Number(r.sale_price) : null,
+        title: r.title ?? null,
+        description: r.description ?? null,
+        medium: r.medium ?? null,
+        image_url: r.image_url ?? null,
+        alt_text: r.alt_text ?? null,
+        seo_title: r.seo_title ?? null,
+        seo_description: r.seo_description ?? null,
       })),
     };
   },
