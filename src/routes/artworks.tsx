@@ -233,107 +233,71 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
     >
       <TiltCard max={10} scale={1.03} className="relative">
         <div className="relative aspect-[3/4] overflow-hidden bg-card border border-white/5 group-hover:border-gold/40 transition-colors duration-500">
-          {/* Image with slow ken-burns zoom */}
           <img
             src={thumb(a.image, 800)}
             alt={a.title}
             loading="lazy"
             decoding="async"
             sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
-            className="h-full w-full object-cover transition-transform duration-[1.4s] ease-out group-hover:scale-110 group-data-[reveal=true]:scale-105"
+            className="h-full w-full object-cover transition-transform duration-[1.4s] ease-out group-hover:scale-110"
             style={{ transform: "translateZ(0)" }}
           />
 
-          {/* Corner accent — top-right */}
-          <div className="pointer-events-none absolute top-0 right-0 w-8 h-8 md:w-10 md:h-10 border-t border-r border-gold/40 opacity-70 group-hover:opacity-100 group-hover:w-12 group-hover:h-12 transition-all duration-500" style={{ transform: "translateZ(40px)" }} />
-          <div className="pointer-events-none absolute bottom-0 left-0 w-8 h-8 md:w-10 md:h-10 border-b border-l border-gold/40 opacity-70 group-hover:opacity-100 group-hover:w-12 group-hover:h-12 transition-all duration-500" style={{ transform: "translateZ(40px)" }} />
+          {/* Corner accents */}
+          <div className="pointer-events-none absolute top-0 right-0 w-8 h-8 md:w-10 md:h-10 border-t border-r border-gold/40 opacity-70 group-hover:opacity-100 transition-all duration-500" />
+          <div className="pointer-events-none absolute bottom-0 left-0 w-8 h-8 md:w-10 md:h-10 border-b border-l border-gold/40 opacity-70 group-hover:opacity-100 transition-all duration-500" />
 
-          {/* Status badge */}
-          <div className="absolute top-3 left-3 z-10" style={{ transform: "translateZ(40px)" }}>
-            {a.sold ? (
+          {/* Status badge — top-right (SOLD) or top-left (Available). Sold artworks show ONLY this indicator. */}
+          {a.sold ? (
+            <div className="absolute top-3 right-3 z-10">
               <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-background/85 backdrop-blur border border-border">
                 {t("art.sold")}
               </span>
-            ) : (
+            </div>
+          ) : (
+            <div className="absolute top-3 left-3 z-10">
               <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-gold/95 text-primary-foreground font-medium shadow-glow">
                 {t("art.available")}
               </span>
-            )}
-          </div>
-
-          {/* Immersive info overlay — always dark gradient, content slides up on hover/reveal */}
-          <div
-            className="absolute inset-0 flex flex-col justify-end p-3 md:p-5 z-[5] bg-gradient-to-t from-background via-background/50 to-transparent md:from-background/95 md:via-background/20 md:to-transparent transition-opacity duration-500"
-            style={{ transform: "translateZ(30px)" }}
-          >
-            {/* Title — always visible, strong contrast against any image */}
-            <div className="mt-1 font-display text-base md:text-2xl leading-tight text-foreground font-semibold drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
-              {a.title}
             </div>
+          )}
+        </div>
 
-            {/* Blurb — hidden on mobile, revealed on hover/reveal */}
-            <p className="hidden md:block mt-2 text-[11px] text-muted-foreground leading-relaxed line-clamp-2 max-h-0 opacity-0 group-hover:max-h-16 group-hover:opacity-100 group-data-[reveal=true]:max-h-16 group-data-[reveal=true]:opacity-100 overflow-hidden transition-all duration-500">
-              {blurb}
-            </p>
-
-            {/* Price + CTA row */}
-            <div className="mt-2 md:mt-4 flex items-center justify-between gap-2 translate-y-1 md:translate-y-2 md:opacity-0 md:group-hover:opacity-100 md:group-hover:translate-y-0 group-data-[reveal=true]:opacity-100 group-data-[reveal=true]:translate-y-0 transition-all duration-500 pointer-events-auto">
-              {a.sold ? (
-                <div className="text-xs md:text-sm font-medium text-muted-foreground uppercase tracking-[0.2em]">
-                  {t("art.sold")}
-                </div>
-              ) : (
-                <div className="text-xs md:text-sm font-medium text-gold">
-                  {a.price > 0 ? `$${a.price.toLocaleString()} ` : t("art.inquire")}
-                  {a.price > 0 && <span className="text-[9px] opacity-60">CAD</span>}
-                </div>
-              )}
-              {a.sold ? (
-                <Link
-                  to="/community"
-                  search={{ inquiry: a.title }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  onTouchEnd={(e) => e.stopPropagation()}
-                  onClick={(e) => e.stopPropagation()}
-                  aria-label={`Inquire about ${a.title}`}
-                  className="inline-flex items-center gap-1 px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-semibold border border-gold text-gold hover:bg-gold hover:text-primary-foreground transition-all duration-300"
-                >
-                  <Mail className="h-3 w-3" /> {t("art.inquire")}
-                </Link>
-              ) : (
-              <button
-                onPointerDown={(e) => { e.stopPropagation(); }}
-                onMouseDown={(e) => { e.stopPropagation(); }}
-                onTouchStart={(e) => { e.stopPropagation(); }}
-                onTouchEnd={(e) => { e.stopPropagation(); }}
-                onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAdd(); }}
-                disabled={inCart}
-                aria-label={inCart ? "In cart" : t("feat.add")}
-                className={`inline-flex items-center gap-1 px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-semibold transition-all duration-300 ${
-                  inCart
-                    ? "border border-gold text-gold cursor-default"
-                    : "bg-gradient-gold text-primary-foreground hover:shadow-glow active:scale-95"
-                }`}
-              >
-                {inCart ? (
-                  <><Check className="h-3 w-3" /> In cart</>
-                ) : (
-                  <><Plus className="h-3 w-3" /> {t("feat.add")}</>
-                )}
-              </button>
-              )}
-            </div>
-
-            {/* Touch hint */}
-            {isTouch && !revealed && (
-              <div className="absolute top-3 right-14 px-2 py-1 text-[8px] uppercase tracking-[0.2em] bg-background/70 backdrop-blur border border-border/60 rounded-full opacity-70 transition z-10 pointer-events-none">
-                ← {t("art.swipe") || "swipe"}
+        {/* Info block BELOW the image — never over the artwork */}
+        <div className="pt-3 pb-1 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="font-display text-sm md:text-lg leading-tight truncate">{a.title}</div>
+            {!a.sold && a.price > 0 && (
+              <div className="mt-1 text-[10px] md:text-xs text-gold uppercase tracking-[0.15em]">
+                ${a.price.toLocaleString()} <span className="opacity-60">CAD</span>
               </div>
             )}
           </div>
+          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+            {a.sold ? (
+              <Link
+                to="/community"
+                search={{ inquiry: a.title }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`Inquire about ${a.title}`}
+                className="inline-flex items-center gap-1 px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-semibold border border-gold text-gold hover:bg-gold hover:text-primary-foreground transition-all duration-300 cursor-pointer"
+              >
+                <Mail className="h-3 w-3" /> {t("art.inquire")}
+              </Link>
+            ) : (
+              <AddToCartButton onAdd={onAdd} inCart={inCart} label={t("feat.add")} size="sm" />
+            )}
+          </div>
         </div>
+
+        {/* Blurb — reveal for touch users */}
+        {revealed && (
+          <p className="pb-2 text-[11px] text-muted-foreground leading-relaxed line-clamp-3">{blurb}</p>
+        )}
       </TiltCard>
     </motion.article>
   );
