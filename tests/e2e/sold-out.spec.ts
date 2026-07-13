@@ -23,13 +23,15 @@ test.describe("sold-out UX", () => {
     await soldFilter.waitFor({ state: "visible", timeout: 20_000 });
     await soldFilter.click();
 
-    // At least one sold card should be visible after filtering.
+    // Wait for filter animation to settle and at least one Inquire link to render.
     const inquireLinks = page.getByRole("link", { name: /inquire about/i });
+    await expect(inquireLinks.first()).toBeVisible({ timeout: 15_000 });
     const count = await inquireLinks.count();
-    expect(count, "expected at least one sold artwork under the Sold filter").toBeGreaterThan(0);
+    expect(count, "expected sold artworks under the Sold filter").toBeGreaterThan(0);
 
-    // No Add-to-Cart control may exist on the Sold view.
-    const addButtons = page.getByRole("button", { name: /add to cart|^add$/i });
+    // Give AnimatePresence time to unmount exiting cards, then assert no Add-to-Cart.
+    await page.waitForTimeout(800);
+    const addButtons = page.getByRole("button", { name: /^add( to cart)?$/i });
     expect(await addButtons.count()).toBe(0);
 
     // Cart badge count should stay at 0 — no accidental adds happened.
