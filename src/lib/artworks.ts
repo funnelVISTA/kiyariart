@@ -41,3 +41,11 @@ export const ARTWORKS: Artwork[] = [
 ];
 
 export const HERO_IMAGE = ARTWORKS.find((a) => a.id === "unbothered")!.image;
+
+export function isArtworkPurchasable(artwork: Pick<Artwork, "sold" | "price">) {
+  return !artwork.sold && artwork.price > 0;
+}
+
+export function isArtworkInquiryOnly(artwork: Pick<Artwork, "sold" | "price">) {
+  return !isArtworkPurchasable(artwork);
+}
