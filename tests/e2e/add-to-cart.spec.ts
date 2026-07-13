@@ -62,4 +62,9 @@ test("every available artwork adds to the cart from its card", async ({ page }) 
   // No "Add" buttons remain — all flipped to "In cart".
   await expect(page.getByRole("button", { name: /^add$/i })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /in cart/i })).toHaveCount(total);
+
+  await cartButton.click();
+  await page.getByRole("button", { name: /checkout securely/i }).click();
+  await expect(page.getByRole("heading", { name: /secure checkout/i })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(/checkout unavailable/i)).toHaveCount(0);
 });
