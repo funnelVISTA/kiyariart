@@ -23,8 +23,10 @@ test.describe("sold-out UX", () => {
     await soldFilter.waitFor({ state: "visible", timeout: 20_000 });
     await soldFilter.click();
 
-    // Wait for filter animation to settle and at least one Inquire link to render.
-    const inquireLinks = page.getByRole("link", { name: /inquire about/i });
+    // Wait for filter animation to settle and at least one Inquire control to render.
+    // Inquire is a <button> (with pointer-capture handlers so the click survives
+    // Chrome + vanilla-tilt transforms).
+    const inquireLinks = page.getByRole("button", { name: /inquire about/i });
     await expect(inquireLinks.first()).toBeVisible({ timeout: 15_000 });
     const count = await inquireLinks.count();
     expect(count, "expected sold artworks under the Sold filter").toBeGreaterThan(0);
