@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { ARTWORKS, HERO_IMAGE, type Artwork } from "@/lib/artworks";
+import { ARTWORKS, HERO_IMAGE, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
 import { useI18n } from "@/lib/i18n";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { Reveal, RevealText } from "@/components/ui/Reveal";
@@ -256,6 +256,10 @@ function Home() {
                 onToggleReveal={() => setRevealedId(revealedId === a.id ? null : a.id)}
                 onOpen={() => setLightbox(a)}
                 onAdd={() => {
+                  if (!isArtworkPurchasable(a)) {
+                    toast.error(t("art.soldToast"));
+                    return;
+                  }
                   if (has(a.id)) {
                     toast.info(`${a.title} — already in your cart`);
                     return;
@@ -351,7 +355,7 @@ function FeaturedCard({ a, hero, isTouch, revealed, inCart, onToggleReveal, onOp
       <div className="pt-3 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="font-display text-lg md:text-2xl leading-tight truncate">{a.title}</div>
-          {a.price > 0 && (
+          {isArtworkPurchasable(a) && (
             <div className="mt-1 text-[10px] md:text-xs text-gold uppercase tracking-[0.2em]">
               ${a.price.toLocaleString()} CAD
             </div>

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Artwork } from "./artworks";
+import { isArtworkPurchasable } from "./artworks";
 
 export type CartItem = { artwork: Artwork; qty: number };
 
@@ -25,7 +26,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = typeof window !== "undefined" ? localStorage.getItem(KEY) : null;
-      if (raw) setItems(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw) as CartItem[];
+        setItems(parsed.filter((item) => isArtworkPurchasable(item.artwork)));
+      }
     } catch {}
   }, []);
 
@@ -38,6 +42,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // One-of-one model: adding an artwork already in the cart is a no-op.
   // Returns true if the item was newly added, false if it was already present.
   const add = (a: Artwork): boolean => {
+    if (!isArtworkPurchasable(a)) return false;
     let added = false;
     setItems((prev) => {
       if (prev.some((i) => i.artwork.id === a.id)) return prev;

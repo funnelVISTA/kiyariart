@@ -1,11 +1,23 @@
 import { AnimatePresence, motion } from "motion/react";
 import { X, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useCart } from "@/lib/cart";
 
 export function CartSheet() {
   const { items, remove, total, open, setOpen } = useCart();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!open) return;
+    const root = document.documentElement;
+    root.classList.add("cart-open");
+    (window as any).__kiyariLenis?.stop?.();
+    return () => {
+      root.classList.remove("cart-open");
+      (window as any).__kiyariLenis?.start?.();
+    };
+  }, [open]);
 
   const close = () => setOpen(false);
 
@@ -30,7 +42,10 @@ export function CartSheet() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 240 }}
-            className="fixed right-0 top-0 z-[70] h-full w-full max-w-md bg-background border-l border-border flex flex-col"
+            data-native-scroll
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            className="fixed inset-y-0 right-0 z-[70] flex h-dvh max-h-dvh min-h-0 w-full max-w-md flex-col overflow-hidden overscroll-contain bg-background border-l border-border"
           >
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div className="min-w-0">
@@ -46,7 +61,7 @@ export function CartSheet() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div data-testid="cart-items-scroll" data-native-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-4">
               {items.length === 0 ? (
                 <div className="py-8">
                   <div className="text-center">
