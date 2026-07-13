@@ -88,13 +88,24 @@ function ArtworksPage() {
     () => new Set(availability?.availableOverrideIds ?? []),
     [availability],
   );
+  const catalogOverrideMap = useMemo(() => {
+    const m = new Map<string, { price_override: number | null; on_sale: boolean; sale_price: number | null }>();
+    for (const r of availability?.catalogOverrides ?? []) {
+      m.set(r.artwork_id, {
+        price_override: r.price_override,
+        on_sale: r.on_sale,
+        sale_price: r.sale_price,
+      });
+    }
+    return m;
+  }, [availability]);
 
   const { data: customRows } = useQuery({
     queryKey: ["artworks-custom"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("artworks_custom")
-        .select("id,title,description,price,image_url,collection,medium,sold,display_order,sort_order,alt_text,created_at")
+        .select("id,title,description,price,image_url,collection,medium,sold,display_order,sort_order,alt_text,created_at,on_sale,sale_price")
         .order("display_order", { ascending: true })
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -117,28 +128,46 @@ function ArtworksPage() {
 
   const catalog = useMemo<Artwork[]>(() => {
     const orderMap = new Map<string, number>((orderRows ?? []).map((r) => [r.artwork_id, r.position]));
-    const fromCustom: Artwork[] = (customRows ?? []).map((r) => ({
-      id: r.id,
-      title: r.title,
-      image: r.image_url,
-      price: Number(r.price ?? 0),
-      sold: !!r.sold,
-      collection: "Our Essence",
-      medium: r.medium ?? undefined,
-      description: r.description ?? undefined,
-    }));
-    const fromCatalog: Artwork[] = ARTWORKS.map((a) => ({
-      ...a,
-      collection: "Our Essence",
-      sold: availableOverrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
-    }));
+    const fromCustom: Artwork[] = (customRows ?? []).map((r) => {
+      const list = Number(r.price ?? 0);
+      const onSale = !!(r as any).on_sale && (r as any).sale_price != null;
+      const sale = onSale ? Number((r as any).sale_price) : null;
+      const effective = onSale && sale != null ? sale : list;
+      return {
+        id: r.id,
+        title: r.title,
+        image: r.image_url,
+        price: effective,
+        originalPrice: onSale ? list : undefined,
+        onSale: onSale && sale != null && sale < list,
+        sold: !!r.sold,
+        collection: "Our Essence",
+        medium: r.medium ?? undefined,
+        description: r.description ?? undefined,
+      };
+    });
+    const fromCatalog: Artwork[] = ARTWORKS.map((a) => {
+      const ov = catalogOverrideMap.get(a.id);
+      const list = ov?.price_override ?? a.price;
+      const onSale = !!ov?.on_sale && ov?.sale_price != null;
+      const sale = onSale ? Number(ov!.sale_price) : null;
+      const effective = onSale && sale != null ? sale : list;
+      return {
+        ...a,
+        collection: "Our Essence",
+        price: effective,
+        originalPrice: onSale ? list : undefined,
+        onSale: onSale && sale != null && sale < list,
+        sold: availableOverrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
+      };
+    });
     const merged = [...fromCustom, ...fromCatalog];
     return merged.sort((a, b) => {
       const pa = orderMap.get(a.id) ?? 9999;
       const pb = orderMap.get(b.id) ?? 9999;
       return pa - pb;
     });
-  }, [soldSet, availableOverrideSet, customRows, orderRows]);
+  }, [soldSet, availableOverrideSet, catalogOverrideMap, customRows, orderRows]);
 
   const blurb = (a: Artwork) => {
     if (a.description) return a.description;
