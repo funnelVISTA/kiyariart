@@ -670,9 +670,12 @@ function CatalogCard({
 }
 
 function ArtworkEditor({
-  initial, onClose, onSaved,
+  initial, onClose, onSaved, catalog,
 }: {
-  initial: Partial<Row>; onClose: () => void; onSaved: () => void;
+  initial: Partial<Row>;
+  onClose: () => void;
+  onSaved: () => void;
+  catalog?: { artworkId: string; originalPrice: number; originalSold: boolean };
 }) {
   const [form, setForm] = useState<Partial<Row>>(initial);
   // Local editable string for the price so users can clear the field without
@@ -790,6 +793,32 @@ function ArtworkEditor({
     }
     setSaving(true);
     try {
+      if (catalog) {
+        await adminUpsertCatalogOverride({
+          data: {
+            artworkId: catalog.artworkId,
+            originalPrice: catalog.originalPrice,
+            priceOverride: parsedPrice,
+            onSale,
+            salePrice,
+            title: form.title ?? null,
+            description: form.description ?? null,
+            medium: form.medium ?? null,
+            image_url: form.image_url ?? null,
+            alt_text: form.alt_text ?? null,
+            seo_title: form.seo_title ?? null,
+            seo_description: form.seo_description ?? null,
+          },
+        });
+        if (!!form.sold !== catalog.originalSold) {
+          await adminSetCatalogAvailability({
+            data: { artworkId: catalog.artworkId, available: !form.sold },
+          });
+        }
+        toast.success("Artwork updated");
+        onSaved();
+        return;
+      }
       await adminUpsertCustomArtwork({
         data: {
           id: form.id,
