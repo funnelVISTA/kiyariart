@@ -533,12 +533,29 @@ function CatalogCard({
   selected,
   onToggle,
   onToggleSold,
+  onEdit,
 }: {
-  a: { id: string; title: string; image: string; price: number; sold: boolean; collection: string };
+  a: {
+    id: string;
+    title: string;
+    image: string;
+    price: number;
+    sold: boolean;
+    collection: string;
+    priceListing?: number;
+    priceEffective?: number;
+    onSale?: boolean;
+    salePrice?: number | null;
+    originalPrice?: number;
+    priceOverride?: number | null;
+  };
   selected: boolean;
   onToggle: () => void;
   onToggleSold: () => void;
+  onEdit: () => void;
 }) {
+  const listPrice = a.priceListing ?? a.price;
+  const effective = a.priceEffective ?? a.price;
   return (
     <div
       onClick={onToggle}
@@ -561,6 +578,11 @@ function CatalogCard({
         >
           {a.sold ? "Sold" : "Available"}
         </div>
+        {a.onSale && !a.sold && (
+          <div className="absolute bottom-2 left-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 bg-accent text-accent-foreground">
+            Sale
+          </div>
+        )}
         <div className="absolute top-2 right-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 bg-background/80 border border-border text-muted-foreground">
           Catalog
         </div>
@@ -569,7 +591,18 @@ function CatalogCard({
         <div className="font-display text-xl truncate">{a.title}</div>
         <div className="text-[11px] text-muted-foreground uppercase tracking-[0.2em]">Our Essence</div>
         <div className="mt-1 text-sm text-gold">
-          {a.price > 0 ? `$${Number(a.price).toLocaleString()} CAD` : "—"}
+          {effective > 0 ? (
+            a.onSale && listPrice > effective ? (
+              <>
+                <span className="line-through text-muted-foreground mr-1.5 opacity-70">${listPrice.toLocaleString()}</span>
+                <span className="text-accent">${effective.toLocaleString()}</span> CAD
+              </>
+            ) : (
+              <>${listPrice.toLocaleString()} CAD</>
+            )
+          ) : (
+            "—"
+          )}
         </div>
         <div className="mt-4 flex gap-2">
           <button
@@ -577,6 +610,13 @@ function CatalogCard({
             className="flex-1 inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
           >
             {a.sold ? "Mark available" : "Mark sold"}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            aria-label="Edit price / sale"
+            className="inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
+          >
+            <Pencil className="h-3 w-3" />
           </button>
         </div>
       </div>
