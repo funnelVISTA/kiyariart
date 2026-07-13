@@ -29,10 +29,14 @@ test("cart sheet scrolls itself instead of the page behind it", async ({ page })
   const sheetScroller = page.getByTestId("cart-items-scroll");
   await expect(sheetScroller).toBeVisible();
 
+  const lockedPageY = await page.evaluate(() => window.scrollY);
   const beforeSheetY = await sheetScroller.evaluate((el) => el.scrollTop);
   await sheetScroller.hover();
   await page.mouse.wheel(0, 900);
 
   await expect.poll(() => sheetScroller.evaluate((el) => el.scrollTop)).toBeGreaterThan(beforeSheetY);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(lockedPageY);
+
+  await page.getByRole("button", { name: /close cart/i }).click();
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(beforePageY);
 });
