@@ -89,12 +89,26 @@ function ArtworksPage() {
     [availability],
   );
   const catalogOverrideMap = useMemo(() => {
-    const m = new Map<string, { price_override: number | null; on_sale: boolean; sale_price: number | null }>();
+    const m = new Map<string, {
+      price_override: number | null;
+      on_sale: boolean;
+      sale_price: number | null;
+      title: string | null;
+      description: string | null;
+      medium: string | null;
+      image_url: string | null;
+      alt_text: string | null;
+    }>();
     for (const r of availability?.catalogOverrides ?? []) {
       m.set(r.artwork_id, {
         price_override: r.price_override,
         on_sale: r.on_sale,
         sale_price: r.sale_price,
+        title: (r as any).title ?? null,
+        description: (r as any).description ?? null,
+        medium: (r as any).medium ?? null,
+        image_url: (r as any).image_url ?? null,
+        alt_text: (r as any).alt_text ?? null,
       });
     }
     return m;
@@ -155,6 +169,10 @@ function ArtworksPage() {
       return {
         ...a,
         collection: "Our Essence",
+        title: ov?.title ?? a.title,
+        image: ov?.image_url ?? a.image,
+        description: ov?.description ?? a.description,
+        medium: ov?.medium ?? a.medium,
         price: effective,
         originalPrice: onSale ? list : undefined,
         onSale: onSale && sale != null && sale < list,
