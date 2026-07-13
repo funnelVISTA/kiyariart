@@ -147,7 +147,7 @@ function ArtworksPage() {
 
   const items = useMemo(() => {
     return catalog.filter((a) => {
-      if (filter === "available") return isArtworkPurchasable(a);
+      if (filter === "available") return !a.sold;
       if (filter === "sold") return a.sold;
       return true;
     });
