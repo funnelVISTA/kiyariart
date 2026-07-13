@@ -260,6 +260,7 @@ type ArtCardProps = {
 function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, onAdd, blurb, t }: ArtCardProps) {
   const swipe = useTapSwipe({ onTap: onOpen, onSwipe: onToggleReveal });
   const navigate = useNavigate();
+  const imageInteractionProps = isTouch ? swipe : { onClick: onOpen };
   return (
     <motion.article
       layout
@@ -267,11 +268,25 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.5, delay: (index % 8) * 0.04 }}
-      className="group cursor-pointer"
+      className="group"
       data-reveal={revealed}
-      {...(isTouch ? swipe : { onClick: onOpen })}
     >
-      <TiltCard max={10} scale={1.03} className="relative">
+      {/* Zone 1 — Image only. Tilt effect + lightbox click stay scoped here. */}
+      <TiltCard
+        max={10}
+        scale={1.03}
+        className="relative cursor-pointer"
+        role="button"
+        tabIndex={0}
+        aria-label={`Open ${a.title}`}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onOpen();
+          }
+        }}
+        {...imageInteractionProps}
+      >
         <div className="relative aspect-[3/4] overflow-hidden bg-card border border-white/5 group-hover:border-gold/40 transition-colors duration-500">
           <img
             src={thumb(a.image, 800)}
@@ -308,9 +323,11 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
             </div>
           )}
         </div>
+      </TiltCard>
 
-        {/* Info block BELOW the image — never over the artwork */}
-        <div className="pt-3 pb-1 flex items-start justify-between gap-3">
+      {/* Zone 2 — Info + action strip. Outside TiltCard, on card background.
+          No tilt transform here, so button hit-testing is rock solid in Chrome. */}
+      <div className="pt-3 pb-1 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="font-display text-sm md:text-lg leading-tight truncate">{a.title}</div>
              {isArtworkPurchasable(a) && (
@@ -319,20 +336,19 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
               </div>
             )}
           </div>
-          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+          <div className="shrink-0">
             {!isArtworkPurchasable(a) ? (
               <InquireButton title={a.title} label={t("art.inquire")} onGo={() => navigate({ to: "/community", search: { inquiry: a.title } })} />
             ) : (
               <AddToCartButton onAdd={onAdd} inCart={inCart} label={t("feat.add")} size="sm" />
             )}
           </div>
-        </div>
+      </div>
 
-        {/* Blurb — reveal for touch users */}
-        {revealed && (
-          <p className="pb-2 text-[11px] text-muted-foreground leading-relaxed line-clamp-3">{blurb}</p>
-        )}
-      </TiltCard>
+      {/* Blurb — reveal for touch users */}
+      {revealed && (
+        <p className="pb-2 text-[11px] text-muted-foreground leading-relaxed line-clamp-3">{blurb}</p>
+      )}
     </motion.article>
   );
 }
