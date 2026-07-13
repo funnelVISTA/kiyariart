@@ -355,6 +355,7 @@ type ExhibitionUpsert = {
   link_url?: string | null;
   status?: "upcoming" | "past";
   sort_order?: number;
+  gallery_images?: string[] | null;
 };
 
 export const adminListExhibitions = createServerFn({ method: "GET" })
@@ -394,6 +395,9 @@ export const adminUpsertExhibition = createServerFn({ method: "POST" })
       status: data.status,
       sort_order: Number.isFinite(data.sort_order) ? data.sort_order : 0,
       created_by: context.userId,
+      gallery_images: Array.isArray(data.gallery_images)
+        ? data.gallery_images.filter((u) => typeof u === "string" && u.length > 0)
+        : [],
     };
     if (data.id) {
       const { data: row, error } = await supabaseAdmin

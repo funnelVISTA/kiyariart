@@ -1,4 +1,5 @@
 import { Check, Plus } from "lucide-react";
+import { useRef } from "react";
 
 type Props = {
   onAdd: () => void;
@@ -26,11 +27,48 @@ export function AddToCartButton({ onAdd, inCart, label, variant = "solid", size 
       ? "bg-gradient-gold text-primary-foreground hover:shadow-glow active:scale-95"
       : "border border-border hover:border-gold hover:text-gold";
 
+  // Chrome swallows the synthesized `click` event when the button's transform
+  // shifts between pointerdown and pointerup — which happens continuously
+  // inside a vanilla-tilt TiltCard. We fire the add on `pointerup` after
+  // capturing the pointer on `pointerdown`, so the interaction survives any
+  // parent transform. `onClick` remains as the keyboard/AT fallback (Space /
+  // Enter never produce a pointerdown). `add` in the cart is idempotent, so
+  // the two paths never double-add.
+  const handledRef = useRef(false);
+
+  const fire = () => {
+    if (inCart || handledRef.current) return;
+    handledRef.current = true;
+    // Release the guard on the next frame so a legitimate second interaction
+    // isn't blocked, but the synthesized click that follows pointerup is.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        handledRef.current = false;
+      });
+    });
+    onAdd();
+  };
+
   return (
     <button
       type="button"
-      onPointerDown={(e) => e.stopPropagation()}
-      onPointerUp={(e) => e.stopPropagation()}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        if (e.button !== undefined && e.button !== 0) return;
+        try {
+          (e.currentTarget as HTMLButtonElement).setPointerCapture(e.pointerId);
+        } catch {}
+      }}
+      onPointerUp={(e) => {
+        e.stopPropagation();
+        if (e.button !== undefined && e.button !== 0) return;
+        try {
+          (e.currentTarget as HTMLButtonElement).releasePointerCapture(e.pointerId);
+        } catch {}
+        // Only fire if the release happened over the button itself.
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        if (target && e.currentTarget.contains(target)) fire();
+      }}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
@@ -38,7 +76,7 @@ export function AddToCartButton({ onAdd, inCart, label, variant = "solid", size 
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
-        if (!inCart) onAdd();
+        fire();
       }}
       disabled={inCart}
       aria-label={inCart ? "In cart" : label}

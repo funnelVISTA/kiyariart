@@ -180,3 +180,12 @@
     100% { background-position: 200% 0; }
   }
 }
+
+/* vanilla-tilt injects a glare overlay that can sit above interactive
+   controls inside a TiltCard. Force it to ignore pointer events so the
+   Add-to-Cart and Inquire buttons underneath always receive clicks in
+   every browser (Chrome is the strict one). */
+.js-tilt-glare,
+.js-tilt-glare-inner {
+  pointer-events: none !important;
+}

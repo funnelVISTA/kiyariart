@@ -50,6 +50,7 @@ type DbEx = {
   link_url: string | null;
   status: "upcoming" | "past";
   sort_order: number;
+  gallery_images: string[] | null;
 };
 
 function ExhibitionsPage() {
@@ -76,15 +77,17 @@ function ExhibitionsPage() {
         .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? "")),
     [dbRows],
   );
-  const dbPast = useMemo(() => {
-    const currentYear = new Date().getFullYear();
+  const dbPastGalleries = useMemo(() => {
     return (dbRows ?? [])
-      .filter((r) => {
-        if (r.status !== "past" || !r.event_date) return false;
-        return new Date(r.event_date).getFullYear() === currentYear;
-      })
+      .filter((r) => r.status === "past" && Array.isArray(r.gallery_images) && r.gallery_images.length > 0)
       .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
   }, [dbRows]);
+  // Flat list of every past-show image, in gallery order, for the lightbox.
+  const pastLightboxImages = useMemo(
+    () => dbPastGalleries.flatMap((g) => g.gallery_images ?? []),
+    [dbPastGalleries],
+  );
+  const hasCuratedPast = dbPastGalleries.length > 0;
 
 
   return (
@@ -150,43 +153,98 @@ function ExhibitionsPage() {
         )}
 
 
-        <section className="mt-24">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("ex.gallery")}</div>
-              <h2 className="font-display text-5xl">Afro World Expo · 2024</h2>
+        {hasCuratedPast ? (
+          dbPastGalleries.map((show, showIdx) => {
+            const yearLabel = show.event_date ? new Date(show.event_date).getFullYear() : null;
+            const priorCount = dbPastGalleries
+              .slice(0, showIdx)
+              .reduce((sum, s) => sum + (s.gallery_images?.length ?? 0), 0);
+            return (
+              <section key={show.id} className="mt-24">
+                <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("ex.gallery")}</div>
+                    <h2 className="font-display text-5xl">
+                      {show.title}{yearLabel ? ` · ${yearLabel}` : ""}
+                    </h2>
+                    {(show.venue || show.city) && (
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        {[show.venue, show.city].filter(Boolean).join(", ")}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4 [perspective:1400px]">
+                  {(show.gallery_images ?? []).map((src, i) => {
+                    const flatIdx = priorCount + i;
+                    return (
+                      <motion.button
+                        key={src + i}
+                        onClick={() => setActive(flatIdx)}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-50px" }}
+                        transition={{ duration: 0.5, delay: (i % 8) * 0.05 }}
+                        className="block w-full break-inside-avoid group relative cursor-zoom-in"
+                      >
+                        <TiltCard max={18} scale={1.06} glare className="overflow-hidden shadow-elegant">
+                          <img
+                            src={src}
+                            alt={`${show.title} — photo ${i + 1}`}
+                            loading="lazy"
+                            className="w-full h-auto"
+                            style={{ transform: "translateZ(0)" }}
+                          />
+                          <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition" style={{ transform: "translateZ(30px)" }} />
+                        </TiltCard>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })
+        ) : (
+          <section className="mt-24">
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("ex.gallery")}</div>
+                <h2 className="font-display text-5xl">Afro World Expo · 2024</h2>
+              </div>
             </div>
-          </div>
-
-          <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4 [perspective:1400px]">
-            {GALLERY.map((src, i) => (
-              <motion.button
-                key={src + i}
-                onClick={() => setActive(i)}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: (i % 8) * 0.05 }}
-                className="block w-full break-inside-avoid group relative cursor-zoom-in"
-              >
-                <TiltCard max={18} scale={1.06} glare className="overflow-hidden shadow-elegant">
-                  <img
-                    src={src}
-                    alt={`Exhibition moment ${i + 1}`}
-                    loading="lazy"
-                    className="w-full h-auto"
-                    style={{ transform: "translateZ(0)" }}
-                  />
-                  <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition" style={{ transform: "translateZ(30px)" }} />
-                </TiltCard>
-              </motion.button>
-            ))}
-          </div>
-        </section>
+            <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4 [perspective:1400px]">
+              {GALLERY.map((src, i) => (
+                <motion.button
+                  key={src + i}
+                  onClick={() => setActive(i)}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.5, delay: (i % 8) * 0.05 }}
+                  className="block w-full break-inside-avoid group relative cursor-zoom-in"
+                >
+                  <TiltCard max={18} scale={1.06} glare className="overflow-hidden shadow-elegant">
+                    <img
+                      src={src}
+                      alt={`Exhibition moment ${i + 1}`}
+                      loading="lazy"
+                      className="w-full h-auto"
+                      style={{ transform: "translateZ(0)" }}
+                    />
+                    <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition" style={{ transform: "translateZ(30px)" }} />
+                  </TiltCard>
+                </motion.button>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       <AnimatePresence>
-        {active !== null && (
+        {active !== null && (() => {
+          const list = hasCuratedPast ? pastLightboxImages : GALLERY;
+          const clamped = ((active % list.length) + list.length) % list.length;
+          return (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setActive(null)}
@@ -199,19 +257,20 @@ function ExhibitionsPage() {
               <X className="h-5 w-5" />
             </button>
             <motion.img
-              key={active}
+              key={clamped}
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              src={GALLERY[active]}
+              src={list[clamped]}
               alt=""
               onClick={(e) => e.stopPropagation()}
               className="max-h-[90vh] max-w-[90vw] object-contain shadow-elegant"
             />
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-              <button onClick={(e) => { e.stopPropagation(); setActive((active - 1 + GALLERY.length) % GALLERY.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.prev")}</button>
-              <button onClick={(e) => { e.stopPropagation(); setActive((active + 1) % GALLERY.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.next")}</button>
+              <button onClick={(e) => { e.stopPropagation(); setActive((clamped - 1 + list.length) % list.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.prev")}</button>
+              <button onClick={(e) => { e.stopPropagation(); setActive((clamped + 1) % list.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.next")}</button>
             </div>
           </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
     </div>
   );

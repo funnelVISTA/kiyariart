@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Mail } from "lucide-react";
@@ -16,6 +16,45 @@ import { useIsTouch } from "@/hooks/useIsTouch";
 import { useTapSwipe } from "@/hooks/useTapSwipe";
 
 const thumb = (url: string, w = 700) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
+
+/**
+ * Inquire button — same pointer-capture + pointerup trigger pattern as
+ * AddToCartButton so it never loses the click inside a TiltCard on Chrome.
+ */
+function InquireButton({ title, label, onGo }: { title: string; label: string; onGo: () => void }) {
+  const handledRef = { current: false } as { current: boolean };
+  const go = () => {
+    if (handledRef.current) return;
+    handledRef.current = true;
+    onGo();
+  };
+  return (
+    <button
+      type="button"
+      aria-label={`Inquire about ${title}`}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        if (e.button !== undefined && e.button !== 0) return;
+        try { (e.currentTarget as HTMLButtonElement).setPointerCapture(e.pointerId); } catch {}
+      }}
+      onPointerUp={(e) => {
+        e.stopPropagation();
+        if (e.button !== undefined && e.button !== 0) return;
+        try { (e.currentTarget as HTMLButtonElement).releasePointerCapture(e.pointerId); } catch {}
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        if (target && e.currentTarget.contains(target)) go();
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+      onClick={(e) => { e.stopPropagation(); e.preventDefault(); go(); }}
+      className="relative z-20 inline-flex items-center gap-1 px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-semibold border border-gold text-gold hover:bg-gold hover:text-primary-foreground transition-all duration-300 cursor-pointer pointer-events-auto touch-manipulation select-none"
+    >
+      <Mail className="h-3 w-3" /> {label}
+    </button>
+  );
+}
 
 export const Route = createFileRoute("/artworks")({
   head: () => ({
@@ -220,6 +259,7 @@ type ArtCardProps = {
 
 function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, onAdd, blurb, t }: ArtCardProps) {
   const swipe = useTapSwipe({ onTap: onOpen, onSwipe: onToggleReveal });
+  const navigate = useNavigate();
   return (
     <motion.article
       layout
@@ -281,19 +321,7 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
           </div>
           <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
             {!isArtworkPurchasable(a) ? (
-              <Link
-                to="/community"
-                search={{ inquiry: a.title }}
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                onTouchEnd={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
-                aria-label={`Inquire about ${a.title}`}
-                className="inline-flex items-center gap-1 px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-semibold border border-gold text-gold hover:bg-gold hover:text-primary-foreground transition-all duration-300 cursor-pointer"
-              >
-                <Mail className="h-3 w-3" /> {t("art.inquire")}
-              </Link>
+              <InquireButton title={a.title} label={t("art.inquire")} onGo={() => navigate({ to: "/community", search: { inquiry: a.title } })} />
             ) : (
               <AddToCartButton onAdd={onAdd} inCart={inCart} label={t("feat.add")} size="sm" />
             )}
