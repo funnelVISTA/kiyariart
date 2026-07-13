@@ -541,6 +541,11 @@ function ArtworkEditor({
   initial: Partial<Row>; onClose: () => void; onSaved: () => void;
 }) {
   const [form, setForm] = useState<Partial<Row>>(initial);
+  // Local editable string for the price so users can clear the field without
+  // it snapping back to 0. Empty string = no value yet; validated on save.
+  const [priceInput, setPriceInput] = useState<string>(
+    initial.price === undefined || initial.price === null ? "" : String(initial.price),
+  );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -604,6 +609,18 @@ function ArtworkEditor({
   };
 
   const save = async () => {
+    const trimmed = priceInput.trim();
+    if (trimmed === "") {
+      toast.error("Enter a price", {
+        description: "Use 0 for inquiry-only pieces.",
+      });
+      return;
+    }
+    const parsedPrice = Number(trimmed);
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      toast.error("Price must be a non-negative number");
+      return;
+    }
     setSaving(true);
     try {
       await adminUpsertCustomArtwork({
@@ -611,9 +628,9 @@ function ArtworkEditor({
           id: form.id,
           title: form.title ?? "",
           description: form.description ?? null,
-          price: Number(form.price ?? 0),
+          price: parsedPrice,
           image_url: form.image_url ?? "",
-          collection: form.collection ?? "Our Essence",
+          collection: "Our Essence",
           medium: form.medium ?? null,
           sold: !!form.sold,
           sort_order: Number(form.sort_order ?? 0),
@@ -702,21 +719,11 @@ function ArtworkEditor({
                   <Field label="Price (CAD)">
                     <input
                       type="number" min={0} step={1}
-                      value={form.price ?? 0}
-                      onChange={(e) => setForm((f) => ({ ...f, price: Number(e.target.value) }))}
+                      value={priceInput}
+                      onChange={(e) => setPriceInput(e.target.value)}
                       className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
                     />
                     <p className="mt-1 text-[10px] text-muted-foreground">Set 0 to hide the buy button (inquiry only).</p>
-                  </Field>
-                  <Field label="Collection">
-                    <select
-                      value={form.collection ?? "Our Essence"}
-                      onChange={(e) => setForm((f) => ({ ...f, collection: e.target.value }))}
-                      className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
-                    >
-                      <option>Our Essence</option>
-                      <option>The Legends</option>
-                    </select>
                   </Field>
                   <Field label="Medium (optional)">
                     <input
