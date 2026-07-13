@@ -220,6 +220,7 @@ type ArtCardProps = {
 
 function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, onAdd, blurb, t }: ArtCardProps) {
   const swipe = useTapSwipe({ onTap: onOpen, onSwipe: onToggleReveal });
+  const navigate = useNavigate();
   return (
     <motion.article
       layout
