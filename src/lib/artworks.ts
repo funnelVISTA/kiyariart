@@ -4,7 +4,7 @@ export type Artwork = {
   image: string;
   price: number;
   sold: boolean;
-  collection: "Our Essence" | "The Legends";
+  collection: "Our Essence";
   medium?: string;
   description?: string;
 };
@@ -19,7 +19,7 @@ export const ARTWORKS: Artwork[] = [
   { id: "daddys-girl", title: "Daddy's Girl", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/image2%20(3).jpeg/:/rs=w:1200,cg:true,m"), price: 1400, sold: false, collection: "Our Essence" },
   { id: "underneath-it-all", title: "Underneath It All", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/image0%20(8)-1d99adf.jpeg/:/rs=w:1200,cg:true,m"), price: 1500, sold: false, collection: "Our Essence" },
   { id: "reign", title: "Reign", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/image0%20(8).jpeg/:/rs=w:1200,cg:true,m"), price: 1700, sold: false, collection: "Our Essence" },
-  { id: "madiba", title: "Madiba", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/Madiba.jpeg/:/rs=w:1200,cg:true,m"), price: 2200, sold: false, collection: "The Legends" },
+  { id: "madiba", title: "Madiba", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/Madiba.jpeg/:/rs=w:1200,cg:true,m"), price: 2200, sold: false, collection: "Our Essence" },
   { id: "raising-a-king", title: "Raising a King", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/Raising%20a%20King.jpg/:/rs=w:1200,cg:true,m"), price: 0, sold: true, collection: "Our Essence" },
   { id: "nnamdi", title: "Nnamdi", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/Nnamdi.jpg/:/rs=w:1200,cg:true"), price: 0, sold: true, collection: "Our Essence" },
   { id: "echioma", title: "Echioma — A Brighter Tomorrow", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/38B4E1E6-D9A3-4341-B678-1652A0C4994E.JPG/:/rs=w:1200,cg:true,m"), price: 0, sold: true, collection: "Our Essence" },
@@ -37,7 +37,7 @@ export const ARTWORKS: Artwork[] = [
   { id: "we-rockin", title: "We Rockin", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/We%20Rockin.jpeg/:/rs=w:1200,cg:true,m"), price: 1800, sold: false, collection: "Our Essence" },
   { id: "soul-sisters", title: "Soul Sisters", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/Soul%20Sisters.jpg/:/rs=w:1200,cg:true,m"), price: 0, sold: true, collection: "Our Essence" },
   { id: "war-child", title: "War Child", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/War%20Child.jpg/:/rs=w:1200,cg:true,m"), price: 0, sold: true, collection: "Our Essence" },
-  { id: "prince", title: "Prince", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/Madiba.jpeg/:/rs=w:1200,cg:true,m"), price: 2400, sold: false, collection: "The Legends" },
+  { id: "prince", title: "Prince", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/Madiba.jpeg/:/rs=w:1200,cg:true,m"), price: 2400, sold: false, collection: "Our Essence" },
 ];
 
 export const HERO_IMAGE = ARTWORKS.find((a) => a.id === "unbothered")!.image;
