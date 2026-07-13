@@ -9,6 +9,17 @@ import {
   adminDeleteExhibition,
   adminUploadImage,
 } from "@/lib/admin-content.functions";
+import { compressImage, blobToBase64 } from "@/lib/image-upload";
+
+const MAX_GALLERY_BATCH = 20;
+
+function todayISO() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 export const Route = createFileRoute("/_authenticated/admin/exhibitions")({
   head: () => ({ meta: [{ title: "Exhibitions — Admin" }, { name: "robots", content: "noindex" }] }),
@@ -244,15 +255,20 @@ function ExhibitionEditor({
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const multiFileRef = useRef<HTMLInputElement>(null);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
 
   const uploadOne = async (file: File): Promise<string> => {
-    const buf = await file.arrayBuffer();
-    const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+    // Compress client-side (max ~1600px longest edge, WebP/JPEG) so we never
+    // ship multi-MB camera originals to the server, then encode with
+    // FileReader — safe for arbitrarily large blobs, unlike
+    // btoa(String.fromCharCode(...bytes)) which overflows the stack.
+    const { blob, filename, contentType } = await compressImage(file);
+    const b64 = await blobToBase64(blob);
     const res = await adminUploadImage({
       data: {
         bucket: "exhibition-images",
-        filename: file.name,
-        contentType: file.type,
+        filename,
+        contentType,
         dataBase64: b64,
       },
     });
@@ -273,15 +289,21 @@ function ExhibitionEditor({
   };
 
   const handleGallery = async (files: FileList) => {
+    const list = Array.from(files).slice(0, MAX_GALLERY_BATCH);
+    if (files.length > MAX_GALLERY_BATCH) {
+      toast.message(`Uploading first ${MAX_GALLERY_BATCH} of ${files.length} — please add the rest in another batch.`);
+    }
     setUploading(true);
+    setUploadProgress({ done: 0, total: list.length });
     try {
       const uploaded: string[] = [];
-      for (const file of Array.from(files)) {
+      for (const file of list) {
         try {
           uploaded.push(await uploadOne(file));
         } catch (e: any) {
           toast.error(`${file.name}: ${e?.message ?? "upload failed"}`);
         }
+        setUploadProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
       }
       if (uploaded.length) {
         setForm((f) => ({ ...f, gallery_images: [...(f.gallery_images ?? []), ...uploaded] }));
@@ -289,6 +311,7 @@ function ExhibitionEditor({
       }
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   };
 
