@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Mail } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { ARTWORKS, type Artwork } from "@/lib/artworks";
+import { ARTWORKS, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
 import { useCart } from "@/lib/cart";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { Lightbox } from "@/components/site/Lightbox";
@@ -99,7 +99,7 @@ function ArtworksPage() {
       const pb = orderMap.get(b.id) ?? 9999;
       return pa - pb;
     });
-  }, [soldSet, customRows, orderRows]);
+  }, [soldSet, availableOverrideSet, customRows, orderRows]);
 
   const blurb = (a: Artwork) => {
     if (a.description) return a.description;
@@ -108,14 +108,14 @@ function ArtworksPage() {
 
   const items = useMemo(() => {
     return catalog.filter((a) => {
-      if (filter === "available") return !a.sold;
+      if (filter === "available") return isArtworkPurchasable(a);
       if (filter === "sold") return a.sold;
       return true;
     });
   }, [filter, catalog]);
 
   const handleAdd = (a: Artwork) => {
-    if (a.sold) {
+    if (!isArtworkPurchasable(a)) {
       toast.error(t("art.soldToast"), { description: t("art.soldDesc") });
       return;
     }
@@ -254,10 +254,16 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
                 {t("art.sold")}
               </span>
             </div>
-          ) : (
+          ) : isArtworkPurchasable(a) ? (
             <div className="absolute top-3 left-3 z-10">
               <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-gold/95 text-primary-foreground font-medium shadow-glow">
                 {t("art.available")}
+              </span>
+            </div>
+          ) : (
+            <div className="absolute top-3 right-3 z-10">
+              <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-background/85 backdrop-blur border border-gold text-gold">
+                {t("art.inquire")}
               </span>
             </div>
           )}
@@ -267,14 +273,14 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
         <div className="pt-3 pb-1 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="font-display text-sm md:text-lg leading-tight truncate">{a.title}</div>
-            {!a.sold && a.price > 0 && (
+             {isArtworkPurchasable(a) && (
               <div className="mt-1 text-[10px] md:text-xs text-gold uppercase tracking-[0.15em]">
                 ${a.price.toLocaleString()} <span className="opacity-60">CAD</span>
               </div>
             )}
           </div>
           <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-            {a.sold ? (
+            {!isArtworkPurchasable(a) ? (
               <Link
                 to="/community"
                 search={{ inquiry: a.title }}

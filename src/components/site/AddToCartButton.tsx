@@ -19,7 +19,7 @@ export function AddToCartButton({ onAdd, inCart, label, variant = "solid", size 
       ? "px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px]"
       : "px-3.5 py-2 text-[10px]";
   const base =
-    "inline-flex items-center gap-1 uppercase tracking-[0.2em] font-semibold transition-all duration-300 cursor-pointer select-none";
+    "relative z-20 inline-flex items-center gap-1 uppercase tracking-[0.2em] font-semibold transition-all duration-300 cursor-pointer select-none pointer-events-auto touch-manipulation";
   const state = inCart
     ? "border border-gold text-gold cursor-default"
     : variant === "solid"
@@ -30,7 +30,9 @@ export function AddToCartButton({ onAdd, inCart, label, variant = "solid", size 
     <button
       type="button"
       onPointerDown={(e) => e.stopPropagation()}
+      onPointerUp={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
       onTouchEnd={(e) => e.stopPropagation()}
       onClick={(e) => {

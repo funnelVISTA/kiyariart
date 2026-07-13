@@ -4,6 +4,7 @@ import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createArtworkCheckout, listArtworkAvailability } from "@/lib/payments.functions";
 import { useCart } from "@/lib/cart";
+import { isArtworkPurchasable } from "@/lib/artworks";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -21,12 +22,29 @@ function CheckoutRouteShell() {
 }
 
 function CheckoutPage() {
-  const { items, total, remove } = useCart();
+  const { items, remove } = useCart();
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const optInRef = useRef(false);
   optInRef.current = marketingOptIn;
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
+  const checkoutItems = useMemo(
+    () => items.filter((i) => isArtworkPurchasable(i.artwork)),
+    [items],
+  );
+  const checkoutTotal = useMemo(
+    () => checkoutItems.reduce((sum, i) => sum + i.artwork.price, 0),
+    [checkoutItems],
+  );
+
+  useEffect(() => {
+    for (const item of items) {
+      if (!isArtworkPurchasable(item.artwork)) {
+        remove(item.artwork.id);
+        toast.warning(`"${item.artwork.title}" is inquiry-only — removed from cart`);
+      }
+    }
+  }, [items, remove]);
 
   // Auto-prune: if any cart item was sold elsewhere while it sat in the
   // buyer's localStorage, drop it before Stripe rejects the whole session.
@@ -37,7 +55,7 @@ function CheckoutPage() {
         if (cancelled) return;
         const soldSet = new Set(res.soldIds);
         const overrideSet = new Set(res.availableOverrideIds);
-        const stale = items.filter(
+        const stale = checkoutItems.filter(
           (i) => soldSet.has(i.artwork.id) && !overrideSet.has(i.artwork.id),
         );
         for (const s of stale) {
@@ -57,14 +75,14 @@ function CheckoutPage() {
   const options = useMemo(
     () => ({
       fetchClientSecret: async () => {
-        if (items.length === 0) throw new Error("Cart is empty");
+          if (checkoutItems.length === 0) throw new Error("Cart is empty");
         try {
           const result = await createArtworkCheckout({
             data: {
               environment: getStripeEnvironment(),
               returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
               marketingOptIn: optInRef.current,
-              items: items.map((i) => ({
+              items: checkoutItems.map((i) => ({
                 id: i.artwork.id,
                 title: i.artwork.title,
                 image: i.artwork.image,
@@ -85,10 +103,10 @@ function CheckoutPage() {
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [retryKey],
+    [checkoutItems, retryKey],
   );
 
-  if (items.length === 0) {
+  if (checkoutItems.length === 0) {
     return (
       <div className="pt-32 pb-20 container-page text-center">
         <div className="font-display text-5xl mb-4">Your cart is empty</div>
@@ -111,7 +129,7 @@ function CheckoutPage() {
             <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">Order summary</div>
             <h1 className="font-display text-4xl md:text-5xl mb-8">Secure checkout</h1>
             <div className="space-y-4 border-t border-border pt-6">
-              {items.map((i) => (
+              {checkoutItems.map((i) => (
                 <div key={i.artwork.id} className="flex gap-4">
                   <img src={i.artwork.image} alt={i.artwork.title} className="h-20 w-20 object-cover" />
                   <div className="flex-1">
@@ -124,7 +142,7 @@ function CheckoutPage() {
             </div>
             <div className="mt-6 pt-6 border-t border-border flex justify-between">
               <span className="text-sm text-muted-foreground">Subtotal</span>
-              <span className="text-gold font-medium">${total.toLocaleString()} CAD</span>
+              <span className="text-gold font-medium">${checkoutTotal.toLocaleString()} CAD</span>
             </div>
             <p className="mt-4 text-[11px] text-muted-foreground">
               Shipping calculated by destination. Each piece is one of a kind.

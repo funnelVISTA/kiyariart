@@ -73,14 +73,17 @@ describe("validateCartInput", () => {
 
 describe("resolveCartItems", () => {
   it("ignores client-supplied price, title, image; quantity always 1 (one-of-one)", async () => {
-    const [resolved] = await resolveCartItems([
-      line({
-        unit_amount_cad: 0.01,
-        title: "Free Money",
-        image: "https://evil/x.png",
-        quantity: 999,
-      }),
-    ]);
+    const [resolved] = await resolveCartItems(
+      [
+        line({
+          unit_amount_cad: 0.01,
+          title: "Free Money",
+          image: "https://evil/x.png",
+          quantity: 999,
+        }),
+      ],
+      { availableOverrideIds: [] },
+    );
     expect(resolved.unit_amount_cad).toBe(forSale.price);
     expect(resolved.title).toBe(forSale.title);
     expect(resolved.image).toBe(forSale.image);
@@ -88,21 +91,20 @@ describe("resolveCartItems", () => {
   });
 
   it("dedupes repeated ids into a single line", async () => {
-    const resolved = await resolveCartItems([
-      line({ quantity: 1 }),
-      line({ quantity: 1 }),
-      line({ quantity: 1 }),
-    ]);
+    const resolved = await resolveCartItems(
+      [line({ quantity: 1 }), line({ quantity: 1 }), line({ quantity: 1 })],
+      { availableOverrideIds: [] },
+    );
     expect(resolved).toHaveLength(1);
     expect(resolved[0].quantity).toBe(1);
   });
 
   it("rejects unknown artwork ids", async () => {
-    await expect(resolveCartItems([line({ id: "ghost-artwork" })])).rejects.toThrow(/Unknown/);
+    await expect(resolveCartItems([line({ id: "ghost-artwork" })], { availableOverrideIds: [] })).rejects.toThrow(/Unknown/);
   });
 
   it("rejects artworks marked sold in the catalog", async () => {
-    await expect(resolveCartItems([line({ id: sold.id })])).rejects.toThrow(/not available/);
+    await expect(resolveCartItems([line({ id: sold.id })], { availableOverrideIds: [] })).rejects.toThrow(/not available/);
   });
 });
 

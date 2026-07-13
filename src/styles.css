@@ -85,6 +85,12 @@
     text-rendering: optimizeLegibility;
   }
 
+  html.cart-open,
+  html.cart-open body {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
   h1, h2, h3, h4, .font-display {
     font-family: var(--font-display);
     font-weight: 500;

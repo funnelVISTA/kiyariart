@@ -93,10 +93,30 @@ type ResolvedLine = {
 // Resolve client-supplied cart ids against the server-authoritative catalog
 // (hardcoded ARTWORKS + admin-uploaded artworks_custom rows). Every piece is
 // a one-of-one — quantity is always 1 regardless of what the client sends.
-export async function resolveCartItems(items: CartLine[]): Promise<ResolvedLine[]> {
+export async function resolveCartItems(
+  items: CartLine[],
+  opts?: { availableOverrideIds?: Iterable<string> },
+): Promise<ResolvedLine[]> {
   const uniqueIds = Array.from(new Set(items.map((i) => i.id)));
 
+  const catalogIds = uniqueIds.filter((id) => ARTWORKS.find((a) => a.id === id));
   const customIds = uniqueIds.filter((id) => !ARTWORKS.find((a) => a.id === id));
+  const availableOverrides = new Set<string>(opts?.availableOverrideIds ?? []);
+  const needsOverrideLookup =
+    opts?.availableOverrideIds == null &&
+    catalogIds.some((id) => ARTWORKS.find((a) => a.id === id)?.sold);
+  if (needsOverrideLookup) {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: stockRows } = await supabaseAdmin
+      .from("artwork_stock")
+      .select("artwork_id,total_units,sold_units")
+      .in("artwork_id", catalogIds);
+    for (const row of stockRows ?? []) {
+      if ((row.total_units ?? 0) - (row.sold_units ?? 0) > 0) {
+        availableOverrides.add(row.artwork_id);
+      }
+    }
+  }
   let customMap = new Map<string, { id: string; title: string; image: string; price: number; sold: boolean }>();
   if (customIds.length) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -118,7 +138,8 @@ export async function resolveCartItems(items: CartLine[]): Promise<ResolvedLine[
   return uniqueIds.map((id) => {
     const art = ARTWORKS.find((a) => a.id === id);
     if (art) {
-      if (art.sold) throw new Error(`"${art.title}" is not available`);
+      const hasAvailableOverride = availableOverrides.has(art.id);
+      if (art.sold && !hasAvailableOverride) throw new Error(`"${art.title}" is not available`);
       if (!(art.price > 0)) throw new Error(`"${art.title}" is not for sale`);
       return {
         id: art.id, title: art.title, image: art.image,
@@ -140,12 +161,16 @@ export async function resolveCartItems(items: CartLine[]): Promise<ResolvedLine[
 async function fetchSoldSet(ids: string[]): Promise<Set<string>> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const sold = new Set<string>();
-  const [{ data: legacy }, { data: customSold }] = await Promise.all([
+  const [{ data: legacy }, { data: customSold }, { data: stockRows }] = await Promise.all([
     supabaseAdmin.from("sold_artworks").select("artwork_id").in("artwork_id", ids),
     supabaseAdmin.from("artworks_custom").select("id,sold").in("id", ids),
+    supabaseAdmin.from("artwork_stock").select("artwork_id,total_units,sold_units").in("artwork_id", ids),
   ]);
   for (const r of legacy ?? []) sold.add(r.artwork_id);
   for (const r of customSold ?? []) if (r.sold) sold.add(r.id);
+  for (const r of stockRows ?? []) {
+    if ((r.total_units ?? 0) - (r.sold_units ?? 0) > 0) sold.delete(r.artwork_id);
+  }
   return sold;
 }
 
