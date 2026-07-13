@@ -1,7 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
-import { X, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
-import { useEffect, useRef } from "react";
-import { TransformWrapper, TransformComponent, type ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect } from "react";
 import { useTapSwipe } from "@/hooks/useTapSwipe";
 
 type Props = {
@@ -11,13 +10,13 @@ type Props = {
   caption?: string;
   title?: string;
   description?: string;
+  price?: number;
   onClose: () => void;
   onPrev?: () => void;
   onNext?: () => void;
 };
 
-export function Lightbox({ open, src, alt, caption, title, description, onClose, onPrev, onNext }: Props) {
-  const ref = useRef<ReactZoomPanPinchRef | null>(null);
+export function Lightbox({ open, src, alt, caption, title, description, price, onClose, onPrev, onNext }: Props) {
   const swipe = useTapSwipe({
     onSwipe: (dir) => {
       if (dir === "left" && onNext) onNext();
@@ -28,12 +27,10 @@ export function Lightbox({ open, src, alt, caption, title, description, onClose,
 
   useEffect(() => {
     if (!open) return;
-    ref.current?.resetTransform();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowLeft" && onPrev) onPrev();
       if (e.key === "ArrowRight" && onNext) onNext();
-      if (e.key === "0") ref.current?.resetTransform();
     };
     window.addEventListener("keydown", onKey);
     const prevOverflow = document.body.style.overflow;
@@ -61,14 +58,6 @@ export function Lightbox({ open, src, alt, caption, title, description, onClose,
             <X className="h-5 w-5" />
           </button>
 
-          <button
-            onClick={(e) => { e.stopPropagation(); ref.current?.resetTransform(); }}
-            aria-label="Reset zoom"
-            className="absolute left-1/2 top-4 md:top-6 -translate-x-1/2 grid h-10 w-10 place-items-center rounded-full border border-border bg-card/60 hover:border-gold transition z-20"
-          >
-            <RotateCcw className="h-4 w-4" />
-          </button>
-
           {onPrev && (
             <button
               onClick={(e) => { e.stopPropagation(); onPrev(); }}
@@ -93,38 +82,28 @@ export function Lightbox({ open, src, alt, caption, title, description, onClose,
             onClick={(e) => e.stopPropagation()}
             {...swipe}
           >
-            <div className="relative flex-1 min-h-0 w-full flex items-center justify-center overflow-hidden">
-              <TransformWrapper
-                ref={ref}
-                initialScale={1}
-                minScale={1}
-                maxScale={5}
-                centerOnInit
-                doubleClick={{ mode: "toggle", step: 1.5 }}
-                wheel={{ step: 0.15 }}
-                pinch={{ step: 5 }}
-              >
-                <TransformComponent
-                  wrapperStyle={{ width: "100%", height: "100%" }}
-                  contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
-                >
-                  <img
-                    src={src}
-                    alt={alt}
-                    draggable={false}
-                    className="max-h-full max-w-full object-contain select-none"
-                  />
-                </TransformComponent>
-              </TransformWrapper>
+            <div className="relative flex-1 min-h-0 w-full flex items-center justify-center">
+              <img
+                src={src}
+                alt={alt}
+                draggable={false}
+                className="max-h-[85vh] max-w-full object-contain select-none"
+                style={{ maxHeight: "85vh", maxWidth: "100%" }}
+              />
             </div>
 
-            {(title || description) && (
+            {(title || description || (price ?? 0) > 0) && (
               <div className="w-full md:w-[300px] shrink-0 md:self-start md:pt-16 text-left">
                 {title && (
                   <div className="font-display text-lg md:text-2xl text-gold leading-tight">{title}</div>
                 )}
+                {(price ?? 0) > 0 && (
+                  <div className="mt-2 text-sm md:text-base text-foreground font-medium">
+                    ${price!.toLocaleString()} <span className="text-xs opacity-60">CAD</span>
+                  </div>
+                )}
                 {description && (
-                  <p className="mt-2 text-xs md:text-sm text-foreground/85 leading-relaxed">
+                  <p className="mt-3 text-xs md:text-sm text-foreground/85 leading-relaxed">
                     {description}
                   </p>
                 )}
@@ -136,7 +115,7 @@ export function Lightbox({ open, src, alt, caption, title, description, onClose,
             <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground text-center">
               {caption}
               <div className="mt-1 text-[9px] opacity-60 normal-case tracking-wider">
-                Pinch / scroll to zoom · drag to pan · ← → to navigate
+                ← → to navigate
               </div>
             </div>
           )}

@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef, useState } from "react";
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { ARTWORKS, HERO_IMAGE, type Artwork } from "@/lib/artworks";
 import { useI18n } from "@/lib/i18n";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { Reveal, RevealText } from "@/components/ui/Reveal";
 import { Lightbox } from "@/components/site/Lightbox";
+import { AddToCartButton } from "@/components/site/AddToCartButton";
 import { useCart } from "@/lib/cart";
 import { useIsTouch } from "@/hooks/useIsTouch";
 import { useTapSwipe } from "@/hooks/useTapSwipe";
@@ -293,7 +294,10 @@ function Home() {
         open={!!lightbox}
         src={lightbox?.image ?? null}
         alt={lightbox?.title}
-        caption={lightbox ? `${lightbox.title} — ${lightbox.collection}` : undefined}
+        title={lightbox?.title}
+        description={lightbox?.description}
+        price={lightbox?.price}
+        caption={lightbox ? lightbox.title : undefined}
         onClose={() => setLightbox(null)}
       />
     </div>
@@ -341,40 +345,20 @@ function FeaturedCard({ a, hero, isTouch, revealed, inCart, onToggleReveal, onOp
           className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
           style={{ transform: "translateZ(0)" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/10 to-transparent opacity-70 group-hover:opacity-95 group-data-[reveal=true]:opacity-95 transition-opacity duration-500" />
+      </div>
 
-        {isTouch && !revealed && (
-          <div
-            className="absolute bottom-3 right-3 px-2 py-1 text-[9px] uppercase tracking-[0.2em] bg-background/70 backdrop-blur border border-border/60 rounded-full opacity-80 transition z-10 pointer-events-none"
-            style={{ transform: "translateZ(40px)" }}
-          >
-            ← swipe
-          </div>
-        )}
-
-        <div className="absolute inset-x-0 bottom-0 p-6 translate-y-2 group-hover:translate-y-0 group-data-[reveal=true]:translate-y-0 transition-transform duration-500 pointer-events-auto" style={{ transform: "translateZ(30px)" }}>
-          <div className="font-display text-2xl md:text-3xl">{a.title}</div>
-          <div className="mt-1 flex items-center justify-between gap-4">
-            <div className="text-xs uppercase tracking-[0.2em] text-gold">
-              {a.price > 0 ? `$${a.price.toLocaleString()} CAD` : t("art.inquire")}
+      {/* Info BELOW the image — never over the artwork */}
+      <div className="pt-3 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="font-display text-lg md:text-2xl leading-tight truncate">{a.title}</div>
+          {a.price > 0 && (
+            <div className="mt-1 text-[10px] md:text-xs text-gold uppercase tracking-[0.2em]">
+              ${a.price.toLocaleString()} CAD
             </div>
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-              onTouchEnd={(e) => e.stopPropagation()}
-              onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAdd(); }}
-              disabled={inCart}
-              aria-label={inCart ? "In cart" : t("feat.add")}
-              className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] border px-3 py-2 transition ${
-                inCart
-                  ? "border-gold text-gold cursor-default"
-                  : "border-border hover:border-gold hover:text-gold"
-              }`}
-            >
-              {inCart ? <>✓ In cart</> : <><Plus className="h-3 w-3" /> {t("feat.add")}</>}
-            </button>
-          </div>
+          )}
+        </div>
+        <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+          <AddToCartButton onAdd={onAdd} inCart={inCart} label={t("feat.add")} variant="outline" size="sm" />
         </div>
       </div>
     </TiltCard>
