@@ -502,6 +502,13 @@ export const listArtworkAvailability = createServerFn({ method: "GET" }).handler
       price_override: number | null;
       on_sale: boolean;
       sale_price: number | null;
+      title: string | null;
+      description: string | null;
+      medium: string | null;
+      image_url: string | null;
+      alt_text: string | null;
+      seo_title: string | null;
+      seo_description: string | null;
     }>;
   }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -511,7 +518,7 @@ export const listArtworkAvailability = createServerFn({ method: "GET" }).handler
       supabaseAdmin.from("artwork_stock").select("artwork_id,total_units,sold_units"),
       supabaseAdmin
         .from("artwork_catalog_overrides")
-        .select("artwork_id,price_override,on_sale,sale_price"),
+        .select("artwork_id,price_override,on_sale,sale_price,title,description,medium,image_url,alt_text,seo_title,seo_description"),
     ]);
     const soldSet = new Set<string>();
     for (const r of sold ?? []) soldSet.add(r.artwork_id);
@@ -531,6 +538,13 @@ export const listArtworkAvailability = createServerFn({ method: "GET" }).handler
         price_override: r.price_override != null ? Number(r.price_override) : null,
         on_sale: !!r.on_sale,
         sale_price: r.sale_price != null ? Number(r.sale_price) : null,
+        title: r.title ?? null,
+        description: r.description ?? null,
+        medium: r.medium ?? null,
+        image_url: r.image_url ?? null,
+        alt_text: r.alt_text ?? null,
+        seo_title: r.seo_title ?? null,
+        seo_description: r.seo_description ?? null,
       })),
     };
   },
