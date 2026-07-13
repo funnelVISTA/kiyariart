@@ -336,27 +336,39 @@ type FeaturedCardProps = {
 
 function FeaturedCard({ a, hero, isTouch, revealed, inCart, onToggleReveal, onOpen, onAdd, t }: FeaturedCardProps) {
   const swipe = useTapSwipe({ onTap: onOpen, onSwipe: onToggleReveal });
+  const imageInteractionProps = isTouch ? swipe : { onClick: onOpen };
   return (
-    <TiltCard
-      max={8}
-      scale={1.02}
-      className="group relative h-full"
-      data-reveal={revealed}
-      {...(isTouch ? swipe : { onClick: onOpen })}
-    >
-      <div className={`relative overflow-hidden ${hero ? "aspect-square md:aspect-[4/5]" : "aspect-square"}`}>
-        <img
-          src={thumb(a.image, hero ? 1100 : 700)}
-          alt={a.title}
-          loading={hero ? "eager" : "lazy"}
-          decoding="async"
-          sizes={hero ? "(min-width: 768px) 66vw, 100vw" : "(min-width: 768px) 33vw, 50vw"}
-          className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
-          style={{ transform: "translateZ(0)" }}
-        />
-      </div>
+    <div className="group relative h-full" data-reveal={revealed}>
+      {/* Zone 1 — Image only. Tilt + lightbox click confined here. */}
+      <TiltCard
+        max={8}
+        scale={1.02}
+        className="relative cursor-pointer"
+        role="button"
+        tabIndex={0}
+        aria-label={`Open ${a.title}`}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onOpen();
+          }
+        }}
+        {...imageInteractionProps}
+      >
+        <div className={`relative overflow-hidden ${hero ? "aspect-square md:aspect-[4/5]" : "aspect-square"}`}>
+          <img
+            src={thumb(a.image, hero ? 1100 : 700)}
+            alt={a.title}
+            loading={hero ? "eager" : "lazy"}
+            decoding="async"
+            sizes={hero ? "(min-width: 768px) 66vw, 100vw" : "(min-width: 768px) 33vw, 50vw"}
+            className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
+            style={{ transform: "translateZ(0)" }}
+          />
+        </div>
+      </TiltCard>
 
-      {/* Info BELOW the image — never over the artwork */}
+      {/* Zone 2 — Info + action strip. Outside TiltCard, no transform. */}
       <div className="pt-3 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="font-display text-lg md:text-2xl leading-tight truncate">{a.title}</div>
@@ -366,11 +378,11 @@ function FeaturedCard({ a, hero, isTouch, revealed, inCart, onToggleReveal, onOp
             </div>
           )}
         </div>
-        <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+        <div className="shrink-0">
           <AddToCartButton onAdd={onAdd} inCart={inCart} label={t("feat.add")} variant="outline" size="sm" />
         </div>
       </div>
-    </TiltCard>
+    </div>
   );
 }
 
