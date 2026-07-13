@@ -117,12 +117,12 @@ export async function resolveCartItems(
       }
     }
   }
-  let customMap = new Map<string, { id: string; title: string; image: string; price: number; sold: boolean }>();
+  let customMap = new Map<string, { id: string; title: string; image: string; price: number; sold: boolean; on_sale: boolean; sale_price: number | null }>();
   if (customIds.length) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
       .from("artworks_custom")
-      .select("id,title,image_url,price,sold")
+      .select("id,title,image_url,price,sold,on_sale,sale_price")
       .in("id", customIds);
     for (const r of data ?? []) {
       customMap.set(r.id, {
@@ -131,6 +131,27 @@ export async function resolveCartItems(
         image: r.image_url,
         price: Number(r.price ?? 0),
         sold: !!r.sold,
+        on_sale: !!(r as any).on_sale,
+        sale_price: (r as any).sale_price != null ? Number((r as any).sale_price) : null,
+      });
+    }
+  }
+  // Catalog price/sale overrides (for hardcoded ARTWORKS ids).
+  const catalogOverrideMap = new Map<
+    string,
+    { price_override: number | null; on_sale: boolean; sale_price: number | null }
+  >();
+  if (catalogIds.length) {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: ovRows } = await supabaseAdmin
+      .from("artwork_catalog_overrides")
+      .select("artwork_id,price_override,on_sale,sale_price")
+      .in("artwork_id", catalogIds);
+    for (const r of ovRows ?? []) {
+      catalogOverrideMap.set(r.artwork_id, {
+        price_override: r.price_override != null ? Number(r.price_override) : null,
+        on_sale: !!r.on_sale,
+        sale_price: r.sale_price != null ? Number(r.sale_price) : null,
       });
     }
   }
@@ -140,19 +161,23 @@ export async function resolveCartItems(
     if (art) {
       const hasAvailableOverride = availableOverrides.has(art.id);
       if (art.sold && !hasAvailableOverride) throw new Error(`"${art.title}" is not available`);
-      if (!(art.price > 0)) throw new Error(`"${art.title}" is not for sale`);
+      const ov = catalogOverrideMap.get(art.id);
+      const listPrice = ov?.price_override ?? art.price;
+      const effective = ov?.on_sale && ov.sale_price != null ? ov.sale_price : listPrice;
+      if (!(effective > 0)) throw new Error(`"${art.title}" is not for sale`);
       return {
         id: art.id, title: art.title, image: art.image,
-        unit_amount_cad: art.price, quantity: 1 as const, source: "catalog" as const,
+        unit_amount_cad: effective, quantity: 1 as const, source: "catalog" as const,
       };
     }
     const c = customMap.get(id);
     if (!c) throw new Error(`Unknown artwork: ${id}`);
     if (c.sold) throw new Error(`"${c.title}" is not available`);
-    if (!(c.price > 0)) throw new Error(`"${c.title}" is not for sale`);
+    const effective = c.on_sale && c.sale_price != null ? c.sale_price : c.price;
+    if (!(effective > 0)) throw new Error(`"${c.title}" is not for sale`);
     return {
       id: c.id, title: c.title, image: c.image,
-      unit_amount_cad: c.price, quantity: 1 as const, source: "custom" as const,
+      unit_amount_cad: effective, quantity: 1 as const, source: "custom" as const,
     };
   });
 }
@@ -465,12 +490,24 @@ export const confirmCheckout = createServerFn({ method: "POST" })
 
 // Public: list sold-out artwork IDs (from both catalog overrides and custom).
 export const listArtworkAvailability = createServerFn({ method: "GET" }).handler(
-  async (): Promise<{ soldIds: string[]; availableOverrideIds: string[] }> => {
+  async (): Promise<{
+    soldIds: string[];
+    availableOverrideIds: string[];
+    catalogOverrides: Array<{
+      artwork_id: string;
+      price_override: number | null;
+      on_sale: boolean;
+      sale_price: number | null;
+    }>;
+  }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data: sold }, { data: customSold }, { data: stock }] = await Promise.all([
+    const [{ data: sold }, { data: customSold }, { data: stock }, { data: overrides }] = await Promise.all([
       supabaseAdmin.from("sold_artworks").select("artwork_id"),
       supabaseAdmin.from("artworks_custom").select("id").eq("sold", true),
       supabaseAdmin.from("artwork_stock").select("artwork_id,total_units,sold_units"),
+      supabaseAdmin
+        .from("artwork_catalog_overrides")
+        .select("artwork_id,price_override,on_sale,sale_price"),
     ]);
     const soldSet = new Set<string>();
     for (const r of sold ?? []) soldSet.add(r.artwork_id);
@@ -482,7 +519,16 @@ export const listArtworkAvailability = createServerFn({ method: "GET" }).handler
         soldSet.delete(r.artwork_id);
       }
     }
-    return { soldIds: Array.from(soldSet), availableOverrideIds: Array.from(availableOverride) };
+    return {
+      soldIds: Array.from(soldSet),
+      availableOverrideIds: Array.from(availableOverride),
+      catalogOverrides: (overrides ?? []).map((r: any) => ({
+        artwork_id: r.artwork_id,
+        price_override: r.price_override != null ? Number(r.price_override) : null,
+        on_sale: !!r.on_sale,
+        sale_price: r.sale_price != null ? Number(r.sale_price) : null,
+      })),
+    };
   },
 );
 

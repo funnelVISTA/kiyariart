@@ -88,13 +88,24 @@ function ArtworksPage() {
     () => new Set(availability?.availableOverrideIds ?? []),
     [availability],
   );
+  const catalogOverrideMap = useMemo(() => {
+    const m = new Map<string, { price_override: number | null; on_sale: boolean; sale_price: number | null }>();
+    for (const r of availability?.catalogOverrides ?? []) {
+      m.set(r.artwork_id, {
+        price_override: r.price_override,
+        on_sale: r.on_sale,
+        sale_price: r.sale_price,
+      });
+    }
+    return m;
+  }, [availability]);
 
   const { data: customRows } = useQuery({
     queryKey: ["artworks-custom"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("artworks_custom")
-        .select("id,title,description,price,image_url,collection,medium,sold,display_order,sort_order,alt_text,created_at")
+        .select("id,title,description,price,image_url,collection,medium,sold,display_order,sort_order,alt_text,created_at,on_sale,sale_price")
         .order("display_order", { ascending: true })
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -117,28 +128,46 @@ function ArtworksPage() {
 
   const catalog = useMemo<Artwork[]>(() => {
     const orderMap = new Map<string, number>((orderRows ?? []).map((r) => [r.artwork_id, r.position]));
-    const fromCustom: Artwork[] = (customRows ?? []).map((r) => ({
-      id: r.id,
-      title: r.title,
-      image: r.image_url,
-      price: Number(r.price ?? 0),
-      sold: !!r.sold,
-      collection: "Our Essence",
-      medium: r.medium ?? undefined,
-      description: r.description ?? undefined,
-    }));
-    const fromCatalog: Artwork[] = ARTWORKS.map((a) => ({
-      ...a,
-      collection: "Our Essence",
-      sold: availableOverrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
-    }));
+    const fromCustom: Artwork[] = (customRows ?? []).map((r) => {
+      const list = Number(r.price ?? 0);
+      const onSale = !!(r as any).on_sale && (r as any).sale_price != null;
+      const sale = onSale ? Number((r as any).sale_price) : null;
+      const effective = onSale && sale != null ? sale : list;
+      return {
+        id: r.id,
+        title: r.title,
+        image: r.image_url,
+        price: effective,
+        originalPrice: onSale ? list : undefined,
+        onSale: onSale && sale != null && sale < list,
+        sold: !!r.sold,
+        collection: "Our Essence",
+        medium: r.medium ?? undefined,
+        description: r.description ?? undefined,
+      };
+    });
+    const fromCatalog: Artwork[] = ARTWORKS.map((a) => {
+      const ov = catalogOverrideMap.get(a.id);
+      const list = ov?.price_override ?? a.price;
+      const onSale = !!ov?.on_sale && ov?.sale_price != null;
+      const sale = onSale ? Number(ov!.sale_price) : null;
+      const effective = onSale && sale != null ? sale : list;
+      return {
+        ...a,
+        collection: "Our Essence",
+        price: effective,
+        originalPrice: onSale ? list : undefined,
+        onSale: onSale && sale != null && sale < list,
+        sold: availableOverrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
+      };
+    });
     const merged = [...fromCustom, ...fromCatalog];
     return merged.sort((a, b) => {
       const pa = orderMap.get(a.id) ?? 9999;
       const pb = orderMap.get(b.id) ?? 9999;
       return pa - pb;
     });
-  }, [soldSet, availableOverrideSet, customRows, orderRows]);
+  }, [soldSet, availableOverrideSet, catalogOverrideMap, customRows, orderRows]);
 
   const blurb = (a: Artwork) => {
     if (a.description) return a.description;
@@ -302,6 +331,14 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
           <div className="pointer-events-none absolute top-0 right-0 w-8 h-8 md:w-10 md:h-10 border-t border-r border-gold/40 opacity-70 group-hover:opacity-100 transition-all duration-500" />
           <div className="pointer-events-none absolute bottom-0 left-0 w-8 h-8 md:w-10 md:h-10 border-b border-l border-gold/40 opacity-70 group-hover:opacity-100 transition-all duration-500" />
 
+          {/* SALE badge (in addition to status) */}
+          {!a.sold && a.onSale && (
+            <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+              <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-accent text-accent-foreground font-medium">
+                Sale
+              </span>
+            </div>
+          )}
           {/* Status badge — top-right (SOLD) or top-left (Available). Sold artworks show ONLY this indicator. */}
           {a.sold ? (
             <div className="absolute top-3 right-3 z-10">
@@ -309,13 +346,13 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
                 {t("art.sold")}
               </span>
             </div>
-          ) : isArtworkPurchasable(a) ? (
+          ) : isArtworkPurchasable(a) && !a.onSale ? (
             <div className="absolute top-3 left-3 z-10">
               <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-gold/95 text-primary-foreground font-medium shadow-glow">
                 {t("art.available")}
               </span>
             </div>
-          ) : (
+          ) : isArtworkPurchasable(a) ? null : (
             <div className="absolute top-3 right-3 z-10">
               <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-background/85 backdrop-blur border border-gold text-gold">
                 {t("art.inquire")}
@@ -332,7 +369,14 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
             <div className="font-display text-sm md:text-lg leading-tight truncate">{a.title}</div>
              {isArtworkPurchasable(a) && (
               <div className="mt-1 text-[10px] md:text-xs text-gold uppercase tracking-[0.15em]">
-                ${a.price.toLocaleString()} <span className="opacity-60">CAD</span>
+                {a.onSale && a.originalPrice ? (
+                  <>
+                    <span className="line-through text-muted-foreground mr-1.5 opacity-70">${a.originalPrice.toLocaleString()}</span>
+                    <span className="text-accent">${a.price.toLocaleString()}</span> <span className="opacity-60">CAD</span>
+                  </>
+                ) : (
+                  <>${a.price.toLocaleString()} <span className="opacity-60">CAD</span></>
+                )}
               </div>
             )}
           </div>

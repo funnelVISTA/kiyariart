@@ -136,7 +136,16 @@ function CheckoutPage() {
                     <div className="font-display text-lg">{i.artwork.title}</div>
                     <div className="text-xs text-muted-foreground">{i.artwork.collection}</div>
                   </div>
-                  <div className="text-gold text-sm">${i.artwork.price.toLocaleString()} CAD</div>
+                  <div className="text-gold text-sm">
+                    {i.artwork.onSale && i.artwork.originalPrice ? (
+                      <>
+                        <span className="line-through text-muted-foreground mr-1.5 opacity-70">${i.artwork.originalPrice.toLocaleString()}</span>
+                        <span className="text-accent">${i.artwork.price.toLocaleString()}</span> CAD
+                      </>
+                    ) : (
+                      <>${i.artwork.price.toLocaleString()} CAD</>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

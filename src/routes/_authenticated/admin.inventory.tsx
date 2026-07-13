@@ -29,6 +29,7 @@ import {
   adminReorderCustomArtworks,
   adminBulkSetArtworkSold,
   adminBulkDeleteArtworks,
+  adminUpsertCatalogOverride,
 } from "@/lib/admin-content.functions";
 import { adminSetCatalogAvailability } from "@/lib/admin-extra.functions";
 import { listArtworkAvailability } from "@/lib/payments.functions";
@@ -72,6 +73,15 @@ type Row = {
 function AdminArtworksPage() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
+  const [editingCatalog, setEditingCatalog] = useState<null | {
+    id: string;
+    title: string;
+    image: string;
+    originalPrice: number;
+    priceOverride: number | null;
+    onSale: boolean;
+    salePrice: number | null;
+  }>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [order, setOrder] = useState<Row[] | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<
@@ -94,6 +104,13 @@ function AdminArtworksPage() {
     () => new Set(availQ.data?.availableOverrideIds ?? []),
     [availQ.data],
   );
+  const catalogOverrideMap = useMemo(() => {
+    const m = new Map<string, { price_override: number | null; on_sale: boolean; sale_price: number | null }>();
+    for (const r of availQ.data?.catalogOverrides ?? []) {
+      m.set(r.artwork_id, { price_override: r.price_override, on_sale: r.on_sale, sale_price: r.sale_price });
+    }
+    return m;
+  }, [availQ.data]);
 
   const refresh = () => {
     setOrder(null);
@@ -224,11 +241,24 @@ function AdminArtworksPage() {
   };
 
   const catalogRows = useMemo(() => {
-    return ARTWORKS.map((a) => ({
-      ...a,
-      sold: overrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
-    }));
-  }, [soldSet, overrideSet]);
+    return ARTWORKS.map((a) => {
+      const ov = catalogOverrideMap.get(a.id);
+      const listPrice = ov?.price_override ?? a.price;
+      const onSale = !!ov?.on_sale && ov?.sale_price != null;
+      const salePrice = onSale ? Number(ov!.sale_price) : null;
+      const effective = onSale && salePrice != null ? salePrice : listPrice;
+      return {
+        ...a,
+        sold: overrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
+        priceListing: listPrice,
+        priceEffective: effective,
+        onSale,
+        salePrice,
+        originalPrice: a.price,
+        priceOverride: ov?.price_override ?? null,
+      };
+    });
+  }, [soldSet, overrideSet, catalogOverrideMap]);
 
   return (
     <div className="pt-10 pb-20">
@@ -327,6 +357,17 @@ function AdminArtworksPage() {
                 selected={selected.has(a.id)}
                 onToggle={() => toggleSel(a.id)}
                 onToggleSold={() => toggleCatalog(a.id, a.sold /* was sold → make available */)}
+                onEdit={() =>
+                  setEditingCatalog({
+                    id: a.id,
+                    title: a.title,
+                    image: a.image,
+                    originalPrice: a.originalPrice,
+                    priceOverride: a.priceOverride,
+                    onSale: a.onSale,
+                    salePrice: a.salePrice,
+                  })
+                }
               />
             ))}
           </div>
@@ -338,6 +379,14 @@ function AdminArtworksPage() {
           initial={editing}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); refresh(); }}
+        />
+      )}
+
+      {editingCatalog && (
+        <CatalogOverrideEditor
+          initial={editingCatalog}
+          onClose={() => setEditingCatalog(null)}
+          onSaved={() => { setEditingCatalog(null); refresh(); }}
         />
       )}
 
@@ -484,12 +533,29 @@ function CatalogCard({
   selected,
   onToggle,
   onToggleSold,
+  onEdit,
 }: {
-  a: { id: string; title: string; image: string; price: number; sold: boolean; collection: string };
+  a: {
+    id: string;
+    title: string;
+    image: string;
+    price: number;
+    sold: boolean;
+    collection: string;
+    priceListing?: number;
+    priceEffective?: number;
+    onSale?: boolean;
+    salePrice?: number | null;
+    originalPrice?: number;
+    priceOverride?: number | null;
+  };
   selected: boolean;
   onToggle: () => void;
   onToggleSold: () => void;
+  onEdit: () => void;
 }) {
+  const listPrice = a.priceListing ?? a.price;
+  const effective = a.priceEffective ?? a.price;
   return (
     <div
       onClick={onToggle}
@@ -512,6 +578,11 @@ function CatalogCard({
         >
           {a.sold ? "Sold" : "Available"}
         </div>
+        {a.onSale && !a.sold && (
+          <div className="absolute bottom-2 left-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 bg-accent text-accent-foreground">
+            Sale
+          </div>
+        )}
         <div className="absolute top-2 right-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 bg-background/80 border border-border text-muted-foreground">
           Catalog
         </div>
@@ -520,7 +591,18 @@ function CatalogCard({
         <div className="font-display text-xl truncate">{a.title}</div>
         <div className="text-[11px] text-muted-foreground uppercase tracking-[0.2em]">Our Essence</div>
         <div className="mt-1 text-sm text-gold">
-          {a.price > 0 ? `$${Number(a.price).toLocaleString()} CAD` : "—"}
+          {effective > 0 ? (
+            a.onSale && listPrice > effective ? (
+              <>
+                <span className="line-through text-muted-foreground mr-1.5 opacity-70">${listPrice.toLocaleString()}</span>
+                <span className="text-accent">${effective.toLocaleString()}</span> CAD
+              </>
+            ) : (
+              <>${listPrice.toLocaleString()} CAD</>
+            )
+          ) : (
+            "—"
+          )}
         </div>
         <div className="mt-4 flex gap-2">
           <button
@@ -528,6 +610,13 @@ function CatalogCard({
             className="flex-1 inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
           >
             {a.sold ? "Mark available" : "Mark sold"}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            aria-label="Edit price / sale"
+            className="inline-flex items-center justify-center gap-2 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
+          >
+            <Pencil className="h-3 w-3" />
           </button>
         </div>
       </div>
@@ -545,6 +634,12 @@ function ArtworkEditor({
   // it snapping back to 0. Empty string = no value yet; validated on save.
   const [priceInput, setPriceInput] = useState<string>(
     initial.price === undefined || initial.price === null ? "" : String(initial.price),
+  );
+  const [onSale, setOnSale] = useState<boolean>(!!(initial as any).on_sale);
+  const [saleMode, setSaleMode] = useState<"percent" | "fixed">("fixed");
+  const [percentOff, setPercentOff] = useState<string>("");
+  const [salePriceInput, setSalePriceInput] = useState<string>(
+    (initial as any).sale_price != null ? String((initial as any).sale_price) : "",
   );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -621,6 +716,33 @@ function ArtworkEditor({
       toast.error("Price must be a non-negative number");
       return;
     }
+    // Compute sale_price from mode when on_sale
+    let salePrice: number | null = null;
+    if (onSale) {
+      if (!(parsedPrice > 0)) {
+        toast.error("Set a regular price before enabling sale");
+        return;
+      }
+      if (saleMode === "percent") {
+        const pct = Number(percentOff);
+        if (!Number.isFinite(pct) || pct < 1 || pct > 99) {
+          toast.error("Percent off must be between 1 and 99");
+          return;
+        }
+        salePrice = Math.round(parsedPrice * (1 - pct / 100) * 100) / 100;
+      } else {
+        const sp = Number(salePriceInput);
+        if (!Number.isFinite(sp) || sp <= 0) {
+          toast.error("Sale price must be positive");
+          return;
+        }
+        if (sp >= parsedPrice) {
+          toast.error("Sale price must be less than the regular price");
+          return;
+        }
+        salePrice = Math.round(sp * 100) / 100;
+      }
+    }
     setSaving(true);
     try {
       await adminUpsertCustomArtwork({
@@ -638,6 +760,8 @@ function ArtworkEditor({
           seo_title: form.seo_title ?? null,
           seo_description: form.seo_description ?? null,
           alt_text: form.alt_text ?? null,
+          on_sale: onSale,
+          sale_price: salePrice,
         },
       });
       toast.success(form.id ? "Artwork updated" : "Artwork added");
@@ -749,6 +873,57 @@ function ArtworkEditor({
                     />
                     <span className="text-sm">Mark as sold</span>
                   </label>
+
+                  <div className="pt-4 border-t border-border">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={onSale}
+                        onChange={(e) => setOnSale(e.target.checked)}
+                      />
+                      <span className="text-sm">On Sale</span>
+                    </label>
+                    {onSale && (
+                      <div className="mt-3 space-y-3">
+                        <div className="flex gap-2 text-[10px] uppercase tracking-[0.2em]">
+                          <button
+                            type="button"
+                            onClick={() => setSaleMode("percent")}
+                            className={`px-3 py-1.5 border ${saleMode === "percent" ? "border-gold text-gold" : "border-border text-muted-foreground"}`}
+                          >Percent off</button>
+                          <button
+                            type="button"
+                            onClick={() => setSaleMode("fixed")}
+                            className={`px-3 py-1.5 border ${saleMode === "fixed" ? "border-gold text-gold" : "border-border text-muted-foreground"}`}
+                          >Set sale price</button>
+                        </div>
+                        {saleMode === "percent" ? (
+                          <Field label="Percent off (1–99)">
+                            <input
+                              type="number" min={1} max={99} step={1}
+                              value={percentOff}
+                              onChange={(e) => setPercentOff(e.target.value)}
+                              className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                            />
+                            {percentOff && Number(priceInput) > 0 && Number(percentOff) >= 1 && Number(percentOff) <= 99 && (
+                              <p className="mt-1 text-[10px] text-accent">
+                                Sale price: ${(Number(priceInput) * (1 - Number(percentOff) / 100)).toFixed(2)} CAD
+                              </p>
+                            )}
+                          </Field>
+                        ) : (
+                          <Field label="Sale price (CAD)">
+                            <input
+                              type="number" min={0} step={1}
+                              value={salePriceInput}
+                              onChange={(e) => setSalePriceInput(e.target.value)}
+                              className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                            />
+                          </Field>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -819,5 +994,185 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</span>
       <div className="mt-1.5">{children}</div>
     </label>
+  );
+}
+
+function CatalogOverrideEditor({
+  initial,
+  onClose,
+  onSaved,
+}: {
+  initial: {
+    id: string;
+    title: string;
+    image: string;
+    originalPrice: number;
+    priceOverride: number | null;
+    onSale: boolean;
+    salePrice: number | null;
+  };
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [priceInput, setPriceInput] = useState<string>(
+    initial.priceOverride != null ? String(initial.priceOverride) : String(initial.originalPrice ?? ""),
+  );
+  const [onSale, setOnSale] = useState<boolean>(initial.onSale);
+  const [saleMode, setSaleMode] = useState<"percent" | "fixed">("fixed");
+  const [percentOff, setPercentOff] = useState<string>("");
+  const [salePriceInput, setSalePriceInput] = useState<string>(
+    initial.salePrice != null ? String(initial.salePrice) : "",
+  );
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    const trimmed = priceInput.trim();
+    if (trimmed === "") {
+      toast.error("Enter a price", { description: "Use 0 for inquiry-only pieces." });
+      return;
+    }
+    const parsedPrice = Number(trimmed);
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      toast.error("Price must be a non-negative number");
+      return;
+    }
+    let salePrice: number | null = null;
+    if (onSale) {
+      if (!(parsedPrice > 0)) {
+        toast.error("Set a regular price before enabling sale");
+        return;
+      }
+      if (saleMode === "percent") {
+        const pct = Number(percentOff);
+        if (!Number.isFinite(pct) || pct < 1 || pct > 99) {
+          toast.error("Percent off must be between 1 and 99");
+          return;
+        }
+        salePrice = Math.round(parsedPrice * (1 - pct / 100) * 100) / 100;
+      } else {
+        const sp = Number(salePriceInput);
+        if (!Number.isFinite(sp) || sp <= 0) {
+          toast.error("Sale price must be positive");
+          return;
+        }
+        if (sp >= parsedPrice) {
+          toast.error("Sale price must be less than the regular price");
+          return;
+        }
+        salePrice = Math.round(sp * 100) / 100;
+      }
+    }
+    setSaving(true);
+    try {
+      await adminUpsertCatalogOverride({
+        data: {
+          artworkId: initial.id,
+          originalPrice: initial.originalPrice,
+          priceOverride: parsedPrice,
+          onSale,
+          salePrice,
+        },
+      });
+      toast.success("Saved");
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[90] bg-background/95 backdrop-blur-xl overflow-y-auto" onClick={onClose}>
+      <div className="min-h-full flex items-start md:items-center justify-center p-4 md:p-10">
+        <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-xl bg-card border border-border">
+          <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full border border-border hover:border-gold">
+            <X className="h-4 w-4" />
+          </button>
+          <div className="p-6 md:p-8">
+            <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Catalog · Edit</div>
+            <h2 className="font-display text-2xl truncate">{initial.title}</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Catalog images are hardcoded. You can set/override the price and put this piece on sale.
+            </p>
+
+            <div className="mt-6 grid md:grid-cols-[120px_1fr] gap-6">
+              <img src={initial.image} alt={initial.title} className="w-full aspect-[4/5] object-cover border border-border" />
+              <div className="space-y-4">
+                <Field label="Price (CAD)">
+                  <input
+                    type="number" min={0} step={1}
+                    value={priceInput}
+                    onChange={(e) => setPriceInput(e.target.value)}
+                    className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                  />
+                  <p className="mt-1 text-[10px] text-muted-foreground">Set 0 to hide the buy button (inquiry only).</p>
+                </Field>
+
+                <div className="pt-2 border-t border-border">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={onSale} onChange={(e) => setOnSale(e.target.checked)} />
+                    <span className="text-sm">On Sale</span>
+                  </label>
+                  {onSale && (
+                    <div className="mt-3 space-y-3">
+                      <div className="flex gap-2 text-[10px] uppercase tracking-[0.2em]">
+                        <button
+                          type="button"
+                          onClick={() => setSaleMode("percent")}
+                          className={`px-3 py-1.5 border ${saleMode === "percent" ? "border-gold text-gold" : "border-border text-muted-foreground"}`}
+                        >Percent off</button>
+                        <button
+                          type="button"
+                          onClick={() => setSaleMode("fixed")}
+                          className={`px-3 py-1.5 border ${saleMode === "fixed" ? "border-gold text-gold" : "border-border text-muted-foreground"}`}
+                        >Set sale price</button>
+                      </div>
+                      {saleMode === "percent" ? (
+                        <Field label="Percent off (1–99)">
+                          <input
+                            type="number" min={1} max={99} step={1}
+                            value={percentOff}
+                            onChange={(e) => setPercentOff(e.target.value)}
+                            className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                          />
+                          {percentOff && Number(priceInput) > 0 && Number(percentOff) >= 1 && Number(percentOff) <= 99 && (
+                            <p className="mt-1 text-[10px] text-accent">
+                              Sale price: ${(Number(priceInput) * (1 - Number(percentOff) / 100)).toFixed(2)} CAD
+                            </p>
+                          )}
+                        </Field>
+                      ) : (
+                        <Field label="Sale price (CAD)">
+                          <input
+                            type="number" min={0} step={1}
+                            value={salePriceInput}
+                            onChange={(e) => setSalePriceInput(e.target.value)}
+                            className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                          />
+                        </Field>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 flex items-center justify-end gap-3">
+              <button onClick={onClose} className="px-5 py-2.5 text-xs uppercase tracking-[0.2em] border border-border hover:border-gold">
+                Cancel
+              </button>
+              <button
+                onClick={save}
+                disabled={saving}
+                className="bg-gradient-gold text-primary-foreground px-6 py-2.5 text-xs uppercase tracking-[0.2em] hover:shadow-glow transition disabled:opacity-50"
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

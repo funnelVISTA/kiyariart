@@ -50,6 +50,33 @@ export type Database = {
         }
         Relationships: []
       }
+      artwork_catalog_overrides: {
+        Row: {
+          artwork_id: string
+          created_at: string
+          on_sale: boolean
+          price_override: number | null
+          sale_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          artwork_id: string
+          created_at?: string
+          on_sale?: boolean
+          price_override?: number | null
+          sale_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          artwork_id?: string
+          created_at?: string
+          on_sale?: boolean
+          price_override?: number | null
+          sale_price?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       artwork_display_order: {
         Row: {
           artwork_id: string
@@ -100,7 +127,9 @@ export type Database = {
           id: string
           image_url: string
           medium: string | null
+          on_sale: boolean
           price: number
+          sale_price: number | null
           seo_description: string | null
           seo_title: string | null
           sold: boolean
@@ -118,7 +147,9 @@ export type Database = {
           id?: string
           image_url: string
           medium?: string | null
+          on_sale?: boolean
           price?: number
+          sale_price?: number | null
           seo_description?: string | null
           seo_title?: string | null
           sold?: boolean
@@ -136,7 +167,9 @@ export type Database = {
           id?: string
           image_url?: string
           medium?: string | null
+          on_sale?: boolean
           price?: number
+          sale_price?: number | null
           seo_description?: string | null
           seo_title?: string | null
           sold?: boolean
