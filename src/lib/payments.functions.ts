@@ -93,13 +93,19 @@ type ResolvedLine = {
 // Resolve client-supplied cart ids against the server-authoritative catalog
 // (hardcoded ARTWORKS + admin-uploaded artworks_custom rows). Every piece is
 // a one-of-one — quantity is always 1 regardless of what the client sends.
-export async function resolveCartItems(items: CartLine[]): Promise<ResolvedLine[]> {
+export async function resolveCartItems(
+  items: CartLine[],
+  opts?: { availableOverrideIds?: Iterable<string> },
+): Promise<ResolvedLine[]> {
   const uniqueIds = Array.from(new Set(items.map((i) => i.id)));
 
   const catalogIds = uniqueIds.filter((id) => ARTWORKS.find((a) => a.id === id));
   const customIds = uniqueIds.filter((id) => !ARTWORKS.find((a) => a.id === id));
-  const availableOverrides = new Set<string>();
-  if (catalogIds.length) {
+  const availableOverrides = new Set<string>(opts?.availableOverrideIds ?? []);
+  const needsOverrideLookup =
+    opts?.availableOverrideIds == null &&
+    catalogIds.some((id) => ARTWORKS.find((a) => a.id === id)?.sold);
+  if (needsOverrideLookup) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: stockRows } = await supabaseAdmin
       .from("artwork_stock")

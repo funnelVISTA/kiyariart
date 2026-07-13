@@ -44,7 +44,7 @@ function Home() {
   const [lightbox, setLightbox] = useState<Artwork | null>(null);
   const [revealedId, setRevealedId] = useState<string | null>(null);
 
-  const featured = ARTWORKS.filter((a) => !a.sold).slice(0, 6);
+  const featured = ARTWORKS.filter(isArtworkPurchasable).slice(0, 6);
 
   return (
     <div data-cf-page="home">
