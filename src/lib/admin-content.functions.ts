@@ -476,6 +476,65 @@ export const adminBulkDeleteExhibitions = createServerFn({ method: "POST" })
 
 // ===== Admin activity log =====
 
+// ===== Catalog price / sale overrides (for hardcoded ARTWORKS ids) =====
+
+type CatalogOverrideUpsert = {
+  artworkId: string;
+  originalPrice: number; // reference — used to validate sale bounds
+  priceOverride?: number | null;
+  onSale?: boolean;
+  salePrice?: number | null;
+};
+
+export const adminUpsertCatalogOverride = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: CatalogOverrideUpsert) => {
+    if (!d.artworkId || typeof d.artworkId !== "string") throw new Error("artworkId required");
+    const original = Number(d.originalPrice);
+    if (!Number.isFinite(original) || original < 0) throw new Error("Invalid original price");
+    let priceOverride: number | null = null;
+    if (d.priceOverride !== undefined && d.priceOverride !== null && `${d.priceOverride}` !== "") {
+      const p = Number(d.priceOverride);
+      if (!Number.isFinite(p) || p < 0) throw new Error("Invalid price");
+      priceOverride = Math.round(p * 100) / 100;
+    }
+    const effectiveList = priceOverride ?? original;
+    const onSale = !!d.onSale;
+    let salePrice: number | null = null;
+    if (onSale) {
+      const sp = Number(d.salePrice);
+      if (!Number.isFinite(sp) || sp <= 0) throw new Error("Sale price must be positive");
+      if (!(effectiveList > 0)) throw new Error("Set a regular price before enabling sale");
+      if (sp >= effectiveList) throw new Error("Sale price must be less than the regular price");
+      salePrice = Math.round(sp * 100) / 100;
+    }
+    return { artworkId: d.artworkId, priceOverride, onSale, salePrice };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("artwork_catalog_overrides")
+      .upsert(
+        {
+          artwork_id: data.artworkId,
+          price_override: data.priceOverride,
+          on_sale: data.onSale,
+          sale_price: data.salePrice,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "artwork_id" },
+      );
+    if (error) throw new Error(error.message);
+    await logActivity(supabaseAdmin, context, {
+      action: "artwork.catalog_override_saved",
+      entity_id: data.artworkId,
+      entity_title: data.artworkId,
+      details: { priceOverride: data.priceOverride, onSale: data.onSale, salePrice: data.salePrice },
+    });
+    return { ok: true };
+  });
+
 export const adminListActivityLog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { limit?: number } | undefined) => ({
