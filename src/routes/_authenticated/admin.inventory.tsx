@@ -380,13 +380,25 @@ function AdminArtworksPage() {
                 onToggleSold={() => toggleCatalog(a.id, a.sold /* was sold → make available */)}
                 onEdit={() =>
                   setEditingCatalog({
-                    id: a.id,
-                    title: a.title,
-                    image: a.image,
+                    artworkId: a.id,
                     originalPrice: a.originalPrice,
-                    priceOverride: a.priceOverride,
+                    originalSold: a.sold,
                     onSale: a.onSale,
                     salePrice: a.salePrice,
+                    initial: {
+                      id: a.id,
+                      title: a.title,
+                      description: a.description ?? null,
+                      medium: a.medium ?? null,
+                      price: a.priceListing ?? a.price,
+                      image_url: a.image,
+                      collection: "Our Essence",
+                      sold: a.sold,
+                      alt_text: a.altText ?? null,
+                      seo_title: a.seoTitle ?? null,
+                      seo_description: a.seoDescription ?? null,
+                      ...( { on_sale: a.onSale, sale_price: a.salePrice } as any ),
+                    },
                   })
                 }
               />
