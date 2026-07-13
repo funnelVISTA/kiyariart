@@ -56,13 +56,17 @@ export const DICT: Dict = {
   "feat.add": { en: "Add", fr: "Ajouter" },
 
   // CTA
-  "cta.kicker": { en: "Join the network", fr: "Rejoignez le cercle" },
+  "cta.kicker": { en: "Connect", fr: "Connecter" },
   "cta.title": { en: "Be first to see what comes next.", fr: "Soyez les premiers à découvrir la suite." },
   "cta.lede": {
     en: "New paintings, upcoming exhibitions, studio dispatches — straight to your inbox.",
     fr: "Nouvelles toiles, expositions à venir, nouvelles d'atelier — directement dans votre boîte.",
   },
   "cta.btn": { en: "Get in touch", fr: "Contactez-nous" },
+  "cta.commission": {
+    en: "Interested in a custom piece? Mention your vision when you reach out — Kiyari accepts commissions.",
+    fr: "Intéressé par une pièce sur mesure? Mentionnez votre vision lorsque vous écrivez — Kiyari accepte les commissions.",
+  },
 
   // Artwork shared
   "art.inquire": { en: "Inquire", fr: "Sur demande" },
