@@ -423,8 +423,13 @@ function AdminArtworksPage() {
       )}
 
       {editingCatalog && (
-        <CatalogOverrideEditor
-          initial={editingCatalog}
+        <ArtworkEditor
+          initial={editingCatalog.initial}
+          catalog={{
+            artworkId: editingCatalog.artworkId,
+            originalPrice: editingCatalog.originalPrice,
+            originalSold: editingCatalog.originalSold,
+          }}
           onClose={() => setEditingCatalog(null)}
           onSaved={() => { setEditingCatalog(null); refresh(); }}
         />
