@@ -873,6 +873,57 @@ function ArtworkEditor({
                     />
                     <span className="text-sm">Mark as sold</span>
                   </label>
+
+                  <div className="pt-4 border-t border-border">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={onSale}
+                        onChange={(e) => setOnSale(e.target.checked)}
+                      />
+                      <span className="text-sm">On Sale</span>
+                    </label>
+                    {onSale && (
+                      <div className="mt-3 space-y-3">
+                        <div className="flex gap-2 text-[10px] uppercase tracking-[0.2em]">
+                          <button
+                            type="button"
+                            onClick={() => setSaleMode("percent")}
+                            className={`px-3 py-1.5 border ${saleMode === "percent" ? "border-gold text-gold" : "border-border text-muted-foreground"}`}
+                          >Percent off</button>
+                          <button
+                            type="button"
+                            onClick={() => setSaleMode("fixed")}
+                            className={`px-3 py-1.5 border ${saleMode === "fixed" ? "border-gold text-gold" : "border-border text-muted-foreground"}`}
+                          >Set sale price</button>
+                        </div>
+                        {saleMode === "percent" ? (
+                          <Field label="Percent off (1–99)">
+                            <input
+                              type="number" min={1} max={99} step={1}
+                              value={percentOff}
+                              onChange={(e) => setPercentOff(e.target.value)}
+                              className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                            />
+                            {percentOff && Number(priceInput) > 0 && Number(percentOff) >= 1 && Number(percentOff) <= 99 && (
+                              <p className="mt-1 text-[10px] text-accent">
+                                Sale price: ${(Number(priceInput) * (1 - Number(percentOff) / 100)).toFixed(2)} CAD
+                              </p>
+                            )}
+                          </Field>
+                        ) : (
+                          <Field label="Sale price (CAD)">
+                            <input
+                              type="number" min={0} step={1}
+                              value={salePriceInput}
+                              onChange={(e) => setSalePriceInput(e.target.value)}
+                              className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                            />
+                          </Field>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
