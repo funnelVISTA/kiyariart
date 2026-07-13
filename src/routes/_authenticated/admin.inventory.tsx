@@ -447,7 +447,7 @@ function SortableCard({
       </div>
       <div className="p-4">
         <div className="font-display text-xl truncate">{a.title}</div>
-        <div className="text-[11px] text-muted-foreground uppercase tracking-[0.2em]">{a.collection}</div>
+        <div className="text-[11px] text-muted-foreground uppercase tracking-[0.2em]">Our Essence</div>
         <div className="mt-1 text-sm text-gold">
           {a.price > 0 ? `$${Number(a.price).toLocaleString()} CAD` : "—"}
         </div>
@@ -518,7 +518,7 @@ function CatalogCard({
       </div>
       <div className="p-4">
         <div className="font-display text-xl truncate">{a.title}</div>
-        <div className="text-[11px] text-muted-foreground uppercase tracking-[0.2em]">{a.collection}</div>
+        <div className="text-[11px] text-muted-foreground uppercase tracking-[0.2em]">Our Essence</div>
         <div className="mt-1 text-sm text-gold">
           {a.price > 0 ? `$${Number(a.price).toLocaleString()} CAD` : "—"}
         </div>
