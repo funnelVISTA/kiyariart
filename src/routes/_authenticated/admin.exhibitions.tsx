@@ -105,7 +105,7 @@ function AdminExhibitionsPage() {
             onClick={() => setEditing({ status: "upcoming" })}
             className="inline-flex items-center gap-2 bg-gradient-gold text-primary-foreground px-5 py-2.5 text-xs uppercase tracking-[0.2em] hover:shadow-glow transition"
           >
-            <Plus className="h-4 w-4" /> Add event
+            <Plus className="h-4 w-4" /> Add exhibition
           </button>
         </div>
 
@@ -306,7 +306,7 @@ function ExhibitionEditor({
             <X className="h-4 w-4" />
           </button>
           <div className="p-6 md:p-8">
-            <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">{form.id ? "Edit event" : "New event"}</div>
+            <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">{form.id ? "Edit exhibition" : "New exhibition"}</div>
             <h2 className="font-display text-3xl">{form.id ? form.title : "Add exhibition"}</h2>
 
             <div className="mt-6 grid md:grid-cols-2 gap-6">
@@ -399,7 +399,7 @@ function ExhibitionEditor({
               </div>
 
               <div>
-                <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Cover image (optional)</label>
+                <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Poster / cover image (optional)</label>
                 <div className="mt-2 aspect-[4/3] border border-dashed border-border bg-background/50 relative overflow-hidden">
                   {form.image_url ? (
                     <img src={form.image_url} alt="" className="h-full w-full object-cover" />
