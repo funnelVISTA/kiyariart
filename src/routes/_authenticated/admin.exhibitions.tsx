@@ -394,15 +394,21 @@ function ExhibitionEditor({
                     <input
                       type="date"
                       value={form.event_date ?? ""}
+                      min={mode === "event" ? todayISO() : undefined}
+                      max={mode === "media" ? todayISO() : undefined}
                       onChange={(e) => setForm((f) => ({ ...f, event_date: e.target.value }))}
                       className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
                     />
+                    <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                      {mode === "event" ? "Today or later" : "Today or earlier"} · click for calendar or type YYYY-MM-DD
+                    </p>
                   </Field>
                   {mode === "event" && (
                     <Field label="End date (optional)">
                       <input
                         type="date"
                         value={form.end_date ?? ""}
+                        min={form.event_date || todayISO()}
                         onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
                         className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
                       />
