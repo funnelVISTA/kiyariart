@@ -7,6 +7,10 @@ export type Artwork = {
   collection: "Our Essence";
   medium?: string;
   description?: string;
+  /** Original (pre-sale) list price when `onSale` is true. */
+  originalPrice?: number;
+  /** True when the piece is on sale and `price` is the discounted sale price. */
+  onSale?: boolean;
 };
 
 const w = (url: string) => url;
