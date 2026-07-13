@@ -11,11 +11,24 @@ export function CartSheet() {
   useEffect(() => {
     if (!open) return;
     const root = document.documentElement;
+    const body = document.body;
+    const scrollY = window.scrollY;
     root.classList.add("cart-open");
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
     (window as any).__kiyariLenis?.stop?.();
     return () => {
       root.classList.remove("cart-open");
+      body.style.position = "";
+      body.style.top = "";
+      body.style.left = "";
+      body.style.right = "";
+      body.style.width = "";
       (window as any).__kiyariLenis?.start?.();
+      window.scrollTo(0, scrollY);
     };
   }, [open]);
 
