@@ -1,13 +1,11 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * Sold-out UX invariants. These prevent regressions where a sold artwork
- * becomes purchasable again — the exact scenario that produces double sales.
+ * Sold-out UX invariants. Prevent regressions where a sold artwork becomes
+ * purchasable again — the exact scenario that produces double sales.
  *
- * Assertions:
- *   1. Each sold artwork card renders the "Sold" badge.
- *   2. The Add-to-cart button on a sold card is disabled and labelled "Sold".
- *   3. Sold artworks cannot be added to the cart via the UI.
+ * Current design (post-refactor): sold cards render a "Sold" badge and an
+ * "Inquire" link instead of any Add-to-Cart control.
  */
 
 test.describe("sold-out UX", () => {
@@ -17,32 +15,20 @@ test.describe("sold-out UX", () => {
     test.setTimeout(60_000);
 
     await page.goto("/artworks", { waitUntil: "domcontentloaded" });
-
-    // Wait for the grid to render at least one card.
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-    // Every "Sold" pill implies a matching disabled Add button on the same
-    // card. Grabbing all sold buttons at once catches any card that slipped
-    // through with an enabled Add-to-cart control.
-    const soldButtons = page.getByRole("button", { name: /^sold$/i });
-    const count = await soldButtons.count();
-    expect(count, "expected at least one sold artwork in the catalog").toBeGreaterThan(0);
+    // Filter to Sold to isolate the invariant.
+    const soldFilter = page.getByRole("button", { name: /^sold$/i }).first();
+    await soldFilter.click();
 
-    for (let i = 0; i < count; i += 1) {
-      await expect(soldButtons.nth(i)).toBeDisabled();
-    }
+    // At least one sold card should be visible after filtering.
+    const inquireLinks = page.getByRole("link", { name: /inquire about/i });
+    const count = await inquireLinks.count();
+    expect(count, "expected at least one sold artwork under the Sold filter").toBeGreaterThan(0);
 
-    // Filter to the sold/"Archive" collection and re-check.
-    const archiveFilter = page.getByRole("button", { name: /archive/i }).first();
-    if (await archiveFilter.count()) {
-      await archiveFilter.click();
-      const filteredSold = page.getByRole("button", { name: /^sold$/i });
-      const filteredCount = await filteredSold.count();
-      expect(filteredCount).toBeGreaterThan(0);
-      for (let i = 0; i < filteredCount; i += 1) {
-        await expect(filteredSold.nth(i)).toBeDisabled();
-      }
-    }
+    // No Add-to-Cart control may exist on the Sold view.
+    const addButtons = page.getByRole("button", { name: /add to cart|^add$/i });
+    expect(await addButtons.count()).toBe(0);
 
     // Cart badge count should stay at 0 — no accidental adds happened.
     const cartBadge = page.getByRole("button", { name: /cart/i }).first();
