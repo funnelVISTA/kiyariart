@@ -270,6 +270,10 @@ function AdminArtworksPage() {
       const effective = onSale && salePrice != null ? salePrice : listPrice;
       return {
         ...a,
+        title: ov?.title ?? a.title,
+        image: ov?.image_url ?? a.image,
+        description: ov?.description ?? a.description,
+        medium: ov?.medium ?? a.medium,
         sold: overrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
         priceListing: listPrice,
         priceEffective: effective,
@@ -277,6 +281,9 @@ function AdminArtworksPage() {
         salePrice,
         originalPrice: a.price,
         priceOverride: ov?.price_override ?? null,
+        altText: ov?.alt_text ?? null,
+        seoTitle: ov?.seo_title ?? null,
+        seoDescription: ov?.seo_description ?? null,
       };
     });
   }, [soldSet, overrideSet, catalogOverrideMap]);
