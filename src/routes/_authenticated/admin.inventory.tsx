@@ -635,6 +635,12 @@ function ArtworkEditor({
   const [priceInput, setPriceInput] = useState<string>(
     initial.price === undefined || initial.price === null ? "" : String(initial.price),
   );
+  const [onSale, setOnSale] = useState<boolean>(!!(initial as any).on_sale);
+  const [saleMode, setSaleMode] = useState<"percent" | "fixed">("fixed");
+  const [percentOff, setPercentOff] = useState<string>("");
+  const [salePriceInput, setSalePriceInput] = useState<string>(
+    (initial as any).sale_price != null ? String((initial as any).sale_price) : "",
+  );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -710,6 +716,33 @@ function ArtworkEditor({
       toast.error("Price must be a non-negative number");
       return;
     }
+    // Compute sale_price from mode when on_sale
+    let salePrice: number | null = null;
+    if (onSale) {
+      if (!(parsedPrice > 0)) {
+        toast.error("Set a regular price before enabling sale");
+        return;
+      }
+      if (saleMode === "percent") {
+        const pct = Number(percentOff);
+        if (!Number.isFinite(pct) || pct < 1 || pct > 99) {
+          toast.error("Percent off must be between 1 and 99");
+          return;
+        }
+        salePrice = Math.round(parsedPrice * (1 - pct / 100) * 100) / 100;
+      } else {
+        const sp = Number(salePriceInput);
+        if (!Number.isFinite(sp) || sp <= 0) {
+          toast.error("Sale price must be positive");
+          return;
+        }
+        if (sp >= parsedPrice) {
+          toast.error("Sale price must be less than the regular price");
+          return;
+        }
+        salePrice = Math.round(sp * 100) / 100;
+      }
+    }
     setSaving(true);
     try {
       await adminUpsertCustomArtwork({
@@ -727,6 +760,8 @@ function ArtworkEditor({
           seo_title: form.seo_title ?? null,
           seo_description: form.seo_description ?? null,
           alt_text: form.alt_text ?? null,
+          on_sale: onSale,
+          sale_price: salePrice,
         },
       });
       toast.success(form.id ? "Artwork updated" : "Artwork added");
