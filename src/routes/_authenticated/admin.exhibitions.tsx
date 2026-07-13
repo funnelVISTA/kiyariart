@@ -9,6 +9,17 @@ import {
   adminDeleteExhibition,
   adminUploadImage,
 } from "@/lib/admin-content.functions";
+import { compressImage, blobToBase64 } from "@/lib/image-upload";
+
+const MAX_GALLERY_BATCH = 20;
+
+function todayISO() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 export const Route = createFileRoute("/_authenticated/admin/exhibitions")({
   head: () => ({ meta: [{ title: "Exhibitions — Admin" }, { name: "robots", content: "noindex" }] }),
@@ -244,15 +255,20 @@ function ExhibitionEditor({
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const multiFileRef = useRef<HTMLInputElement>(null);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
 
   const uploadOne = async (file: File): Promise<string> => {
-    const buf = await file.arrayBuffer();
-    const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+    // Compress client-side (max ~1600px longest edge, WebP/JPEG) so we never
+    // ship multi-MB camera originals to the server, then encode with
+    // FileReader — safe for arbitrarily large blobs, unlike
+    // btoa(String.fromCharCode(...bytes)) which overflows the stack.
+    const { blob, filename, contentType } = await compressImage(file);
+    const b64 = await blobToBase64(blob);
     const res = await adminUploadImage({
       data: {
         bucket: "exhibition-images",
-        filename: file.name,
-        contentType: file.type,
+        filename,
+        contentType,
         dataBase64: b64,
       },
     });
@@ -273,15 +289,21 @@ function ExhibitionEditor({
   };
 
   const handleGallery = async (files: FileList) => {
+    const list = Array.from(files).slice(0, MAX_GALLERY_BATCH);
+    if (files.length > MAX_GALLERY_BATCH) {
+      toast.message(`Uploading first ${MAX_GALLERY_BATCH} of ${files.length} — please add the rest in another batch.`);
+    }
     setUploading(true);
+    setUploadProgress({ done: 0, total: list.length });
     try {
       const uploaded: string[] = [];
-      for (const file of Array.from(files)) {
+      for (const file of list) {
         try {
           uploaded.push(await uploadOne(file));
         } catch (e: any) {
           toast.error(`${file.name}: ${e?.message ?? "upload failed"}`);
         }
+        setUploadProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
       }
       if (uploaded.length) {
         setForm((f) => ({ ...f, gallery_images: [...(f.gallery_images ?? []), ...uploaded] }));
@@ -289,6 +311,7 @@ function ExhibitionEditor({
       }
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -306,6 +329,14 @@ function ExhibitionEditor({
     }
     if (mode === "event" && !form.event_date) {
       toast.error("Date is required");
+      return;
+    }
+    if (mode === "event" && form.event_date && form.event_date < todayISO()) {
+      toast.error("Upcoming events can't be in the past. Use Add Media for past shows.");
+      return;
+    }
+    if (mode === "media" && form.event_date && form.event_date > todayISO()) {
+      toast.error("Past exhibitions can't have a future date.");
       return;
     }
     setSaving(true);
@@ -371,15 +402,21 @@ function ExhibitionEditor({
                     <input
                       type="date"
                       value={form.event_date ?? ""}
+                      min={mode === "event" ? todayISO() : undefined}
+                      max={mode === "media" ? todayISO() : undefined}
                       onChange={(e) => setForm((f) => ({ ...f, event_date: e.target.value }))}
                       className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
                     />
+                    <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                      {mode === "event" ? "Today or later" : "Today or earlier"} · click for calendar or type YYYY-MM-DD
+                    </p>
                   </Field>
                   {mode === "event" && (
                     <Field label="End date (optional)">
                       <input
                         type="date"
                         value={form.end_date ?? ""}
+                        min={form.event_date || todayISO()}
                         onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
                         className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
                       />
@@ -525,6 +562,14 @@ function ExhibitionEditor({
                     >
                       <ImagePlus className="h-3.5 w-3.5" /> {uploading ? "Uploading…" : "Add photos"}
                     </button>
+                    {uploadProgress && (
+                      <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-center">
+                        Uploading {uploadProgress.done} / {uploadProgress.total}…
+                      </p>
+                    )}
+                    <p className="mt-2 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60 text-center">
+                      Up to {MAX_GALLERY_BATCH} images per batch · auto-resized to 1600px
+                    </p>
                   </>
                 )}
               </div>
