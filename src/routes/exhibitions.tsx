@@ -241,7 +241,10 @@ function ExhibitionsPage() {
       </div>
 
       <AnimatePresence>
-        {active !== null && (
+        {active !== null && (() => {
+          const list = hasCuratedPast ? pastLightboxImages : GALLERY;
+          const clamped = ((active % list.length) + list.length) % list.length;
+          return (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setActive(null)}
@@ -254,19 +257,20 @@ function ExhibitionsPage() {
               <X className="h-5 w-5" />
             </button>
             <motion.img
-              key={active}
+              key={clamped}
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              src={GALLERY[active]}
+              src={list[clamped]}
               alt=""
               onClick={(e) => e.stopPropagation()}
               className="max-h-[90vh] max-w-[90vw] object-contain shadow-elegant"
             />
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-              <button onClick={(e) => { e.stopPropagation(); setActive((active - 1 + GALLERY.length) % GALLERY.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.prev")}</button>
-              <button onClick={(e) => { e.stopPropagation(); setActive((active + 1) % GALLERY.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.next")}</button>
+              <button onClick={(e) => { e.stopPropagation(); setActive((clamped - 1 + list.length) % list.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.prev")}</button>
+              <button onClick={(e) => { e.stopPropagation(); setActive((clamped + 1) % list.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.next")}</button>
             </div>
           </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
     </div>
   );
