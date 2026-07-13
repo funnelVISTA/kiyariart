@@ -291,6 +291,11 @@ function Home() {
               {t("cta.btn")} <ArrowRight className="h-4 w-4" />
             </Link>
           </Reveal>
+          <Reveal delay={0.35}>
+            <p className="mt-4 text-sm text-muted-foreground max-w-lg mx-auto">
+              {t("cta.commission")}
+            </p>
+          </Reveal>
         </div>
       </section>
 
