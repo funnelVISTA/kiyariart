@@ -99,7 +99,7 @@ function ArtworksPage() {
       const pb = orderMap.get(b.id) ?? 9999;
       return pa - pb;
     });
-  }, [soldSet, customRows, orderRows]);
+  }, [soldSet, availableOverrideSet, customRows, orderRows]);
 
   const blurb = (a: Artwork) => {
     if (a.description) return a.description;
@@ -108,7 +108,7 @@ function ArtworksPage() {
 
   const items = useMemo(() => {
     return catalog.filter((a) => {
-      if (filter === "available") return !a.sold;
+      if (filter === "available") return isArtworkPurchasable(a);
       if (filter === "sold") return a.sold;
       return true;
     });
