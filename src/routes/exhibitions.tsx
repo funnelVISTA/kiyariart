@@ -313,7 +313,9 @@ function ExhibitionsPage() {
       <AnimatePresence>
         {active !== null && (() => {
           const list = hasCuratedPast ? pastLightboxImages : GALLERY;
+          const caps = hasCuratedPast ? pastLightboxCaptions : [];
           const clamped = ((active % list.length) + list.length) % list.length;
+          const caption = caps[clamped] ?? "";
           return (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -326,14 +328,20 @@ function ExhibitionsPage() {
             >
               <X className="h-5 w-5" />
             </button>
-            <motion.img
-              key={clamped}
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              src={list[clamped]}
-              alt=""
-              onClick={(e) => e.stopPropagation()}
-              className="max-h-[90vh] max-w-[90vw] object-contain shadow-elegant"
-            />
+            <div className="flex flex-col items-center max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
+              <motion.img
+                key={clamped}
+                initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                src={list[clamped]}
+                alt={caption}
+                className={`${caption ? "max-h-[78vh]" : "max-h-[86vh]"} max-w-full object-contain shadow-elegant`}
+              />
+              {caption && (
+                <p className="mt-3 max-w-3xl text-center text-sm text-muted-foreground italic px-4">
+                  {caption}
+                </p>
+              )}
+            </div>
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
               <button onClick={(e) => { e.stopPropagation(); setActive((clamped - 1 + list.length) % list.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.prev")}</button>
               <button onClick={(e) => { e.stopPropagation(); setActive((clamped + 1) % list.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.next")}</button>
