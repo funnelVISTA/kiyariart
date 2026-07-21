@@ -40,14 +40,12 @@ type Row = {
   status: "upcoming" | "past";
   sort_order: number;
   gallery_images: string[] | null;
+  gallery_captions?: string[] | null;
 };
-
-type Tab = "event" | "media";
 
 function AdminExhibitionsPage() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<Tab>("event");
-  const [editing, setEditing] = useState<Partial<Row> | null>(null);
+  const [editing, setEditing] = useState<{ row: Partial<Row>; mode: "event" | "media" } | null>(null);
 
   const q = useQuery({
     queryKey: ["admin", "exhibitions"],
@@ -70,16 +68,33 @@ function AdminExhibitionsPage() {
   const rows = ((q.data?.exhibitions ?? []) as Row[]).map((r) => ({
     ...r,
     gallery_images: Array.isArray(r.gallery_images) ? r.gallery_images : [],
+    gallery_captions: Array.isArray(r.gallery_captions) ? r.gallery_captions : [],
   }));
-  const upcoming = rows.filter((r) => r.status === "upcoming");
-  const past = rows.filter((r) => r.status === "past");
+  const today = todayISO();
+  // "Event" rows = status upcoming. Split by end date (fall back to event_date).
+  const eventRows = rows.filter((r) => r.status === "upcoming");
+  const isPastByDate = (r: Row) => {
+    const cmp = r.end_date || r.event_date;
+    return !!cmp && cmp < today;
+  };
+  const upcoming = eventRows
+    .filter((r) => !isPastByDate(r))
+    .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? ""));
+  const past = eventRows
+    .filter(isPastByDate)
+    .sort((a, b) => (b.end_date ?? b.event_date ?? "").localeCompare(a.end_date ?? a.event_date ?? ""))
+    .slice(0, 4);
+  const media = rows
+    .filter((r) => r.status === "past")
+    .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
 
-  const startNew = () => {
+  const startNew = (mode: "event" | "media") => {
     setEditing({
-      status: tab === "event" ? "upcoming" : "past",
-      gallery_images: [],
+      row: { status: mode === "event" ? "upcoming" : "past", gallery_images: [], gallery_captions: [] },
+      mode,
     });
   };
+  const openEdit = (r: Row, mode: "event" | "media") => setEditing({ row: r, mode });
 
   return (
     <div className="pt-10 pb-20">
@@ -89,51 +104,58 @@ function AdminExhibitionsPage() {
             <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Studio</div>
             <h1 className="font-display text-5xl md:text-6xl">Events</h1>
             <p className="mt-2 text-sm text-muted-foreground max-w-xl">
-              Add upcoming shows under <em>Add Event</em>. Archive photos from past events under <em>Add Media</em>. Everything published goes live on the public Events page instantly.
+              Add upcoming shows with <em>Add Event</em>. Archive photos from past events with <em>Add Media</em>. Everything published goes live on the public Events page instantly.
             </p>
           </div>
-          <button
-            onClick={startNew}
-            className="inline-flex items-center gap-2 bg-gradient-gold text-primary-foreground px-5 py-2.5 text-xs uppercase tracking-[0.2em] hover:shadow-glow transition"
-          >
-            <Plus className="h-4 w-4" /> {tab === "event" ? "Add event" : "Add media"}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => startNew("event")}
+              className="inline-flex items-center gap-2 bg-gradient-gold text-primary-foreground px-5 py-2.5 text-xs uppercase tracking-[0.2em] hover:shadow-glow transition"
+            >
+              <Plus className="h-4 w-4" /> Add event
+            </button>
+            <button
+              onClick={() => startNew("media")}
+              className="inline-flex items-center gap-2 border border-gold/60 text-gold px-5 py-2.5 text-xs uppercase tracking-[0.2em] hover:bg-gold/5 transition"
+            >
+              <ImagePlus className="h-4 w-4" /> Add media
+            </button>
+          </div>
         </div>
 
-        {/* Tabs */}
-        <div className="mt-8 inline-flex border border-border bg-card/40">
-          <TabButton active={tab === "event"} onClick={() => setTab("event")} label="Add event" hint="Upcoming shows" />
-          <TabButton active={tab === "media"} onClick={() => setTab("media")} label="Add media" hint="Past shows gallery" />
-        </div>
-
-        {tab === "event" ? (
-          <Section
-            title="Upcoming events"
-            emptyLabel="No upcoming events yet. Click Add event to publish your next show."
-            rows={upcoming}
-            onEdit={setEditing}
-            onDelete={onDelete}
-            kind="event"
-          />
-        ) : (
-          <Section
-            title="Past events — media galleries"
-            emptyLabel="No past event galleries yet. Click Add media to archive a past show."
-            rows={past}
-            onEdit={setEditing}
-            onDelete={onDelete}
-            kind="media"
-          />
-        )}
+        <Section
+          title="Upcoming events"
+          emptyLabel="No upcoming events yet. Click Add event to publish your next show."
+          rows={upcoming}
+          onEdit={(r) => openEdit(r, "event")}
+          onDelete={onDelete}
+          kind="event"
+        />
+        <Section
+          title="Past events (most recent 4)"
+          emptyLabel="No past events yet — events auto-move here after their end date."
+          rows={past}
+          onEdit={(r) => openEdit(r, "event")}
+          onDelete={onDelete}
+          kind="event"
+        />
+        <Section
+          title="Media galleries"
+          emptyLabel="No media galleries yet. Click Add media to archive photos from a past show."
+          rows={media}
+          onEdit={(r) => openEdit(r, "media")}
+          onDelete={onDelete}
+          kind="media"
+        />
 
         {q.isLoading && <p className="mt-6 text-muted-foreground text-sm">Loading…</p>}
       </div>
 
       {editing && (
         <ExhibitionEditor
-          key={editing.id ?? "new"}
-          initial={editing}
-          mode={editing.status === "past" ? "media" : "event"}
+          key={(editing.row.id ?? "new") + ":" + editing.mode}
+          initial={editing.row}
+          mode={editing.mode}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
@@ -142,18 +164,6 @@ function AdminExhibitionsPage() {
         />
       )}
     </div>
-  );
-}
-
-function TabButton({ active, onClick, label, hint }: { active: boolean; onClick: () => void; label: string; hint: string }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-5 py-3 text-xs uppercase tracking-[0.25em] border-r border-border last:border-r-0 transition ${active ? "bg-gradient-gold text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-    >
-      <span className="block">{label}</span>
-      <span className={`block text-[9px] tracking-[0.2em] mt-0.5 ${active ? "opacity-80" : "opacity-60"}`}>{hint}</span>
-    </button>
   );
 }
 
