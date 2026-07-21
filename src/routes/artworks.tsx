@@ -1,7 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Mail } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ARTWORKS, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
 import { useCart } from "@/lib/cart";
@@ -16,45 +15,6 @@ import { useIsTouch } from "@/hooks/useIsTouch";
 import { useTapSwipe } from "@/hooks/useTapSwipe";
 
 const thumb = (url: string, w = 700) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
-
-/**
- * Inquire button — same pointer-capture + pointerup trigger pattern as
- * AddToCartButton so it never loses the click inside a TiltCard on Chrome.
- */
-function InquireButton({ title, label, onGo }: { title: string; label: string; onGo: () => void }) {
-  const handledRef = { current: false } as { current: boolean };
-  const go = () => {
-    if (handledRef.current) return;
-    handledRef.current = true;
-    onGo();
-  };
-  return (
-    <button
-      type="button"
-      aria-label={`Inquire about ${title}`}
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        if (e.button !== undefined && e.button !== 0) return;
-        try { (e.currentTarget as HTMLButtonElement).setPointerCapture(e.pointerId); } catch {}
-      }}
-      onPointerUp={(e) => {
-        e.stopPropagation();
-        if (e.button !== undefined && e.button !== 0) return;
-        try { (e.currentTarget as HTMLButtonElement).releasePointerCapture(e.pointerId); } catch {}
-        const target = document.elementFromPoint(e.clientX, e.clientY);
-        if (target && e.currentTarget.contains(target)) go();
-      }}
-      onMouseDown={(e) => e.stopPropagation()}
-      onMouseUp={(e) => e.stopPropagation()}
-      onTouchStart={(e) => e.stopPropagation()}
-      onTouchEnd={(e) => e.stopPropagation()}
-      onClick={(e) => { e.stopPropagation(); e.preventDefault(); go(); }}
-      className="relative z-20 inline-flex items-center gap-1 px-2.5 md:px-3.5 py-1.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-semibold border border-gold text-gold hover:bg-gold hover:text-primary-foreground transition-all duration-300 cursor-pointer pointer-events-auto touch-manipulation select-none"
-    >
-      <Mail className="h-3 w-3" /> {label}
-    </button>
-  );
-}
 
 export const Route = createFileRoute("/artworks")({
   head: () => ({
@@ -88,6 +48,10 @@ function ArtworksPage() {
     () => new Set(availability?.availableOverrideIds ?? []),
     [availability],
   );
+  const deletedCatalogSet = useMemo(
+    () => new Set(availability?.deletedCatalogIds ?? []),
+    [availability],
+  );
   const catalogOverrideMap = useMemo(() => {
     const m = new Map<string, {
       price_override: number | null;
@@ -98,6 +62,8 @@ function ArtworksPage() {
       medium: string | null;
       image_url: string | null;
       alt_text: string | null;
+      shipping_cad: number;
+      deleted: boolean;
     }>();
     for (const r of availability?.catalogOverrides ?? []) {
       m.set(r.artwork_id, {
@@ -109,17 +75,20 @@ function ArtworksPage() {
         medium: (r as any).medium ?? null,
         image_url: (r as any).image_url ?? null,
         alt_text: (r as any).alt_text ?? null,
+        shipping_cad: Number((r as any).shipping_cad ?? 0),
+        deleted: !!(r as any).deleted,
       });
     }
     return m;
   }, [availability]);
+  const customShippingMap = useMemo(() => availability?.customShipping ?? {}, [availability]);
 
   const { data: customRows } = useQuery({
     queryKey: ["artworks-custom"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("artworks_custom")
-        .select("id,title,description,price,image_url,collection,medium,sold,display_order,sort_order,alt_text,created_at,on_sale,sale_price")
+        .select("id,title,description,price,image_url,collection,medium,sold,display_order,sort_order,alt_text,created_at,on_sale,sale_price,shipping_cad")
         .order("display_order", { ascending: true })
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -158,9 +127,10 @@ function ArtworksPage() {
         collection: "Our Essence",
         medium: r.medium ?? undefined,
         description: r.description ?? undefined,
+        shipping_cad: Number((r as any).shipping_cad ?? 0),
       };
     });
-    const fromCatalog: Artwork[] = ARTWORKS.map((a) => {
+    const fromCatalog: Artwork[] = ARTWORKS.filter((a) => !deletedCatalogSet.has(a.id)).map((a) => {
       const ov = catalogOverrideMap.get(a.id);
       const list = ov?.price_override ?? a.price;
       const onSale = !!ov?.on_sale && ov?.sale_price != null;
@@ -177,6 +147,7 @@ function ArtworksPage() {
         originalPrice: onSale ? list : undefined,
         onSale: onSale && sale != null && sale < list,
         sold: availableOverrideSet.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
+        shipping_cad: ov?.shipping_cad ?? 0,
       };
     });
     const merged = [...fromCustom, ...fromCatalog];
@@ -185,7 +156,7 @@ function ArtworksPage() {
       const pb = orderMap.get(b.id) ?? 9999;
       return pa - pb;
     });
-  }, [soldSet, availableOverrideSet, catalogOverrideMap, customRows, orderRows]);
+  }, [soldSet, availableOverrideSet, deletedCatalogSet, catalogOverrideMap, customRows, orderRows]);
 
   const blurb = (a: Artwork) => {
     if (a.description) return a.description;
