@@ -145,20 +145,24 @@ function ExhibitionsPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, delay: i * 0.05 }}
-                    className="group relative border border-border p-8 md:p-12 hover:border-gold transition-colors overflow-hidden"
+                    className="group relative border border-border hover:border-gold transition-colors overflow-hidden"
                   >
-                    {e.image_url && (
-                      <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition">
-                        <img src={e.image_url} alt="" className="h-full w-full object-cover" />
-                      </div>
-                    )}
-                    <div className="relative grid md:grid-cols-12 gap-8 items-start">
-                      <div className="md:col-span-3">
-                        <div className="font-display text-5xl text-gold leading-none">{monthShort}<br />{day}</div>
-                        <div className="mt-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">{year}</div>
-                      </div>
-                      <div className="md:col-span-9">
-                        <h3 className="font-display text-4xl">{e.title}</h3>
+                    <div className="relative grid md:grid-cols-12 gap-0 items-stretch">
+                      {e.image_url && (
+                        <div className="md:col-span-5 bg-background relative aspect-[4/3] md:aspect-auto md:min-h-[280px] overflow-hidden">
+                          <img
+                            src={e.image_url}
+                            alt={`${e.title} poster`}
+                            className="absolute inset-0 h-full w-full object-contain"
+                          />
+                        </div>
+                      )}
+                      <div className={`${e.image_url ? "md:col-span-7" : "md:col-span-12"} p-8 md:p-10`}>
+                        <div className="flex items-baseline gap-4">
+                          <div className="font-display text-4xl md:text-5xl text-gold leading-none">{monthShort} {day}</div>
+                          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{year}</div>
+                        </div>
+                        <h3 className="mt-4 font-display text-3xl md:text-4xl">{e.title}</h3>
                         <div className="mt-3 flex flex-wrap gap-5 text-sm text-muted-foreground">
                           {e.time_text && <span className="inline-flex items-center gap-2"><Calendar className="h-4 w-4 text-gold" /> {e.time_text}</span>}
                           {(e.venue || e.city) && (
@@ -172,6 +176,44 @@ function ExhibitionsPage() {
                           </a>
                         )}
                       </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {dbPastEvents.length > 0 && (
+          <section className="mt-20">
+            <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">Past events</div>
+            <div className="grid md:grid-cols-2 gap-6">
+              {dbPastEvents.map((e, i) => {
+                const d = e.event_date ? new Date(e.event_date) : null;
+                const dateLabel = d
+                  ? d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "short", day: "numeric", year: "numeric" })
+                  : "";
+                return (
+                  <motion.div
+                    key={e.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                    className="border border-border overflow-hidden flex flex-col"
+                  >
+                    {e.image_url && (
+                      <div className="relative aspect-[4/3] bg-background overflow-hidden">
+                        <img src={e.image_url} alt={`${e.title} poster`} className="absolute inset-0 h-full w-full object-contain" />
+                      </div>
+                    )}
+                    <div className="p-6">
+                      <div className="text-[10px] uppercase tracking-[0.25em] text-gold">{dateLabel}</div>
+                      <h3 className="mt-2 font-display text-2xl">{e.title}</h3>
+                      {(e.venue || e.city) && (
+                        <div className="mt-1 text-xs text-muted-foreground">{[e.venue, e.city].filter(Boolean).join(", ")}</div>
+                      )}
+                      {e.blurb && <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{e.blurb}</p>}
                     </div>
                   </motion.div>
                 );
