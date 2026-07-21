@@ -30,6 +30,7 @@ import {
   adminBulkSetArtworkSold,
   adminBulkDeleteArtworks,
   adminUpsertCatalogOverride,
+  adminDeleteCatalogArtwork,
 } from "@/lib/admin-content.functions";
 import { adminSetCatalogAvailability } from "@/lib/admin-extra.functions";
 import { listArtworkAvailability } from "@/lib/payments.functions";
@@ -203,37 +204,30 @@ function AdminArtworksPage() {
   };
 
   const runBulkDelete = async (ids: string[]) => {
-    const deletableIds = ids.filter((id) => !catalogIds.has(id));
-    const skippedCatalog = ids.length - deletableIds.length;
-    if (deletableIds.length === 0) {
-      toast.warning("Catalog originals can't be deleted", {
-        description: "Mark them as sold instead.",
-      });
-      clearSel();
-      return;
-    }
+    const catalogSel = ids.filter((id) => catalogIds.has(id));
+    const customSel = ids.filter((id) => !catalogIds.has(id));
     try {
-      const res = await adminBulkDeleteArtworks({ data: { ids: deletableIds } });
-      const deleted = res?.deleted ?? 0;
-      const blocked = res?.blocked?.length ?? 0;
+      let deleted = 0;
+      if (customSel.length > 0) {
+        const res = await adminBulkDeleteArtworks({ data: { ids: customSel } });
+        deleted += res?.deleted ?? 0;
+      }
+      for (const id of catalogSel) {
+        await adminDeleteCatalogArtwork({ data: { artworkId: id } });
+        deleted += 1;
+      }
       if (deleted > 0) toast.success(`${deleted} deleted`);
-      if (blocked > 0) {
-        toast.warning(`${blocked} skipped — order history`, {
-          description: "Mark them as sold instead to keep the record.",
-        });
-      }
-      if (skippedCatalog > 0) {
-        toast.warning(`${skippedCatalog} catalog original(s) skipped`, {
-          description: "Catalog pieces can only be marked sold.",
-        });
-      }
       clearSel(); refresh();
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
   };
 
   const runSingleDelete = async (id: string) => {
     try {
-      await adminDeleteCustomArtwork({ data: { id } });
+      if (catalogIds.has(id)) {
+        await adminDeleteCatalogArtwork({ data: { artworkId: id } });
+      } else {
+        await adminDeleteCustomArtwork({ data: { id } });
+      }
       toast.success("Deleted");
       refresh();
     } catch (e: any) {
