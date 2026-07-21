@@ -364,15 +364,6 @@ function Home() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="font-display text-4xl text-gold">{value}</div>
-      <div className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
-    </div>
-  );
-}
-
 type FeaturedCardProps = {
   a: Artwork;
   hero: boolean;
