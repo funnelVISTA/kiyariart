@@ -425,17 +425,17 @@ function ExhibitionEditor({
                 </Field>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label={mode === "event" ? "Date (required)" : "Date (optional)"}>
+                  <Field label={mode === "event" ? "Date (required)" : "Date of event (required)"}>
                     <input
                       type="date"
                       value={form.event_date ?? ""}
-                      min={mode === "event" ? todayISO() : undefined}
+                      min={mode === "event" && !form.id ? todayISO() : undefined}
                       max={mode === "media" ? todayISO() : undefined}
                       onChange={(e) => setForm((f) => ({ ...f, event_date: e.target.value }))}
                       className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
                     />
                     <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-                      {mode === "event" ? "Today or later" : "Today or earlier"} · click for calendar or type YYYY-MM-DD
+                      {mode === "event" ? "Start date" : "Date the event happened"} · click for calendar or type YYYY-MM-DD
                     </p>
                   </Field>
                   {mode === "event" && (
@@ -443,13 +443,35 @@ function ExhibitionEditor({
                       <input
                         type="date"
                         value={form.end_date ?? ""}
-                        min={form.event_date || todayISO()}
+                        min={form.event_date || undefined}
                         onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
                         className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
                       />
+                      <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                        Auto-moves to Past after this date
+                      </p>
                     </Field>
                   )}
                 </div>
+
+                {mode === "media" && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Venue (required)">
+                      <input
+                        value={form.venue ?? ""}
+                        onChange={(e) => setForm((f) => ({ ...f, venue: e.target.value }))}
+                        className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                      />
+                    </Field>
+                    <Field label="City (optional)">
+                      <input
+                        value={form.city ?? ""}
+                        onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                        className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                      />
+                    </Field>
+                  </div>
+                )}
 
                 {mode === "event" && (
                   <>
