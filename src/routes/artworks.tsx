@@ -277,7 +277,6 @@ type ArtCardProps = {
 
 function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, onAdd, blurb, t }: ArtCardProps) {
   const swipe = useTapSwipe({ onTap: onOpen, onSwipe: onToggleReveal });
-  const navigate = useNavigate();
   const imageInteractionProps = isTouch ? swipe : { onClick: onOpen };
   return (
     <motion.article
@@ -335,19 +334,13 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
                 {t("art.sold")}
               </span>
             </div>
-          ) : isArtworkPurchasable(a) && !a.onSale ? (
+          ) : !a.onSale ? (
             <div className="absolute top-3 left-3 z-10">
               <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-gold/95 text-primary-foreground font-medium shadow-glow">
                 {t("art.available")}
               </span>
             </div>
-          ) : isArtworkPurchasable(a) ? null : (
-            <div className="absolute top-3 right-3 z-10">
-              <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-background/85 backdrop-blur border border-gold text-gold">
-                {t("art.inquire")}
-              </span>
-            </div>
-          )}
+          ) : null}
         </div>
       </TiltCard>
 
@@ -356,7 +349,7 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
       <div className="pt-3 pb-1 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="font-display text-sm md:text-lg leading-tight truncate">{a.title}</div>
-             {isArtworkPurchasable(a) && (
+             {!a.sold && a.price > 0 && (
               <div className="mt-1 text-[10px] md:text-xs text-gold uppercase tracking-[0.15em]">
                 {a.onSale && a.originalPrice ? (
                   <>
@@ -370,9 +363,7 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
             )}
           </div>
           <div className="shrink-0">
-            {!isArtworkPurchasable(a) ? (
-              <InquireButton title={a.title} label={t("art.inquire")} onGo={() => navigate({ to: "/community", search: { inquiry: a.title } })} />
-            ) : (
+            {isArtworkPurchasable(a) && (
               <AddToCartButton onAdd={onAdd} inCart={inCart} label={t("feat.add")} size="sm" />
             )}
           </div>
