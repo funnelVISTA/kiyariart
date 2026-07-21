@@ -485,6 +485,8 @@ type CatalogOverrideUpsert = {
   alt_text?: string | null;
   seo_title?: string | null;
   seo_description?: string | null;
+  shipping_cad?: number | null;
+  deleted?: boolean;
 };
 
 export const adminUpsertCatalogOverride = createServerFn({ method: "POST" })
@@ -527,6 +529,8 @@ export const adminUpsertCatalogOverride = createServerFn({ method: "POST" })
       alt_text: norm(d.alt_text),
       seo_title: norm(d.seo_title),
       seo_description: norm(d.seo_description),
+      shipping_cad: d.shipping_cad == null ? undefined : Math.max(0, Number(d.shipping_cad) || 0),
+      deleted: d.deleted === undefined ? undefined : !!d.deleted,
     };
   })
   .handler(async ({ data, context }) => {
@@ -543,6 +547,8 @@ export const adminUpsertCatalogOverride = createServerFn({ method: "POST" })
     for (const k of ["title","description","medium","image_url","alt_text","seo_title","seo_description"] as const) {
       if ((data as any)[k] !== undefined) row[k] = (data as any)[k];
     }
+    if (data.shipping_cad !== undefined) row.shipping_cad = data.shipping_cad;
+    if (data.deleted !== undefined) row.deleted = data.deleted;
     const { error } = await supabaseAdmin
       .from("artwork_catalog_overrides")
       .upsert(row as any, { onConflict: "artwork_id" });
@@ -552,6 +558,32 @@ export const adminUpsertCatalogOverride = createServerFn({ method: "POST" })
       entity_id: data.artworkId,
       entity_title: data.artworkId,
       details: { priceOverride: data.priceOverride, onSale: data.onSale, salePrice: data.salePrice },
+    });
+    return { ok: true };
+  });
+
+// Soft-delete a hardcoded catalog artwork by marking the override as deleted.
+// The record row (and any order history) is preserved.
+export const adminDeleteCatalogArtwork = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { artworkId: string }) => {
+    if (!d.artworkId || typeof d.artworkId !== "string") throw new Error("artworkId required");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("artwork_catalog_overrides")
+      .upsert(
+        { artwork_id: data.artworkId, deleted: true, updated_at: new Date().toISOString() },
+        { onConflict: "artwork_id" },
+      );
+    if (error) throw new Error(error.message);
+    await logActivity(supabaseAdmin, context, {
+      action: "artwork.catalog_deleted",
+      entity_id: data.artworkId,
+      entity_title: data.artworkId,
     });
     return { ok: true };
   });
