@@ -84,6 +84,7 @@ function Home() {
         onSale: onSale && sale != null && sale < list,
         sold: !!r.sold, collection: "Our Essence" as const,
         medium: r.medium ?? undefined, description: r.description ?? undefined,
+        shipping_cad: Number((availability?.customShipping ?? {})[r.id] ?? 0),
       };
     });
     const fromCatalog: Artwork[] = ARTWORKS.filter((a) => !deletedCatalog.has(a.id)).map((a) => {
@@ -99,6 +100,7 @@ function Home() {
         price: effective, originalPrice: onSale ? list : undefined,
         onSale: onSale && sale != null && sale < list,
         sold: availOverride.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
+        shipping_cad: Number(ov?.shipping_cad ?? 0),
       };
     });
     return [...fromCustom, ...fromCatalog].filter(isArtworkPurchasable).slice(0, 6);
