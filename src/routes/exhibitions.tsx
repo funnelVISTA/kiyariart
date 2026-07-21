@@ -234,40 +234,61 @@ function ExhibitionsPage() {
                 <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
                   <div>
                     <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("ex.gallery")}</div>
-                    <h2 className="font-display text-5xl">
-                      {show.title}{yearLabel ? ` · ${yearLabel}` : ""}
+                    <h2 className="font-display text-4xl md:text-5xl">
+                      {show.title}
+                      {show.event_date ? (
+                        <>
+                          <span className="text-muted-foreground"> · </span>
+                          {new Date(show.event_date).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "long", day: "numeric", year: "numeric" })}
+                        </>
+                      ) : null}
+                      {(show.venue || show.city) ? (
+                        <>
+                          <span className="text-muted-foreground"> · </span>
+                          {[show.venue, show.city].filter(Boolean).join(", ")}
+                        </>
+                      ) : null}
                     </h2>
-                    {(show.venue || show.city) && (
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        {[show.venue, show.city].filter(Boolean).join(", ")}
-                      </div>
+                    {show.blurb && (
+                      <p className="mt-3 text-sm text-muted-foreground max-w-2xl leading-relaxed">{show.blurb}</p>
                     )}
                   </div>
                 </div>
                 <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4 [perspective:1400px]">
                   {(show.gallery_images ?? []).map((src, i) => {
                     const flatIdx = priorCount + i;
+                    const caption = (show.gallery_captions ?? [])[i] ?? "";
                     return (
-                      <motion.button
+                      <motion.figure
                         key={src + i}
-                        onClick={() => setActive(flatIdx)}
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-50px" }}
                         transition={{ duration: 0.5, delay: (i % 8) * 0.05 }}
-                        className="block w-full break-inside-avoid group relative cursor-zoom-in"
+                        className="block w-full break-inside-avoid mb-3 md:mb-4"
                       >
-                        <TiltCard max={18} scale={1.06} glare className="overflow-hidden shadow-elegant">
-                          <img
-                            src={src}
-                            alt={`${show.title} — photo ${i + 1}`}
-                            loading="lazy"
-                            className="w-full h-auto"
-                            style={{ transform: "translateZ(0)" }}
-                          />
-                          <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition" style={{ transform: "translateZ(30px)" }} />
-                        </TiltCard>
-                      </motion.button>
+                        <button
+                          type="button"
+                          onClick={() => setActive(flatIdx)}
+                          className="block w-full group relative cursor-zoom-in"
+                        >
+                          <TiltCard max={18} scale={1.06} glare className="overflow-hidden shadow-elegant">
+                            <img
+                              src={src}
+                              alt={caption || `${show.title} — photo ${i + 1}`}
+                              loading="lazy"
+                              className="w-full h-auto"
+                              style={{ transform: "translateZ(0)" }}
+                            />
+                            <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition" style={{ transform: "translateZ(30px)" }} />
+                          </TiltCard>
+                        </button>
+                        {caption && (
+                          <figcaption className="mt-2 text-xs md:text-sm text-muted-foreground italic leading-snug px-0.5">
+                            {caption}
+                          </figcaption>
+                        )}
+                      </motion.figure>
                     );
                   })}
                 </div>
