@@ -260,6 +260,7 @@ function ExhibitionEditor({
   const [form, setForm] = useState<Partial<Row>>({
     ...initial,
     gallery_images: Array.isArray(initial.gallery_images) ? initial.gallery_images : [],
+    gallery_captions: Array.isArray(initial.gallery_captions) ? initial.gallery_captions : [],
   });
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -316,7 +317,11 @@ function ExhibitionEditor({
         setUploadProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
       }
       if (uploaded.length) {
-        setForm((f) => ({ ...f, gallery_images: [...(f.gallery_images ?? []), ...uploaded] }));
+        setForm((f) => ({
+          ...f,
+          gallery_images: [...(f.gallery_images ?? []), ...uploaded],
+          gallery_captions: [...(f.gallery_captions ?? []), ...uploaded.map(() => "")],
+        }));
         toast.success(`${uploaded.length} image${uploaded.length === 1 ? "" : "s"} added`);
       }
     } finally {
@@ -329,7 +334,18 @@ function ExhibitionEditor({
     setForm((f) => ({
       ...f,
       gallery_images: (f.gallery_images ?? []).filter((_, i) => i !== idx),
+      gallery_captions: (f.gallery_captions ?? []).filter((_, i) => i !== idx),
     }));
+  };
+
+  const setCaption = (idx: number, value: string) => {
+    setForm((f) => {
+      const imgs = f.gallery_images ?? [];
+      const caps = [...(f.gallery_captions ?? [])];
+      while (caps.length < imgs.length) caps.push("");
+      caps[idx] = value;
+      return { ...f, gallery_captions: caps };
+    });
   };
 
   const save = async () => {
@@ -341,12 +357,12 @@ function ExhibitionEditor({
       toast.error("Date is required");
       return;
     }
-    if (mode === "event" && form.event_date && form.event_date < todayISO()) {
-      toast.error("Upcoming events can't be in the past. Use Add Media for past shows.");
-      return;
-    }
     if (mode === "media" && form.event_date && form.event_date > todayISO()) {
       toast.error("Past events can't have a future date.");
+      return;
+    }
+    if (mode === "media" && (!form.venue || !form.venue.trim())) {
+      toast.error("Venue is required");
       return;
     }
     setSaving(true);
@@ -366,6 +382,7 @@ function ExhibitionEditor({
           status: mode === "event" ? "upcoming" : "past",
           sort_order: Number(form.sort_order ?? 0),
           gallery_images: mode === "media" ? (form.gallery_images ?? []) : [],
+          gallery_captions: mode === "media" ? (form.gallery_captions ?? []) : [],
         },
       });
       toast.success(form.id ? "Updated" : "Added");
