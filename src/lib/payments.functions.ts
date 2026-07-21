@@ -490,6 +490,7 @@ export const listArtworkAvailability = createServerFn({ method: "GET" }).handler
   async (): Promise<{
     soldIds: string[];
     availableOverrideIds: string[];
+    deletedCatalogIds: string[];
     catalogOverrides: Array<{
       artwork_id: string;
       price_override: number | null;
@@ -502,16 +503,20 @@ export const listArtworkAvailability = createServerFn({ method: "GET" }).handler
       alt_text: string | null;
       seo_title: string | null;
       seo_description: string | null;
+      shipping_cad: number;
+      deleted: boolean;
     }>;
+    customShipping: Record<string, number>;
   }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data: sold }, { data: customSold }, { data: stock }, { data: overrides }] = await Promise.all([
+    const [{ data: sold }, { data: customSold }, { data: stock }, { data: overrides }, { data: customShip }] = await Promise.all([
       supabaseAdmin.from("sold_artworks").select("artwork_id"),
       supabaseAdmin.from("artworks_custom").select("id").eq("sold", true),
       supabaseAdmin.from("artwork_stock").select("artwork_id,total_units,sold_units"),
       supabaseAdmin
         .from("artwork_catalog_overrides")
-        .select("artwork_id,price_override,on_sale,sale_price,title,description,medium,image_url,alt_text,seo_title,seo_description"),
+        .select("artwork_id,price_override,on_sale,sale_price,title,description,medium,image_url,alt_text,seo_title,seo_description,shipping_cad,deleted"),
+      supabaseAdmin.from("artworks_custom").select("id,shipping_cad"),
     ]);
     const soldSet = new Set<string>();
     for (const r of sold ?? []) soldSet.add(r.artwork_id);
@@ -523,9 +528,14 @@ export const listArtworkAvailability = createServerFn({ method: "GET" }).handler
         soldSet.delete(r.artwork_id);
       }
     }
+    const deletedCatalog: string[] = [];
+    for (const r of overrides ?? []) if ((r as any).deleted) deletedCatalog.push((r as any).artwork_id);
+    const customShipping: Record<string, number> = {};
+    for (const r of customShip ?? []) customShipping[(r as any).id] = Number((r as any).shipping_cad ?? 0);
     return {
       soldIds: Array.from(soldSet),
       availableOverrideIds: Array.from(availableOverride),
+      deletedCatalogIds: deletedCatalog,
       catalogOverrides: (overrides ?? []).map((r: any) => ({
         artwork_id: r.artwork_id,
         price_override: r.price_override != null ? Number(r.price_override) : null,
@@ -538,7 +548,10 @@ export const listArtworkAvailability = createServerFn({ method: "GET" }).handler
         alt_text: r.alt_text ?? null,
         seo_title: r.seo_title ?? null,
         seo_description: r.seo_description ?? null,
+        shipping_cad: Number(r.shipping_cad ?? 0),
+        deleted: !!r.deleted,
       })),
+      customShipping,
     };
   },
 );
