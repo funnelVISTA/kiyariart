@@ -5,7 +5,7 @@ import { KeyRound, LogOut, Package, LayoutDashboard, Palette, BarChart3, Users, 
 
 const items = [
   { to: "/admin/orders", label: "Orders", icon: Package },
-  { to: "/admin/exhibitions", label: "Exhibitions", icon: Calendar },
+  { to: "/admin/exhibitions", label: "Events", icon: Calendar },
   { to: "/admin/inventory", label: "Inventory", icon: Palette },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/admin/subscribers", label: "Subscribers", icon: Users },
