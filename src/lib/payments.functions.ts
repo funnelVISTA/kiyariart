@@ -15,43 +15,7 @@ type CreateResult = { clientSecret: string } | { error: string };
 
 export const MAX_CART_ITEMS = 20;
 
-// Flat shipping tiers (CAD). Buyer picks the region matching their address
-// inside Stripe Checkout. Cheapest option shows first.
-const SHIPPING_OPTIONS = [
-  {
-    shipping_rate_data: {
-      display_name: "Shipping — Canada",
-      type: "fixed_amount" as const,
-      fixed_amount: { amount: 5000, currency: "cad" },
-      delivery_estimate: {
-        minimum: { unit: "business_day" as const, value: 3 },
-        maximum: { unit: "business_day" as const, value: 7 },
-      },
-    },
-  },
-  {
-    shipping_rate_data: {
-      display_name: "Shipping — United States",
-      type: "fixed_amount" as const,
-      fixed_amount: { amount: 10000, currency: "cad" },
-      delivery_estimate: {
-        minimum: { unit: "business_day" as const, value: 5 },
-        maximum: { unit: "business_day" as const, value: 10 },
-      },
-    },
-  },
-  {
-    shipping_rate_data: {
-      display_name: "Shipping — International",
-      type: "fixed_amount" as const,
-      fixed_amount: { amount: 20000, currency: "cad" },
-      delivery_estimate: {
-        minimum: { unit: "business_day" as const, value: 7 },
-        maximum: { unit: "business_day" as const, value: 21 },
-      },
-    },
-  },
-];
+export type DeliveryMethod = "ship" | "pickup";
 
 // Pure validator — throws on tampered / malformed input. Exported for tests.
 export function validateCartInput(data: {
@@ -59,6 +23,7 @@ export function validateCartInput(data: {
   returnUrl: string;
   environment: StripeEnv;
   marketingOptIn?: boolean;
+  deliveryMethod?: DeliveryMethod;
 }) {
   if (!Array.isArray(data.items) || data.items.length === 0) {
     throw new Error("Cart is empty");
@@ -78,6 +43,7 @@ export function validateCartInput(data: {
     throw new Error("Invalid environment");
   }
   data.marketingOptIn = data.marketingOptIn === true;
+  data.deliveryMethod = data.deliveryMethod === "pickup" ? "pickup" : "ship";
   return data;
 }
 
@@ -86,6 +52,7 @@ type ResolvedLine = {
   title: string;
   image: string;
   unit_amount_cad: number;
+  shipping_cad: number;
   quantity: 1;
   source: "catalog" | "custom";
 };
@@ -118,11 +85,12 @@ export async function resolveCartItems(
     }
   }
   let customMap = new Map<string, { id: string; title: string; image: string; price: number; sold: boolean; on_sale: boolean; sale_price: number | null }>();
+  const customExtras = new Map<string, { shipping_cad: number }>();
   if (customIds.length) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
       .from("artworks_custom")
-      .select("id,title,image_url,price,sold,on_sale,sale_price")
+      .select("id,title,image_url,price,sold,on_sale,sale_price,shipping_cad")
       .in("id", customIds);
     for (const r of data ?? []) {
       customMap.set(r.id, {
@@ -134,18 +102,19 @@ export async function resolveCartItems(
         on_sale: !!(r as any).on_sale,
         sale_price: (r as any).sale_price != null ? Number((r as any).sale_price) : null,
       });
+      customExtras.set(r.id, { shipping_cad: Number((r as any).shipping_cad ?? 0) });
     }
   }
   // Catalog price/sale overrides (for hardcoded ARTWORKS ids).
   const catalogOverrideMap = new Map<
     string,
-    { price_override: number | null; on_sale: boolean; sale_price: number | null; title: string | null; image_url: string | null }
+    { price_override: number | null; on_sale: boolean; sale_price: number | null; title: string | null; image_url: string | null; shipping_cad: number; deleted: boolean }
   >();
   if (catalogIds.length) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: ovRows } = await supabaseAdmin
       .from("artwork_catalog_overrides")
-      .select("artwork_id,price_override,on_sale,sale_price,title,image_url")
+      .select("artwork_id,price_override,on_sale,sale_price,title,image_url,shipping_cad,deleted")
       .in("artwork_id", catalogIds);
     for (const r of ovRows ?? []) {
       catalogOverrideMap.set(r.artwork_id, {
@@ -154,6 +123,8 @@ export async function resolveCartItems(
         sale_price: r.sale_price != null ? Number(r.sale_price) : null,
         title: (r as any).title ?? null,
         image_url: (r as any).image_url ?? null,
+        shipping_cad: Number((r as any).shipping_cad ?? 0),
+        deleted: !!(r as any).deleted,
       });
     }
   }
@@ -164,6 +135,7 @@ export async function resolveCartItems(
       const hasAvailableOverride = availableOverrides.has(art.id);
       if (art.sold && !hasAvailableOverride) throw new Error(`"${art.title}" is not available`);
       const ov = catalogOverrideMap.get(art.id);
+      if (ov?.deleted) throw new Error(`"${art.title}" is no longer available`);
       const listPrice = ov?.price_override ?? art.price;
       const effective = ov?.on_sale && ov.sale_price != null ? ov.sale_price : listPrice;
       if (!(effective > 0)) throw new Error(`"${art.title}" is not for sale`);
@@ -172,6 +144,7 @@ export async function resolveCartItems(
         title: ov?.title ?? art.title,
         image: ov?.image_url ?? art.image,
         unit_amount_cad: effective, quantity: 1 as const, source: "catalog" as const,
+        shipping_cad: ov?.shipping_cad ?? 0,
       };
     }
     const c = customMap.get(id);
@@ -182,6 +155,7 @@ export async function resolveCartItems(
     return {
       id: c.id, title: c.title, image: c.image,
       unit_amount_cad: effective, quantity: 1 as const, source: "custom" as const,
+      shipping_cad: customExtras.get(id)?.shipping_cad ?? 0,
     };
   });
 }
@@ -209,6 +183,7 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
     returnUrl: string;
     environment: StripeEnv;
     marketingOptIn?: boolean;
+    deliveryMethod?: DeliveryMethod;
   }) => validateCartInput(data))
   .handler(async ({ data }): Promise<CreateResult> => {
     try {
@@ -224,11 +199,27 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
       }
 
       const stripe = createStripeClient(data.environment);
+      const isPickup = data.deliveryMethod === "pickup";
+      const shippingLineItems = isPickup
+        ? []
+        : resolved
+            .filter((i) => i.shipping_cad > 0)
+            .map((i) => ({
+              quantity: 1,
+              price_data: {
+                currency: "cad",
+                unit_amount: Math.round(i.shipping_cad * 100),
+                product_data: {
+                  name: `Shipping — ${i.title}`,
+                  metadata: { kind: "shipping", artwork_id: i.id },
+                },
+              },
+            }));
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
-        line_items: resolved.map((i) => ({
+        line_items: [...resolved.map((i) => ({
           quantity: 1,
           price_data: {
             currency: "cad",
@@ -239,15 +230,17 @@ export const createArtworkCheckout = createServerFn({ method: "POST" })
               metadata: { artwork_id: i.id, source: i.source },
             },
           },
-        })),
+        })), ...shippingLineItems],
         metadata: {
           artwork_ids: ids.join(","),
           marketing_opt_in: data.marketingOptIn ? "1" : "0",
+          delivery_method: isPickup ? "pickup" : "ship",
         },
-        shipping_address_collection: {
-          allowed_countries: ["CA", "US", "GB", "AU", "NZ", "DE", "FR", "NL", "IE", "ES", "IT", "BE", "DK", "SE", "NO", "FI", "CH", "AT", "PT"],
-        },
-        shipping_options: SHIPPING_OPTIONS as any,
+        ...(isPickup ? {} : {
+          shipping_address_collection: {
+            allowed_countries: ["CA", "US", "GB", "AU", "NZ", "DE", "FR", "NL", "IE", "ES", "IT", "BE", "DK", "SE", "NO", "FI", "CH", "AT", "PT"],
+          },
+        }),
         phone_number_collection: { enabled: true },
         payment_intent_data: {
           description: resolved.map((i) => i.title).join(", ").slice(0, 500),
