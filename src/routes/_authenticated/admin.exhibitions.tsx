@@ -644,7 +644,12 @@ function ExhibitionEditor({
               </button>
               <button
                 onClick={save}
-                disabled={saving || !form.title || (mode === "event" && !form.event_date)}
+                disabled={
+                  saving ||
+                  !form.title ||
+                  (mode === "event" && !form.event_date) ||
+                  (mode === "media" && (!form.event_date || !form.venue?.trim()))
+                }
                 className="bg-gradient-gold text-primary-foreground px-6 py-2.5 text-xs uppercase tracking-[0.2em] hover:shadow-glow transition disabled:opacity-50"
               >
                 {saving ? "Saving…" : form.id ? "Save changes" : mode === "event" ? "Publish event" : "Publish gallery"}
