@@ -397,7 +397,7 @@ function ExhibitionEditor({
   return (
     <div className="fixed inset-0 z-[90] bg-background/95 backdrop-blur-xl overflow-y-auto" onClick={onClose}>
       <div className="min-h-full flex items-start md:items-center justify-center p-4 md:p-10">
-        <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-3xl bg-card border border-border">
+        <div onClick={(e) => e.stopPropagation()} className={`relative w-full ${mode === "media" ? "max-w-5xl" : "max-w-3xl"} bg-card border border-border`}>
           <button onClick={onClose} className="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full border border-border hover:border-gold">
             <X className="h-4 w-4" />
           </button>
@@ -572,22 +572,36 @@ function ExhibitionEditor({
                 ) : (
                   <>
                     <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Photos from the event</label>
-                    <p className="text-[10px] text-muted-foreground/70 mt-1">Upload multiple images. They appear as a gallery under this show on the public page.</p>
-                    <div className="mt-2 grid grid-cols-3 gap-2">
+                    <p className="text-[10px] text-muted-foreground/70 mt-1">
+                      Upload photos and add a caption for each — e.g. "L–R: Prime Minister Mark Carney, Mayor James Goddad."
+                    </p>
+                    <div className="mt-2 space-y-3 max-h-[520px] overflow-y-auto pr-1">
                       {(form.gallery_images ?? []).map((url, idx) => (
-                        <div key={url + idx} className="relative aspect-square bg-background/50 border border-border overflow-hidden group">
-                          <img src={url} alt="" className="h-full w-full object-cover" />
+                        <div key={url + idx} className="flex gap-3 items-start border border-border bg-background/40 p-2">
+                          <div className="relative w-28 h-28 shrink-0 bg-background overflow-hidden">
+                            <img src={url} alt="" className="h-full w-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <label className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground">Caption for photo {idx + 1}</label>
+                            <textarea
+                              value={(form.gallery_captions ?? [])[idx] ?? ""}
+                              onChange={(e) => setCaption(idx, e.target.value)}
+                              rows={3}
+                              placeholder='e.g. "L–R: Prime Minister Mark Carney, Mayor James Goddad."'
+                              className="mt-1 w-full bg-background border border-border px-2 py-1.5 text-xs focus:border-gold outline-none resize-y"
+                            />
+                          </div>
                           <button
                             onClick={() => removeGalleryImage(idx)}
-                            className="absolute top-1 right-1 grid h-6 w-6 place-items-center rounded-full bg-background/90 border border-border opacity-0 group-hover:opacity-100 transition hover:border-accent hover:text-accent"
-                            aria-label="Remove"
+                            className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-border hover:border-accent hover:text-accent"
+                            aria-label="Remove photo"
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       ))}
                       {(form.gallery_images?.length ?? 0) === 0 && (
-                        <div className="col-span-3 aspect-[4/3] border border-dashed border-border bg-background/50 grid place-items-center text-xs text-muted-foreground">
+                        <div className="aspect-[4/3] border border-dashed border-border bg-background/50 grid place-items-center text-xs text-muted-foreground">
                           No photos yet
                         </div>
                       )}
