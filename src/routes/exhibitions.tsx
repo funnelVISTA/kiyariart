@@ -51,6 +51,7 @@ type DbEx = {
   status: "upcoming" | "past";
   sort_order: number;
   gallery_images: string[] | null;
+  gallery_captions?: string[] | null;
 };
 
 function ExhibitionsPage() {
@@ -70,28 +71,48 @@ function ExhibitionsPage() {
     },
   });
 
-  // Auto-move upcoming events into past once their date has passed.
+  // Auto-move upcoming events to past once their END date (fallback: start
+  // date) is before today.
   const todayStr = new Date().toISOString().slice(0, 10);
+  const isPastByDate = (r: DbEx) => {
+    const cmp = r.end_date || r.event_date;
+    return !!cmp && cmp < todayStr;
+  };
   const dbUpcoming = useMemo(
     () =>
       (dbRows ?? [])
-        .filter((r) => r.status === "upcoming" && (!r.event_date || r.event_date >= todayStr))
+        .filter((r) => r.status === "upcoming" && !isPastByDate(r))
         .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? "")),
+    [dbRows, todayStr],
+  );
+  const dbPastEvents = useMemo(
+    () =>
+      (dbRows ?? [])
+        .filter((r) => r.status === "upcoming" && isPastByDate(r))
+        .sort((a, b) =>
+          (b.end_date ?? b.event_date ?? "").localeCompare(a.end_date ?? a.event_date ?? ""),
+        )
+        .slice(0, 2),
     [dbRows, todayStr],
   );
   const dbPastGalleries = useMemo(() => {
     return (dbRows ?? [])
-      .filter((r) => {
-        const isPastByStatus = r.status === "past";
-        const isPastByDate = r.status === "upcoming" && r.event_date && r.event_date < todayStr;
-        if (!(isPastByStatus || isPastByDate)) return false;
-        return Array.isArray(r.gallery_images) && r.gallery_images.length > 0;
-      })
+      .filter(
+        (r) => r.status === "past" && Array.isArray(r.gallery_images) && r.gallery_images.length > 0,
+      )
       .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
   }, [dbRows, todayStr]);
   // Flat list of every past-show image, in gallery order, for the lightbox.
   const pastLightboxImages = useMemo(
     () => dbPastGalleries.flatMap((g) => g.gallery_images ?? []),
+    [dbPastGalleries],
+  );
+  const pastLightboxCaptions = useMemo(
+    () =>
+      dbPastGalleries.flatMap((g) => {
+        const caps = Array.isArray(g.gallery_captions) ? g.gallery_captions : [];
+        return (g.gallery_images ?? []).map((_, i) => caps[i] ?? "");
+      }),
     [dbPastGalleries],
   );
   const hasCuratedPast = dbPastGalleries.length > 0;
