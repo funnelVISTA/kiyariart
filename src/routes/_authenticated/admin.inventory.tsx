@@ -69,6 +69,7 @@ type Row = {
   seo_title: string | null;
   seo_description: string | null;
   alt_text: string | null;
+  shipping_cad?: number | null;
 };
 
 function AdminArtworksPage() {
@@ -677,6 +678,9 @@ function ArtworkEditor({
   const [priceInput, setPriceInput] = useState<string>(
     initial.price === undefined || initial.price === null ? "" : String(initial.price),
   );
+  const [shippingInput, setShippingInput] = useState<string>(
+    (initial as any).shipping_cad != null ? String((initial as any).shipping_cad) : "",
+  );
   const [onSale, setOnSale] = useState<boolean>(!!(initial as any).on_sale);
   const [saleMode, setSaleMode] = useState<"percent" | "fixed">("fixed");
   const [percentOff, setPercentOff] = useState<string>("");
@@ -748,14 +752,18 @@ function ArtworkEditor({
   const save = async () => {
     const trimmed = priceInput.trim();
     if (trimmed === "") {
-      toast.error("Enter a price", {
-        description: "Use 0 for inquiry-only pieces.",
-      });
+      toast.error("Enter a price");
       return;
     }
     const parsedPrice = Number(trimmed);
     if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
       toast.error("Price must be a non-negative number");
+      return;
+    }
+    const shippingTrim = shippingInput.trim();
+    const parsedShipping = shippingTrim === "" ? 0 : Number(shippingTrim);
+    if (!Number.isFinite(parsedShipping) || parsedShipping < 0) {
+      toast.error("Shipping must be a non-negative number");
       return;
     }
     // Compute sale_price from mode when on_sale
@@ -802,6 +810,7 @@ function ArtworkEditor({
             alt_text: form.alt_text ?? null,
             seo_title: form.seo_title ?? null,
             seo_description: form.seo_description ?? null,
+            shipping_cad: parsedShipping,
           },
         });
         if (!!form.sold !== catalog.originalSold) {
@@ -830,6 +839,7 @@ function ArtworkEditor({
           alt_text: form.alt_text ?? null,
           on_sale: onSale,
           sale_price: salePrice,
+          shipping_cad: parsedShipping,
         },
       });
       toast.success(form.id ? "Artwork updated" : "Artwork added");
@@ -915,7 +925,16 @@ function ArtworkEditor({
                       onChange={(e) => setPriceInput(e.target.value)}
                       className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
                     />
-                    <p className="mt-1 text-[10px] text-muted-foreground">Set 0 to hide the buy button (inquiry only).</p>
+                  </Field>
+                  <Field label="Shipping (CAD)">
+                    <input
+                      type="number" min={0} step={1}
+                      value={shippingInput}
+                      onChange={(e) => setShippingInput(e.target.value)}
+                      placeholder="0"
+                      className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                    />
+                    <p className="mt-1 text-[10px] text-muted-foreground">Shown separately at checkout. Free for Calgary local pickup.</p>
                   </Field>
                   <Field label="Medium (optional)">
                     <input
