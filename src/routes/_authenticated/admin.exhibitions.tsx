@@ -40,14 +40,12 @@ type Row = {
   status: "upcoming" | "past";
   sort_order: number;
   gallery_images: string[] | null;
+  gallery_captions?: string[] | null;
 };
-
-type Tab = "event" | "media";
 
 function AdminExhibitionsPage() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<Tab>("event");
-  const [editing, setEditing] = useState<Partial<Row> | null>(null);
+  const [editing, setEditing] = useState<{ row: Partial<Row>; mode: "event" | "media" } | null>(null);
 
   const q = useQuery({
     queryKey: ["admin", "exhibitions"],
@@ -70,16 +68,33 @@ function AdminExhibitionsPage() {
   const rows = ((q.data?.exhibitions ?? []) as Row[]).map((r) => ({
     ...r,
     gallery_images: Array.isArray(r.gallery_images) ? r.gallery_images : [],
+    gallery_captions: Array.isArray(r.gallery_captions) ? r.gallery_captions : [],
   }));
-  const upcoming = rows.filter((r) => r.status === "upcoming");
-  const past = rows.filter((r) => r.status === "past");
+  const today = todayISO();
+  // "Event" rows = status upcoming. Split by end date (fall back to event_date).
+  const eventRows = rows.filter((r) => r.status === "upcoming");
+  const isPastByDate = (r: Row) => {
+    const cmp = r.end_date || r.event_date;
+    return !!cmp && cmp < today;
+  };
+  const upcoming = eventRows
+    .filter((r) => !isPastByDate(r))
+    .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? ""));
+  const past = eventRows
+    .filter(isPastByDate)
+    .sort((a, b) => (b.end_date ?? b.event_date ?? "").localeCompare(a.end_date ?? a.event_date ?? ""))
+    .slice(0, 4);
+  const media = rows
+    .filter((r) => r.status === "past")
+    .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
 
-  const startNew = () => {
+  const startNew = (mode: "event" | "media") => {
     setEditing({
-      status: tab === "event" ? "upcoming" : "past",
-      gallery_images: [],
+      row: { status: mode === "event" ? "upcoming" : "past", gallery_images: [], gallery_captions: [] },
+      mode,
     });
   };
+  const openEdit = (r: Row, mode: "event" | "media") => setEditing({ row: r, mode });
 
   return (
     <div className="pt-10 pb-20">
@@ -89,51 +104,58 @@ function AdminExhibitionsPage() {
             <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Studio</div>
             <h1 className="font-display text-5xl md:text-6xl">Events</h1>
             <p className="mt-2 text-sm text-muted-foreground max-w-xl">
-              Add upcoming shows under <em>Add Event</em>. Archive photos from past events under <em>Add Media</em>. Everything published goes live on the public Events page instantly.
+              Add upcoming shows with <em>Add Event</em>. Archive photos from past events with <em>Add Media</em>. Everything published goes live on the public Events page instantly.
             </p>
           </div>
-          <button
-            onClick={startNew}
-            className="inline-flex items-center gap-2 bg-gradient-gold text-primary-foreground px-5 py-2.5 text-xs uppercase tracking-[0.2em] hover:shadow-glow transition"
-          >
-            <Plus className="h-4 w-4" /> {tab === "event" ? "Add event" : "Add media"}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => startNew("event")}
+              className="inline-flex items-center gap-2 bg-gradient-gold text-primary-foreground px-5 py-2.5 text-xs uppercase tracking-[0.2em] hover:shadow-glow transition"
+            >
+              <Plus className="h-4 w-4" /> Add event
+            </button>
+            <button
+              onClick={() => startNew("media")}
+              className="inline-flex items-center gap-2 border border-gold/60 text-gold px-5 py-2.5 text-xs uppercase tracking-[0.2em] hover:bg-gold/5 transition"
+            >
+              <ImagePlus className="h-4 w-4" /> Add media
+            </button>
+          </div>
         </div>
 
-        {/* Tabs */}
-        <div className="mt-8 inline-flex border border-border bg-card/40">
-          <TabButton active={tab === "event"} onClick={() => setTab("event")} label="Add event" hint="Upcoming shows" />
-          <TabButton active={tab === "media"} onClick={() => setTab("media")} label="Add media" hint="Past shows gallery" />
-        </div>
-
-        {tab === "event" ? (
-          <Section
-            title="Upcoming events"
-            emptyLabel="No upcoming events yet. Click Add event to publish your next show."
-            rows={upcoming}
-            onEdit={setEditing}
-            onDelete={onDelete}
-            kind="event"
-          />
-        ) : (
-          <Section
-            title="Past events — media galleries"
-            emptyLabel="No past event galleries yet. Click Add media to archive a past show."
-            rows={past}
-            onEdit={setEditing}
-            onDelete={onDelete}
-            kind="media"
-          />
-        )}
+        <Section
+          title="Upcoming events"
+          emptyLabel="No upcoming events yet. Click Add event to publish your next show."
+          rows={upcoming}
+          onEdit={(r) => openEdit(r, "event")}
+          onDelete={onDelete}
+          kind="event"
+        />
+        <Section
+          title="Past events (most recent 4)"
+          emptyLabel="No past events yet — events auto-move here after their end date."
+          rows={past}
+          onEdit={(r) => openEdit(r, "event")}
+          onDelete={onDelete}
+          kind="event"
+        />
+        <Section
+          title="Media galleries"
+          emptyLabel="No media galleries yet. Click Add media to archive photos from a past show."
+          rows={media}
+          onEdit={(r) => openEdit(r, "media")}
+          onDelete={onDelete}
+          kind="media"
+        />
 
         {q.isLoading && <p className="mt-6 text-muted-foreground text-sm">Loading…</p>}
       </div>
 
       {editing && (
         <ExhibitionEditor
-          key={editing.id ?? "new"}
-          initial={editing}
-          mode={editing.status === "past" ? "media" : "event"}
+          key={(editing.row.id ?? "new") + ":" + editing.mode}
+          initial={editing.row}
+          mode={editing.mode}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
@@ -142,18 +164,6 @@ function AdminExhibitionsPage() {
         />
       )}
     </div>
-  );
-}
-
-function TabButton({ active, onClick, label, hint }: { active: boolean; onClick: () => void; label: string; hint: string }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-5 py-3 text-xs uppercase tracking-[0.25em] border-r border-border last:border-r-0 transition ${active ? "bg-gradient-gold text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-    >
-      <span className="block">{label}</span>
-      <span className={`block text-[9px] tracking-[0.2em] mt-0.5 ${active ? "opacity-80" : "opacity-60"}`}>{hint}</span>
-    </button>
   );
 }
 
@@ -250,6 +260,7 @@ function ExhibitionEditor({
   const [form, setForm] = useState<Partial<Row>>({
     ...initial,
     gallery_images: Array.isArray(initial.gallery_images) ? initial.gallery_images : [],
+    gallery_captions: Array.isArray(initial.gallery_captions) ? initial.gallery_captions : [],
   });
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -306,7 +317,11 @@ function ExhibitionEditor({
         setUploadProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
       }
       if (uploaded.length) {
-        setForm((f) => ({ ...f, gallery_images: [...(f.gallery_images ?? []), ...uploaded] }));
+        setForm((f) => ({
+          ...f,
+          gallery_images: [...(f.gallery_images ?? []), ...uploaded],
+          gallery_captions: [...(f.gallery_captions ?? []), ...uploaded.map(() => "")],
+        }));
         toast.success(`${uploaded.length} image${uploaded.length === 1 ? "" : "s"} added`);
       }
     } finally {
@@ -319,7 +334,18 @@ function ExhibitionEditor({
     setForm((f) => ({
       ...f,
       gallery_images: (f.gallery_images ?? []).filter((_, i) => i !== idx),
+      gallery_captions: (f.gallery_captions ?? []).filter((_, i) => i !== idx),
     }));
+  };
+
+  const setCaption = (idx: number, value: string) => {
+    setForm((f) => {
+      const imgs = f.gallery_images ?? [];
+      const caps = [...(f.gallery_captions ?? [])];
+      while (caps.length < imgs.length) caps.push("");
+      caps[idx] = value;
+      return { ...f, gallery_captions: caps };
+    });
   };
 
   const save = async () => {
@@ -331,12 +357,12 @@ function ExhibitionEditor({
       toast.error("Date is required");
       return;
     }
-    if (mode === "event" && form.event_date && form.event_date < todayISO()) {
-      toast.error("Upcoming events can't be in the past. Use Add Media for past shows.");
-      return;
-    }
     if (mode === "media" && form.event_date && form.event_date > todayISO()) {
       toast.error("Past events can't have a future date.");
+      return;
+    }
+    if (mode === "media" && (!form.venue || !form.venue.trim())) {
+      toast.error("Venue is required");
       return;
     }
     setSaving(true);
@@ -356,6 +382,7 @@ function ExhibitionEditor({
           status: mode === "event" ? "upcoming" : "past",
           sort_order: Number(form.sort_order ?? 0),
           gallery_images: mode === "media" ? (form.gallery_images ?? []) : [],
+          gallery_captions: mode === "media" ? (form.gallery_captions ?? []) : [],
         },
       });
       toast.success(form.id ? "Updated" : "Added");
@@ -370,7 +397,7 @@ function ExhibitionEditor({
   return (
     <div className="fixed inset-0 z-[90] bg-background/95 backdrop-blur-xl overflow-y-auto" onClick={onClose}>
       <div className="min-h-full flex items-start md:items-center justify-center p-4 md:p-10">
-        <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-3xl bg-card border border-border">
+        <div onClick={(e) => e.stopPropagation()} className={`relative w-full ${mode === "media" ? "max-w-5xl" : "max-w-3xl"} bg-card border border-border`}>
           <button onClick={onClose} className="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full border border-border hover:border-gold">
             <X className="h-4 w-4" />
           </button>
@@ -398,17 +425,17 @@ function ExhibitionEditor({
                 </Field>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label={mode === "event" ? "Date (required)" : "Date (optional)"}>
+                  <Field label={mode === "event" ? "Date (required)" : "Date of event (required)"}>
                     <input
                       type="date"
                       value={form.event_date ?? ""}
-                      min={mode === "event" ? todayISO() : undefined}
+                      min={mode === "event" && !form.id ? todayISO() : undefined}
                       max={mode === "media" ? todayISO() : undefined}
                       onChange={(e) => setForm((f) => ({ ...f, event_date: e.target.value }))}
                       className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
                     />
                     <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-                      {mode === "event" ? "Today or later" : "Today or earlier"} · click for calendar or type YYYY-MM-DD
+                      {mode === "event" ? "Start date" : "Date the event happened"} · click for calendar or type YYYY-MM-DD
                     </p>
                   </Field>
                   {mode === "event" && (
@@ -416,13 +443,35 @@ function ExhibitionEditor({
                       <input
                         type="date"
                         value={form.end_date ?? ""}
-                        min={form.event_date || todayISO()}
+                        min={form.event_date || undefined}
                         onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
                         className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
                       />
+                      <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                        Auto-moves to Past after this date
+                      </p>
                     </Field>
                   )}
                 </div>
+
+                {mode === "media" && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Venue (required)">
+                      <input
+                        value={form.venue ?? ""}
+                        onChange={(e) => setForm((f) => ({ ...f, venue: e.target.value }))}
+                        className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                      />
+                    </Field>
+                    <Field label="City (optional)">
+                      <input
+                        value={form.city ?? ""}
+                        onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                        className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                      />
+                    </Field>
+                  </div>
+                )}
 
                 {mode === "event" && (
                   <>
@@ -523,22 +572,36 @@ function ExhibitionEditor({
                 ) : (
                   <>
                     <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Photos from the event</label>
-                    <p className="text-[10px] text-muted-foreground/70 mt-1">Upload multiple images. They appear as a gallery under this show on the public page.</p>
-                    <div className="mt-2 grid grid-cols-3 gap-2">
+                    <p className="text-[10px] text-muted-foreground/70 mt-1">
+                      Upload photos and add a caption for each — e.g. "L–R: Prime Minister Mark Carney, Mayor James Goddad."
+                    </p>
+                    <div className="mt-2 space-y-3 max-h-[520px] overflow-y-auto pr-1">
                       {(form.gallery_images ?? []).map((url, idx) => (
-                        <div key={url + idx} className="relative aspect-square bg-background/50 border border-border overflow-hidden group">
-                          <img src={url} alt="" className="h-full w-full object-cover" />
+                        <div key={url + idx} className="flex gap-3 items-start border border-border bg-background/40 p-2">
+                          <div className="relative w-28 h-28 shrink-0 bg-background overflow-hidden">
+                            <img src={url} alt="" className="h-full w-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <label className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground">Caption for photo {idx + 1}</label>
+                            <textarea
+                              value={(form.gallery_captions ?? [])[idx] ?? ""}
+                              onChange={(e) => setCaption(idx, e.target.value)}
+                              rows={3}
+                              placeholder='e.g. "L–R: Prime Minister Mark Carney, Mayor James Goddad."'
+                              className="mt-1 w-full bg-background border border-border px-2 py-1.5 text-xs focus:border-gold outline-none resize-y"
+                            />
+                          </div>
                           <button
                             onClick={() => removeGalleryImage(idx)}
-                            className="absolute top-1 right-1 grid h-6 w-6 place-items-center rounded-full bg-background/90 border border-border opacity-0 group-hover:opacity-100 transition hover:border-accent hover:text-accent"
-                            aria-label="Remove"
+                            className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-border hover:border-accent hover:text-accent"
+                            aria-label="Remove photo"
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       ))}
                       {(form.gallery_images?.length ?? 0) === 0 && (
-                        <div className="col-span-3 aspect-[4/3] border border-dashed border-border bg-background/50 grid place-items-center text-xs text-muted-foreground">
+                        <div className="aspect-[4/3] border border-dashed border-border bg-background/50 grid place-items-center text-xs text-muted-foreground">
                           No photos yet
                         </div>
                       )}
@@ -581,7 +644,12 @@ function ExhibitionEditor({
               </button>
               <button
                 onClick={save}
-                disabled={saving || !form.title || (mode === "event" && !form.event_date)}
+                disabled={
+                  saving ||
+                  !form.title ||
+                  (mode === "event" && !form.event_date) ||
+                  (mode === "media" && (!form.event_date || !form.venue?.trim()))
+                }
                 className="bg-gradient-gold text-primary-foreground px-6 py-2.5 text-xs uppercase tracking-[0.2em] hover:shadow-glow transition disabled:opacity-50"
               >
                 {saving ? "Saving…" : form.id ? "Save changes" : mode === "event" ? "Publish event" : "Publish gallery"}

@@ -1,0 +1,1 @@
+ALTER TABLE public.exhibitions ADD COLUMN IF NOT EXISTS gallery_captions jsonb NOT NULL DEFAULT '[]'::jsonb;

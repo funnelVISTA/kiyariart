@@ -51,6 +51,7 @@ type DbEx = {
   status: "upcoming" | "past";
   sort_order: number;
   gallery_images: string[] | null;
+  gallery_captions?: string[] | null;
 };
 
 function ExhibitionsPage() {
@@ -70,28 +71,48 @@ function ExhibitionsPage() {
     },
   });
 
-  // Auto-move upcoming events into past once their date has passed.
+  // Auto-move upcoming events to past once their END date (fallback: start
+  // date) is before today.
   const todayStr = new Date().toISOString().slice(0, 10);
+  const isPastByDate = (r: DbEx) => {
+    const cmp = r.end_date || r.event_date;
+    return !!cmp && cmp < todayStr;
+  };
   const dbUpcoming = useMemo(
     () =>
       (dbRows ?? [])
-        .filter((r) => r.status === "upcoming" && (!r.event_date || r.event_date >= todayStr))
+        .filter((r) => r.status === "upcoming" && !isPastByDate(r))
         .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? "")),
+    [dbRows, todayStr],
+  );
+  const dbPastEvents = useMemo(
+    () =>
+      (dbRows ?? [])
+        .filter((r) => r.status === "upcoming" && isPastByDate(r))
+        .sort((a, b) =>
+          (b.end_date ?? b.event_date ?? "").localeCompare(a.end_date ?? a.event_date ?? ""),
+        )
+        .slice(0, 2),
     [dbRows, todayStr],
   );
   const dbPastGalleries = useMemo(() => {
     return (dbRows ?? [])
-      .filter((r) => {
-        const isPastByStatus = r.status === "past";
-        const isPastByDate = r.status === "upcoming" && r.event_date && r.event_date < todayStr;
-        if (!(isPastByStatus || isPastByDate)) return false;
-        return Array.isArray(r.gallery_images) && r.gallery_images.length > 0;
-      })
+      .filter(
+        (r) => r.status === "past" && Array.isArray(r.gallery_images) && r.gallery_images.length > 0,
+      )
       .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
   }, [dbRows, todayStr]);
   // Flat list of every past-show image, in gallery order, for the lightbox.
   const pastLightboxImages = useMemo(
     () => dbPastGalleries.flatMap((g) => g.gallery_images ?? []),
+    [dbPastGalleries],
+  );
+  const pastLightboxCaptions = useMemo(
+    () =>
+      dbPastGalleries.flatMap((g) => {
+        const caps = Array.isArray(g.gallery_captions) ? g.gallery_captions : [];
+        return (g.gallery_images ?? []).map((_, i) => caps[i] ?? "");
+      }),
     [dbPastGalleries],
   );
   const hasCuratedPast = dbPastGalleries.length > 0;
@@ -124,20 +145,24 @@ function ExhibitionsPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, delay: i * 0.05 }}
-                    className="group relative border border-border p-8 md:p-12 hover:border-gold transition-colors overflow-hidden"
+                    className="group relative border border-border hover:border-gold transition-colors overflow-hidden"
                   >
-                    {e.image_url && (
-                      <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition">
-                        <img src={e.image_url} alt="" className="h-full w-full object-cover" />
-                      </div>
-                    )}
-                    <div className="relative grid md:grid-cols-12 gap-8 items-start">
-                      <div className="md:col-span-3">
-                        <div className="font-display text-5xl text-gold leading-none">{monthShort}<br />{day}</div>
-                        <div className="mt-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">{year}</div>
-                      </div>
-                      <div className="md:col-span-9">
-                        <h3 className="font-display text-4xl">{e.title}</h3>
+                    <div className="relative grid md:grid-cols-12 gap-0 items-stretch">
+                      {e.image_url && (
+                        <div className="md:col-span-5 bg-background relative aspect-[4/3] md:aspect-auto md:min-h-[280px] overflow-hidden">
+                          <img
+                            src={e.image_url}
+                            alt={`${e.title} poster`}
+                            className="absolute inset-0 h-full w-full object-contain"
+                          />
+                        </div>
+                      )}
+                      <div className={`${e.image_url ? "md:col-span-7" : "md:col-span-12"} p-8 md:p-10`}>
+                        <div className="flex items-baseline gap-4">
+                          <div className="font-display text-4xl md:text-5xl text-gold leading-none">{monthShort} {day}</div>
+                          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{year}</div>
+                        </div>
+                        <h3 className="mt-4 font-display text-3xl md:text-4xl">{e.title}</h3>
                         <div className="mt-3 flex flex-wrap gap-5 text-sm text-muted-foreground">
                           {e.time_text && <span className="inline-flex items-center gap-2"><Calendar className="h-4 w-4 text-gold" /> {e.time_text}</span>}
                           {(e.venue || e.city) && (
@@ -151,6 +176,44 @@ function ExhibitionsPage() {
                           </a>
                         )}
                       </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {dbPastEvents.length > 0 && (
+          <section className="mt-20">
+            <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">Past events</div>
+            <div className="grid md:grid-cols-2 gap-6">
+              {dbPastEvents.map((e, i) => {
+                const d = e.event_date ? new Date(e.event_date) : null;
+                const dateLabel = d
+                  ? d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "short", day: "numeric", year: "numeric" })
+                  : "";
+                return (
+                  <motion.div
+                    key={e.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                    className="border border-border overflow-hidden flex flex-col"
+                  >
+                    {e.image_url && (
+                      <div className="relative aspect-[4/3] bg-background overflow-hidden">
+                        <img src={e.image_url} alt={`${e.title} poster`} className="absolute inset-0 h-full w-full object-contain" />
+                      </div>
+                    )}
+                    <div className="p-6">
+                      <div className="text-[10px] uppercase tracking-[0.25em] text-gold">{dateLabel}</div>
+                      <h3 className="mt-2 font-display text-2xl">{e.title}</h3>
+                      {(e.venue || e.city) && (
+                        <div className="mt-1 text-xs text-muted-foreground">{[e.venue, e.city].filter(Boolean).join(", ")}</div>
+                      )}
+                      {e.blurb && <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{e.blurb}</p>}
                     </div>
                   </motion.div>
                 );
@@ -250,7 +313,9 @@ function ExhibitionsPage() {
       <AnimatePresence>
         {active !== null && (() => {
           const list = hasCuratedPast ? pastLightboxImages : GALLERY;
+          const caps = hasCuratedPast ? pastLightboxCaptions : [];
           const clamped = ((active % list.length) + list.length) % list.length;
+          const caption = caps[clamped] ?? "";
           return (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -263,14 +328,20 @@ function ExhibitionsPage() {
             >
               <X className="h-5 w-5" />
             </button>
-            <motion.img
-              key={clamped}
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              src={list[clamped]}
-              alt=""
-              onClick={(e) => e.stopPropagation()}
-              className="max-h-[90vh] max-w-[90vw] object-contain shadow-elegant"
-            />
+            <div className="flex flex-col items-center max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
+              <motion.img
+                key={clamped}
+                initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                src={list[clamped]}
+                alt={caption}
+                className={`${caption ? "max-h-[78vh]" : "max-h-[86vh]"} max-w-full object-contain shadow-elegant`}
+              />
+              {caption && (
+                <p className="mt-3 max-w-3xl text-center text-sm text-muted-foreground italic px-4">
+                  {caption}
+                </p>
+              )}
+            </div>
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
               <button onClick={(e) => { e.stopPropagation(); setActive((clamped - 1 + list.length) % list.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.prev")}</button>
               <button onClick={(e) => { e.stopPropagation(); setActive((clamped + 1) % list.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.next")}</button>

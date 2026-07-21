@@ -363,6 +363,7 @@ type ExhibitionUpsert = {
   status?: "upcoming" | "past";
   sort_order?: number;
   gallery_images?: string[] | null;
+  gallery_captions?: string[] | null;
 };
 
 export const adminListExhibitions = createServerFn({ method: "GET" })
@@ -404,6 +405,9 @@ export const adminUpsertExhibition = createServerFn({ method: "POST" })
       created_by: context.userId,
       gallery_images: Array.isArray(data.gallery_images)
         ? data.gallery_images.filter((u) => typeof u === "string" && u.length > 0)
+        : [],
+      gallery_captions: Array.isArray(data.gallery_captions)
+        ? data.gallery_captions.map((c) => (typeof c === "string" ? c : ""))
         : [],
     };
     if (data.id) {
