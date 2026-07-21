@@ -6,10 +6,10 @@ import { useCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n";
 
 const NAV = [
-  { to: "/", key: "nav.home" },
-  { to: "/artworks", key: "nav.artworks" },
-  { to: "/exhibitions", key: "nav.exhibitions" },
-  { to: "/community", key: "nav.community" },
+  { to: "/", key: "nav.home" as const },
+  { to: "/artworks", key: "nav.artworks" as const },
+  { to: "/exhibitions", key: "nav.exhibitions" as const },
+  { to: "/community", key: "nav.community" as const },
 ] as const;
 
 export function Header() {

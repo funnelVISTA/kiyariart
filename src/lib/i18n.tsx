@@ -8,7 +8,7 @@ export const DICT: Dict = {
   // Nav
   "nav.home": { en: "Home", fr: "Accueil" },
   "nav.artworks": { en: "Artworks", fr: "Œuvres" },
-  "nav.exhibitions": { en: "Exhibitions", fr: "Expositions" },
+  "nav.exhibitions": { en: "Events", fr: "Événements" },
   "nav.community": { en: "Community", fr: "Communauté" },
 
   // Hero (home)
@@ -21,7 +21,7 @@ export const DICT: Dict = {
     fr: "Kiyari crée des œuvres afrocentriques vibrantes et remarquables qui fusionnent l'expression abstraite et des éléments tactiles — pour honorer la profondeur et l'éclat de notre culture.",
   },
   "hero.cta1": { en: "Browse the collection", fr: "Voir la collection" },
-  "hero.cta2": { en: "Upcoming exhibitions", fr: "Prochaines expositions" },
+  "hero.cta2": { en: "Upcoming events", fr: "Prochains événements" },
   "hero.scroll": { en: "Scroll", fr: "Défiler" },
 
   // About
@@ -45,10 +45,6 @@ export const DICT: Dict = {
     en: "You will never hear \"don't touch\" with a Kiyari creation.",
     fr: "Vous n'entendrez jamais « ne touchez pas » avec une création de Kiyari.",
   },
-  "stat.originals": { en: "Originals", fr: "Originaux" },
-  "stat.exhibitions": { en: "Exhibitions", fr: "Expositions" },
-  "stat.years": { en: "Years painting", fr: "Années de pratique" },
-
   // Featured
   "feat.kicker": { en: "Available now", fr: "Disponibles" },
   "feat.title": { en: "Featured works", fr: "Œuvres en vedette" },
@@ -69,15 +65,13 @@ export const DICT: Dict = {
   },
 
   // Artwork shared
-  "art.inquire": { en: "Inquire", fr: "Sur demande" },
   "art.sold": { en: "Sold", fr: "Vendu" },
   "art.available": { en: "Available", fr: "Disponible" },
-  "art.priceOnRequest": { en: "Price on request", fr: "Prix sur demande" },
   "art.addToCart": { en: "Add to cart", fr: "Ajouter au panier" },
   "art.addedToast": { en: "added", fr: "ajouté" },
   "art.addedDesc": { en: "Open cart to checkout securely.", fr: "Ouvrez le panier pour passer à la caisse." },
   "art.soldToast": { en: "This piece is sold", fr: "Cette œuvre est vendue" },
-  "art.soldDesc": { en: "Reach out to commission something similar.", fr: "Contactez-nous pour une commande similaire." },
+  "art.soldDesc": { en: "Each piece is one of one.", fr: "Chaque pièce est unique." },
 
   // Artworks page
   "artworks.kicker": { en: "The collection", fr: "La collection" },
@@ -106,12 +100,12 @@ export const DICT: Dict = {
     fr: "de Notre Essence. Acrylique, huile et techniques mixtes superposées sur toile, signée par l'artiste.",
   },
 
-  // Exhibitions
-  "ex.kicker": { en: "Live shows & moments", fr: "Expositions et moments" },
+  // Events
+  "ex.kicker": { en: "Live events & moments", fr: "Événements et moments" },
   "ex.title1": { en: "See it", fr: "À voir" },
   "ex.title2": { en: "in person.", fr: "en personne." },
-  "ex.upcoming": { en: "Upcoming", fr: "À venir" },
-  "ex.past": { en: "Past collections", fr: "Collections passées" },
+  "ex.upcoming": { en: "Upcoming events", fr: "Événements à venir" },
+  "ex.past": { en: "Past events", fr: "Événements passés" },
   "ex.gallery": { en: "Gallery", fr: "Galerie" },
   "ex.details": { en: "Event details →", fr: "Détails de l'événement →" },
   "ex.prev": { en: "Prev", fr: "Préc." },
