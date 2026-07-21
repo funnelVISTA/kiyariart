@@ -16,7 +16,7 @@ export const Route = createFileRoute("/export")({
 const ROUTES = [
   { path: "/", label: "Home" },
   { path: "/artworks", label: "Artworks" },
-  { path: "/exhibitions", label: "Exhibitions" },
+  { path: "/exhibitions", label: "Events" },
   { path: "/community", label: "Community" },
 ];
 

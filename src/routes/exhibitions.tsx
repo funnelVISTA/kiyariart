@@ -10,9 +10,9 @@ import { TiltCard } from "@/components/ui/TiltCard";
 export const Route = createFileRoute("/exhibitions")({
   head: () => ({
     meta: [
-      { title: "Exhibitions — art by KIYARI" },
-      { name: "description", content: "Upcoming exhibitions, past shows, and a gallery of moments from art by KIYARI." },
-      { property: "og:title", content: "Exhibitions — art by KIYARI" },
+      { title: "Events — art by KIYARI" },
+      { name: "description", content: "Upcoming events, past shows, and a gallery of moments from art by KIYARI." },
+      { property: "og:title", content: "Events — art by KIYARI" },
       { property: "og:description", content: "Where to see Kiyari's work live." },
     ],
   }),
@@ -70,18 +70,25 @@ function ExhibitionsPage() {
     },
   });
 
+  // Auto-move upcoming events into past once their date has passed.
+  const todayStr = new Date().toISOString().slice(0, 10);
   const dbUpcoming = useMemo(
     () =>
       (dbRows ?? [])
-        .filter((r) => r.status === "upcoming")
+        .filter((r) => r.status === "upcoming" && (!r.event_date || r.event_date >= todayStr))
         .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? "")),
-    [dbRows],
+    [dbRows, todayStr],
   );
   const dbPastGalleries = useMemo(() => {
     return (dbRows ?? [])
-      .filter((r) => r.status === "past" && Array.isArray(r.gallery_images) && r.gallery_images.length > 0)
+      .filter((r) => {
+        const isPastByStatus = r.status === "past";
+        const isPastByDate = r.status === "upcoming" && r.event_date && r.event_date < todayStr;
+        if (!(isPastByStatus || isPastByDate)) return false;
+        return Array.isArray(r.gallery_images) && r.gallery_images.length > 0;
+      })
       .sort((a, b) => (b.event_date ?? "").localeCompare(a.event_date ?? ""));
-  }, [dbRows]);
+  }, [dbRows, todayStr]);
   // Flat list of every past-show image, in gallery order, for the lightbox.
   const pastLightboxImages = useMemo(
     () => dbPastGalleries.flatMap((g) => g.gallery_images ?? []),

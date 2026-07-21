@@ -90,6 +90,7 @@ type ArtworkUpsert = {
   alt_text?: string | null;
   on_sale?: boolean;
   sale_price?: number | null;
+  shipping_cad?: number;
 };
 
 export const adminListCustomArtworks = createServerFn({ method: "GET" })
@@ -114,6 +115,8 @@ export const adminUpsertCustomArtwork = createServerFn({ method: "POST" })
     const price = Number(d.price);
     if (!Number.isFinite(price) || price < 0) throw new Error("Invalid price");
     if (!d.collection) throw new Error("Collection required");
+    const shipping = Number(d.shipping_cad ?? 0);
+    if (!Number.isFinite(shipping) || shipping < 0) throw new Error("Invalid shipping cost");
     const onSale = !!d.on_sale;
     let salePrice: number | null = null;
     if (onSale) {
@@ -123,7 +126,7 @@ export const adminUpsertCustomArtwork = createServerFn({ method: "POST" })
       if (sp >= price) throw new Error("Sale price must be less than the regular price");
       salePrice = Math.round(sp * 100) / 100;
     }
-    return { ...d, price, on_sale: onSale, sale_price: salePrice };
+    return { ...d, price, on_sale: onSale, sale_price: salePrice, shipping_cad: Math.round(shipping * 100) / 100 };
   })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -144,6 +147,7 @@ export const adminUpsertCustomArtwork = createServerFn({ method: "POST" })
       created_by: context.userId,
       on_sale: !!data.on_sale,
       sale_price: data.sale_price ?? null,
+      shipping_cad: data.shipping_cad ?? 0,
     };
     if (data.id) {
       const { data: before } = await supabaseAdmin
@@ -189,12 +193,6 @@ export const adminDeleteCustomArtwork = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const history = await findArtworksWithOrderHistory(supabaseAdmin, [data.id]);
-    if (history.has(data.id)) {
-      throw new Error(
-        "This artwork has order history and can't be deleted. Mark it as sold instead to keep the record intact.",
-      );
-    }
     const { data: before } = await supabaseAdmin
       .from("artworks_custom").select("title").eq("id", data.id).maybeSingle();
     const { error } = await supabaseAdmin.from("artworks_custom").delete().eq("id", data.id);
@@ -241,20 +239,16 @@ export const adminBulkDeleteArtworks = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const blockedSet = await findArtworksWithOrderHistory(supabaseAdmin, data.ids);
-    const deletable = data.ids.filter((id) => !blockedSet.has(id));
-    let deleted = 0;
-    if (deletable.length > 0) {
-      const { error } = await supabaseAdmin.from("artworks_custom").delete().in("id", deletable);
-      if (error) throw new Error(error.message);
-      deleted = deletable.length;
-    }
+    const { error } = await supabaseAdmin.from("artworks_custom").delete().in("id", data.ids);
+    if (error) throw new Error(error.message);
+    const deleted = data.ids.length;
+    const blockedSet = new Set<string>();
     if (deleted > 0) {
       await logActivity(supabaseAdmin, context, {
         action: "artwork.bulk_deleted",
         entity_id: null,
         entity_title: `${deleted} artwork(s)`,
-        details: { deleted_ids: deletable, blocked_ids: [...blockedSet] },
+        details: { deleted_ids: data.ids },
       });
     }
     return { ok: true, deleted, blocked: [...blockedSet] };
@@ -491,6 +485,8 @@ type CatalogOverrideUpsert = {
   alt_text?: string | null;
   seo_title?: string | null;
   seo_description?: string | null;
+  shipping_cad?: number | null;
+  deleted?: boolean;
 };
 
 export const adminUpsertCatalogOverride = createServerFn({ method: "POST" })
@@ -533,6 +529,8 @@ export const adminUpsertCatalogOverride = createServerFn({ method: "POST" })
       alt_text: norm(d.alt_text),
       seo_title: norm(d.seo_title),
       seo_description: norm(d.seo_description),
+      shipping_cad: d.shipping_cad == null ? undefined : Math.max(0, Number(d.shipping_cad) || 0),
+      deleted: d.deleted === undefined ? undefined : !!d.deleted,
     };
   })
   .handler(async ({ data, context }) => {
@@ -549,6 +547,8 @@ export const adminUpsertCatalogOverride = createServerFn({ method: "POST" })
     for (const k of ["title","description","medium","image_url","alt_text","seo_title","seo_description"] as const) {
       if ((data as any)[k] !== undefined) row[k] = (data as any)[k];
     }
+    if (data.shipping_cad !== undefined) row.shipping_cad = data.shipping_cad;
+    if (data.deleted !== undefined) row.deleted = data.deleted;
     const { error } = await supabaseAdmin
       .from("artwork_catalog_overrides")
       .upsert(row as any, { onConflict: "artwork_id" });
@@ -558,6 +558,32 @@ export const adminUpsertCatalogOverride = createServerFn({ method: "POST" })
       entity_id: data.artworkId,
       entity_title: data.artworkId,
       details: { priceOverride: data.priceOverride, onSale: data.onSale, salePrice: data.salePrice },
+    });
+    return { ok: true };
+  });
+
+// Soft-delete a hardcoded catalog artwork by marking the override as deleted.
+// The record row (and any order history) is preserved.
+export const adminDeleteCatalogArtwork = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { artworkId: string }) => {
+    if (!d.artworkId || typeof d.artworkId !== "string") throw new Error("artworkId required");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("artwork_catalog_overrides")
+      .upsert(
+        { artwork_id: data.artworkId, deleted: true, updated_at: new Date().toISOString() },
+        { onConflict: "artwork_id" },
+      );
+    if (error) throw new Error(error.message);
+    await logActivity(supabaseAdmin, context, {
+      action: "artwork.catalog_deleted",
+      entity_id: data.artworkId,
+      entity_title: data.artworkId,
     });
     return { ok: true };
   });

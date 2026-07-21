@@ -114,8 +114,13 @@ export function CartSheet() {
                           ) : (
                             `$${i.artwork.price.toLocaleString()} CAD`
                           )
-                        ) : "Inquiry"}
+                        ) : "—"}
                       </div>
+                      {Number((i.artwork as any).shipping_cad ?? 0) > 0 && (
+                        <div className="mt-0.5 text-[10px] text-muted-foreground">
+                          + Shipping: ${Number((i.artwork as any).shipping_cad).toLocaleString()} CAD
+                        </div>
+                      )}
                     </div>
                     <button
                       onClick={() => remove(i.artwork.id)}

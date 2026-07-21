@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
-import { createArtworkCheckout, listArtworkAvailability } from "@/lib/payments.functions";
+import { createArtworkCheckout, listArtworkAvailability, type DeliveryMethod } from "@/lib/payments.functions";
 import { useCart } from "@/lib/cart";
 import { isArtworkPurchasable } from "@/lib/artworks";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
@@ -26,22 +26,33 @@ function CheckoutPage() {
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const optInRef = useRef(false);
   optInRef.current = marketingOptIn;
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("ship");
+  const deliveryRef = useRef<DeliveryMethod>("ship");
+  deliveryRef.current = deliveryMethod;
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
   const checkoutItems = useMemo(
     () => items.filter((i) => isArtworkPurchasable(i.artwork)),
     [items],
   );
-  const checkoutTotal = useMemo(
+  const artworkSubtotal = useMemo(
     () => checkoutItems.reduce((sum, i) => sum + i.artwork.price, 0),
     [checkoutItems],
   );
+  const shippingTotal = useMemo(
+    () =>
+      deliveryMethod === "pickup"
+        ? 0
+        : checkoutItems.reduce((sum, i) => sum + Number((i.artwork as any).shipping_cad ?? 0), 0),
+    [checkoutItems, deliveryMethod],
+  );
+  const checkoutTotal = artworkSubtotal + shippingTotal;
 
   useEffect(() => {
     for (const item of items) {
       if (!isArtworkPurchasable(item.artwork)) {
         remove(item.artwork.id);
-        toast.warning(`"${item.artwork.title}" is inquiry-only — removed from cart`);
+        toast.warning(`"${item.artwork.title}" is no longer available — removed from cart`);
       }
     }
   }, [items, remove]);
@@ -82,6 +93,7 @@ function CheckoutPage() {
               environment: getStripeEnvironment(),
               returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
               marketingOptIn: optInRef.current,
+              deliveryMethod: deliveryRef.current,
               items: checkoutItems.map((i) => ({
                 id: i.artwork.id,
                 title: i.artwork.title,
@@ -103,7 +115,7 @@ function CheckoutPage() {
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [checkoutItems, retryKey],
+    [checkoutItems, retryKey, deliveryMethod],
   );
 
   if (checkoutItems.length === 0) {
@@ -135,6 +147,11 @@ function CheckoutPage() {
                   <div className="flex-1">
                     <div className="font-display text-lg">{i.artwork.title}</div>
                     <div className="text-xs text-muted-foreground">{i.artwork.collection}</div>
+                    {deliveryMethod === "ship" && Number((i.artwork as any).shipping_cad ?? 0) > 0 && (
+                      <div className="mt-0.5 text-[10px] text-muted-foreground">
+                        Shipping: ${Number((i.artwork as any).shipping_cad).toLocaleString()} CAD
+                      </div>
+                    )}
                   </div>
                   <div className="text-gold text-sm">
                     {i.artwork.onSale && i.artwork.originalPrice ? (
@@ -149,12 +166,43 @@ function CheckoutPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-6 pt-6 border-t border-border flex justify-between">
-              <span className="text-sm text-muted-foreground">Subtotal</span>
-              <span className="text-gold font-medium">${checkoutTotal.toLocaleString()} CAD</span>
+
+            <div className="mt-6 pt-6 border-t border-border space-y-4">
+              <div>
+                <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">Delivery</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <label className={`cursor-pointer border p-3 text-sm ${deliveryMethod === "ship" ? "border-gold" : "border-border hover:border-muted-foreground/40"}`}>
+                    <input type="radio" name="delivery" className="mr-2 accent-gold" checked={deliveryMethod === "ship"} onChange={() => setDeliveryMethod("ship")} />
+                    Ship it
+                    <div className="mt-1 text-[10px] text-muted-foreground">Shipping charged per piece</div>
+                  </label>
+                  <label className={`cursor-pointer border p-3 text-sm ${deliveryMethod === "pickup" ? "border-gold" : "border-border hover:border-muted-foreground/40"}`}>
+                    <input type="radio" name="delivery" className="mr-2 accent-gold" checked={deliveryMethod === "pickup"} onChange={() => setDeliveryMethod("pickup")} />
+                    Local pickup (Calgary) — Free
+                    <div className="mt-1 text-[10px] text-muted-foreground">Studio will contact you to arrange pickup</div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Artwork</span>
+                <span>${artworkSubtotal.toLocaleString()} CAD</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Shipping</span>
+                <span>
+                  {deliveryMethod === "pickup"
+                    ? <span className="text-accent">Free — Calgary pickup</span>
+                    : <>${shippingTotal.toLocaleString()} CAD</>}
+                </span>
+              </div>
+              <div className="flex justify-between border-t border-border pt-3">
+                <span className="text-sm text-muted-foreground">Total</span>
+                <span className="text-gold font-medium">${checkoutTotal.toLocaleString()} CAD</span>
+              </div>
             </div>
             <p className="mt-4 text-[11px] text-muted-foreground">
-              Shipping calculated by destination. Each piece is one of a kind.
+              Each piece is one of a kind.
             </p>
             <label className="mt-6 flex items-start gap-3 text-xs text-muted-foreground cursor-pointer select-none">
               <input

@@ -11,6 +11,8 @@ export type Artwork = {
   originalPrice?: number;
   /** True when the piece is on sale and `price` is the discounted sale price. */
   onSale?: boolean;
+  /** Shipping cost (CAD) for this specific piece. 0 when unknown. */
+  shipping_cad?: number;
 };
 
 const w = (url: string) => url;
@@ -48,8 +50,4 @@ export const HERO_IMAGE = ARTWORKS.find((a) => a.id === "unbothered")!.image;
 
 export function isArtworkPurchasable(artwork: Pick<Artwork, "sold" | "price">) {
   return !artwork.sold && artwork.price > 0;
-}
-
-export function isArtworkInquiryOnly(artwork: Pick<Artwork, "sold" | "price">) {
-  return !isArtworkPurchasable(artwork);
 }

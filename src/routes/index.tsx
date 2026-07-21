@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform } from "motion/react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { ARTWORKS, HERO_IMAGE, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
 import { useI18n } from "@/lib/i18n";
@@ -12,6 +12,9 @@ import { useCart } from "@/lib/cart";
 import { useIsTouch } from "@/hooks/useIsTouch";
 import { useTapSwipe } from "@/hooks/useTapSwipe";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { listArtworkAvailability } from "@/lib/payments.functions";
 
 const thumb = (url: string, w = 800) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 
@@ -44,7 +47,64 @@ function Home() {
   const [lightbox, setLightbox] = useState<Artwork | null>(null);
   const [revealedId, setRevealedId] = useState<string | null>(null);
 
-  const featured = ARTWORKS.filter(isArtworkPurchasable).slice(0, 6);
+  const { data: availability } = useQuery({
+    queryKey: ["artwork-availability"],
+    queryFn: () => listArtworkAvailability(),
+    staleTime: 60_000,
+  });
+  const { data: customRows } = useQuery({
+    queryKey: ["artworks-custom-home"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("artworks_custom")
+        .select("id,title,description,price,image_url,medium,sold,display_order,created_at,on_sale,sale_price")
+        .order("display_order", { ascending: true })
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
+
+  const featured = useMemo<Artwork[]>(() => {
+    const soldSet = new Set(availability?.soldIds ?? []);
+    const availOverride = new Set(availability?.availableOverrideIds ?? []);
+    const deletedCatalog = new Set(availability?.deletedCatalogIds ?? []);
+    const ovMap = new Map<string, any>();
+    for (const r of availability?.catalogOverrides ?? []) ovMap.set(r.artwork_id, r);
+
+    const fromCustom: Artwork[] = (customRows ?? []).map((r: any) => {
+      const list = Number(r.price ?? 0);
+      const onSale = !!r.on_sale && r.sale_price != null;
+      const sale = onSale ? Number(r.sale_price) : null;
+      const effective = onSale && sale != null ? sale : list;
+      return {
+        id: r.id, title: r.title, image: r.image_url, price: effective,
+        originalPrice: onSale ? list : undefined,
+        onSale: onSale && sale != null && sale < list,
+        sold: !!r.sold, collection: "Our Essence" as const,
+        medium: r.medium ?? undefined, description: r.description ?? undefined,
+        shipping_cad: Number((availability?.customShipping ?? {})[r.id] ?? 0),
+      };
+    });
+    const fromCatalog: Artwork[] = ARTWORKS.filter((a) => !deletedCatalog.has(a.id)).map((a) => {
+      const ov = ovMap.get(a.id);
+      const list = ov?.price_override ?? a.price;
+      const onSale = !!ov?.on_sale && ov?.sale_price != null;
+      const sale = onSale ? Number(ov.sale_price) : null;
+      const effective = onSale && sale != null ? sale : list;
+      return {
+        ...a, collection: "Our Essence" as const,
+        title: ov?.title ?? a.title, image: ov?.image_url ?? a.image,
+        description: ov?.description ?? a.description, medium: ov?.medium ?? a.medium,
+        price: effective, originalPrice: onSale ? list : undefined,
+        onSale: onSale && sale != null && sale < list,
+        sold: availOverride.has(a.id) ? false : (a.sold || soldSet.has(a.id)),
+        shipping_cad: Number(ov?.shipping_cad ?? 0),
+      };
+    });
+    return [...fromCustom, ...fromCatalog].filter(isArtworkPurchasable).slice(0, 6);
+  }, [availability, customRows]);
 
   return (
     <div data-cf-page="home">
@@ -169,13 +229,6 @@ function Home() {
               {t("about.p4")}
             </p>
           </Reveal>
-          <Reveal delay={0.35}>
-            <div className="grid grid-cols-3 gap-6 pt-6 text-sm">
-              <Stat label={t("stat.originals")} value="26+" />
-              <Stat label={t("stat.exhibitions")} value="12" />
-              <Stat label={t("stat.years")} value="9" />
-            </div>
-          </Reveal>
         </div>
       </section>
 
@@ -186,7 +239,7 @@ function Home() {
             <Reveal>
               <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">Live shows</div>
             </Reveal>
-            <RevealText as="h2" text="Exhibitions" className="font-display text-5xl md:text-6xl block" />
+            <RevealText as="h2" text="Events" className="font-display text-5xl md:text-6xl block" />
           </div>
           <div className="md:col-span-7 md:col-start-6">
             <ul className="divide-y divide-border border-y border-border">
@@ -309,15 +362,6 @@ function Home() {
         caption={lightbox ? lightbox.title : undefined}
         onClose={() => setLightbox(null)}
       />
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="font-display text-4xl text-gold">{value}</div>
-      <div className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
     </div>
   );
 }

@@ -55,6 +55,7 @@ export type Database = {
           alt_text: string | null
           artwork_id: string
           created_at: string
+          deleted: boolean
           description: string | null
           image_url: string | null
           medium: string | null
@@ -63,6 +64,7 @@ export type Database = {
           sale_price: number | null
           seo_description: string | null
           seo_title: string | null
+          shipping_cad: number
           title: string | null
           updated_at: string
         }
@@ -70,6 +72,7 @@ export type Database = {
           alt_text?: string | null
           artwork_id: string
           created_at?: string
+          deleted?: boolean
           description?: string | null
           image_url?: string | null
           medium?: string | null
@@ -78,6 +81,7 @@ export type Database = {
           sale_price?: number | null
           seo_description?: string | null
           seo_title?: string | null
+          shipping_cad?: number
           title?: string | null
           updated_at?: string
         }
@@ -85,6 +89,7 @@ export type Database = {
           alt_text?: string | null
           artwork_id?: string
           created_at?: string
+          deleted?: boolean
           description?: string | null
           image_url?: string | null
           medium?: string | null
@@ -93,6 +98,7 @@ export type Database = {
           sale_price?: number | null
           seo_description?: string | null
           seo_title?: string | null
+          shipping_cad?: number
           title?: string | null
           updated_at?: string
         }
@@ -153,6 +159,7 @@ export type Database = {
           sale_price: number | null
           seo_description: string | null
           seo_title: string | null
+          shipping_cad: number
           sold: boolean
           sort_order: number
           title: string
@@ -173,6 +180,7 @@ export type Database = {
           sale_price?: number | null
           seo_description?: string | null
           seo_title?: string | null
+          shipping_cad?: number
           sold?: boolean
           sort_order?: number
           title: string
@@ -193,6 +201,7 @@ export type Database = {
           sale_price?: number | null
           seo_description?: string | null
           seo_title?: string | null
+          shipping_cad?: number
           sold?: boolean
           sort_order?: number
           title?: string

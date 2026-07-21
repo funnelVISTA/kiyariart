@@ -22,7 +22,7 @@ function todayISO() {
 }
 
 export const Route = createFileRoute("/_authenticated/admin/exhibitions")({
-  head: () => ({ meta: [{ title: "Exhibitions — Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Events — Admin" }, { name: "robots", content: "noindex" }] }),
   component: AdminExhibitionsPage,
 });
 
@@ -87,9 +87,9 @@ function AdminExhibitionsPage() {
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
             <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Studio</div>
-            <h1 className="font-display text-5xl md:text-6xl">Exhibitions</h1>
+            <h1 className="font-display text-5xl md:text-6xl">Events</h1>
             <p className="mt-2 text-sm text-muted-foreground max-w-xl">
-              Add upcoming shows under <em>Add Event</em>. Archive photos from past exhibitions under <em>Add Media</em>. Everything published goes live on the public Exhibitions page instantly.
+              Add upcoming shows under <em>Add Event</em>. Archive photos from past events under <em>Add Media</em>. Everything published goes live on the public Events page instantly.
             </p>
           </div>
           <button
@@ -117,8 +117,8 @@ function AdminExhibitionsPage() {
           />
         ) : (
           <Section
-            title="Past exhibitions — media galleries"
-            emptyLabel="No past exhibition galleries yet. Click Add media to archive a past show."
+            title="Past events — media galleries"
+            emptyLabel="No past event galleries yet. Click Add media to archive a past show."
             rows={past}
             onEdit={setEditing}
             onDelete={onDelete}
@@ -336,7 +336,7 @@ function ExhibitionEditor({
       return;
     }
     if (mode === "media" && form.event_date && form.event_date > todayISO()) {
-      toast.error("Past exhibitions can't have a future date.");
+      toast.error("Past events can't have a future date.");
       return;
     }
     setSaving(true);
@@ -383,8 +383,8 @@ function ExhibitionEditor({
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
               {mode === "event"
-                ? "Publishes to the Upcoming section on the public Exhibitions page."
-                : "Publishes to the Past shows gallery on the public Exhibitions page."}
+                ? "Publishes to the Upcoming section on the public Events page."
+                : "Publishes to the Past shows gallery on the public Events page."}
             </p>
 
             <div className="mt-6 grid md:grid-cols-2 gap-6">
@@ -522,7 +522,7 @@ function ExhibitionEditor({
                   </>
                 ) : (
                   <>
-                    <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Photos from the exhibition</label>
+                    <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Photos from the event</label>
                     <p className="text-[10px] text-muted-foreground/70 mt-1">Upload multiple images. They appear as a gallery under this show on the public page.</p>
                     <div className="mt-2 grid grid-cols-3 gap-2">
                       {(form.gallery_images ?? []).map((url, idx) => (
