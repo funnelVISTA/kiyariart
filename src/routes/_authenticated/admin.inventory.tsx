@@ -1115,7 +1115,7 @@ function CatalogOverrideEditor({
   const save = async () => {
     const trimmed = priceInput.trim();
     if (trimmed === "") {
-      toast.error("Enter a price", { description: "Use 0 for inquiry-only pieces." });
+      toast.error("Enter a price");
       return;
     }
     const parsedPrice = Number(trimmed);
@@ -1193,7 +1193,6 @@ function CatalogOverrideEditor({
                     onChange={(e) => setPriceInput(e.target.value)}
                     className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
                   />
-                  <p className="mt-1 text-[10px] text-muted-foreground">Set 0 to hide the buy button (inquiry only).</p>
                 </Field>
 
                 <div className="pt-2 border-t border-border">
