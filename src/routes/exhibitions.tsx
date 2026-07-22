@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { Calendar, MapPin, X } from "lucide-react";
+import { motion } from "motion/react";
+import { Calendar, MapPin } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { Lightbox } from "@/components/site/Lightbox";
 
 export const Route = createFileRoute("/exhibitions")({
   head: () => ({
@@ -18,24 +19,6 @@ export const Route = createFileRoute("/exhibitions")({
   }),
   component: ExhibitionsPage,
 });
-
-const GALLERY = [
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE7.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE20.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE10.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE8.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE2.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE13.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE14.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE12.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE16.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE6.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE4.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE11.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE19.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE17.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE15.jpg/:/rs=w:1200",
-];
 
 type DbEx = {
   id: string;
@@ -132,7 +115,7 @@ function ExhibitionsPage() {
         {dbUpcoming.length > 0 && (
           <section className="mt-20">
             <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">{t("ex.upcoming")}</div>
-            <div className="space-y-6">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {dbUpcoming.map((e, i) => {
                 const d = e.event_date ? new Date(e.event_date) : null;
                 const monthShort = d ? d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "short" }).toUpperCase() : "TBA";
@@ -145,37 +128,35 @@ function ExhibitionsPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, delay: i * 0.05 }}
-                    className="group relative border border-border hover:border-gold transition-colors overflow-hidden"
+                    className="group relative border border-border hover:border-gold transition-colors overflow-hidden flex flex-col"
                   >
-                    <div className="relative grid md:grid-cols-12 gap-0 items-stretch">
-                      {e.image_url && (
-                        <div className="md:col-span-5 bg-background relative aspect-[4/3] md:aspect-auto md:min-h-[280px] overflow-hidden">
-                          <img
-                            src={e.image_url}
-                            alt={`${e.title} poster`}
-                            className="absolute inset-0 h-full w-full object-contain"
-                          />
-                        </div>
-                      )}
-                      <div className={`${e.image_url ? "md:col-span-7" : "md:col-span-12"} p-8 md:p-10`}>
-                        <div className="flex items-baseline gap-4">
-                          <div className="font-display text-4xl md:text-5xl text-gold leading-none">{monthShort} {day}</div>
-                          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{year}</div>
-                        </div>
-                        <h3 className="mt-4 font-display text-3xl md:text-4xl">{e.title}</h3>
-                        <div className="mt-3 flex flex-wrap gap-5 text-sm text-muted-foreground">
-                          {e.time_text && <span className="inline-flex items-center gap-2"><Calendar className="h-4 w-4 text-gold" /> {e.time_text}</span>}
-                          {(e.venue || e.city) && (
-                            <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-gold" /> {[e.venue, e.city].filter(Boolean).join(", ")}</span>
-                          )}
-                        </div>
-                        {e.blurb && <p className="mt-5 text-muted-foreground max-w-2xl leading-relaxed">{e.blurb}</p>}
-                        {e.link_url && (
-                          <a href={e.link_url} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-2 text-sm link-underline text-gold">
-                            {t("ex.details")}
-                          </a>
+                    {e.image_url && (
+                      <div className="relative aspect-[4/3] bg-background overflow-hidden">
+                        <img
+                          src={e.image_url}
+                          alt={`${e.title} poster`}
+                          className="absolute inset-0 h-full w-full object-contain"
+                        />
+                      </div>
+                    )}
+                    <div className="p-5 flex-1 flex flex-col">
+                      <div className="flex items-baseline gap-2">
+                        <div className="font-display text-2xl text-gold leading-none">{monthShort} {day}</div>
+                        <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{year}</div>
+                      </div>
+                      <h3 className="mt-2 font-display text-xl leading-tight">{e.title}</h3>
+                      <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                        {e.time_text && <div className="inline-flex items-center gap-1.5"><Calendar className="h-3 w-3 text-gold" /> {e.time_text}</div>}
+                        {(e.venue || e.city) && (
+                          <div className="inline-flex items-center gap-1.5"><MapPin className="h-3 w-3 text-gold" /> {[e.venue, e.city].filter(Boolean).join(", ")}</div>
                         )}
                       </div>
+                      {e.blurb && <p className="mt-3 text-xs text-muted-foreground leading-relaxed line-clamp-3">{e.blurb}</p>}
+                      {e.link_url && (
+                        <a href={e.link_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs link-underline text-gold self-start">
+                          {t("ex.details")}
+                        </a>
+                      )}
                     </div>
                   </motion.div>
                 );
@@ -187,7 +168,7 @@ function ExhibitionsPage() {
         {dbPastEvents.length > 0 && (
           <section className="mt-20">
             <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">Past events</div>
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {dbPastEvents.map((e, i) => {
                 const d = e.event_date ? new Date(e.event_date) : null;
                 const dateLabel = d
@@ -207,13 +188,13 @@ function ExhibitionsPage() {
                         <img src={e.image_url} alt={`${e.title} poster`} className="absolute inset-0 h-full w-full object-contain" />
                       </div>
                     )}
-                    <div className="p-6">
+                    <div className="p-5">
                       <div className="text-[10px] uppercase tracking-[0.25em] text-gold">{dateLabel}</div>
-                      <h3 className="mt-2 font-display text-2xl">{e.title}</h3>
+                      <h3 className="mt-1 font-display text-xl leading-tight">{e.title}</h3>
                       {(e.venue || e.city) && (
                         <div className="mt-1 text-xs text-muted-foreground">{[e.venue, e.city].filter(Boolean).join(", ")}</div>
                       )}
-                      {e.blurb && <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{e.blurb}</p>}
+                      {e.blurb && <p className="mt-2 text-xs text-muted-foreground leading-relaxed line-clamp-3">{e.blurb}</p>}
                     </div>
                   </motion.div>
                 );
@@ -223,38 +204,35 @@ function ExhibitionsPage() {
         )}
 
 
-        {hasCuratedPast ? (
-          dbPastGalleries.map((show, showIdx) => {
-            const yearLabel = show.event_date ? new Date(show.event_date).getFullYear() : null;
+        {hasCuratedPast && (
+          <div className="mt-24 space-y-20">
+            <div>
+              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("ex.gallery")}</div>
+              <h2 className="font-display text-4xl md:text-5xl">Albums</h2>
+              <p className="mt-2 text-sm text-muted-foreground max-w-2xl">Each show has its own album below. Click any photo to view it full-size.</p>
+            </div>
+            {dbPastGalleries.map((show, showIdx) => {
             const priorCount = dbPastGalleries
               .slice(0, showIdx)
               .reduce((sum, s) => sum + (s.gallery_images?.length ?? 0), 0);
             return (
-              <section key={show.id} className="mt-24">
-                <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("ex.gallery")}</div>
-                    <h2 className="font-display text-4xl md:text-5xl">
-                      {show.title}
-                      {show.event_date ? (
-                        <>
-                          <span className="text-muted-foreground"> · </span>
-                          {new Date(show.event_date).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "long", day: "numeric", year: "numeric" })}
-                        </>
-                      ) : null}
-                      {(show.venue || show.city) ? (
-                        <>
-                          <span className="text-muted-foreground"> · </span>
-                          {[show.venue, show.city].filter(Boolean).join(", ")}
-                        </>
-                      ) : null}
-                    </h2>
-                    {show.blurb && (
-                      <p className="mt-3 text-sm text-muted-foreground max-w-2xl leading-relaxed">{show.blurb}</p>
+              <section key={show.id} className="relative">
+                <div className="mb-6 border-l-2 border-gold/60 pl-4">
+                  <h3 className="font-display text-2xl md:text-3xl leading-tight">{show.title}</h3>
+                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                    {show.event_date && (
+                      <span className="inline-flex items-center gap-1.5"><Calendar className="h-3 w-3 text-gold" />{new Date(show.event_date).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+                    )}
+                    {show.time_text && <span className="normal-case tracking-normal text-muted-foreground">· {show.time_text}</span>}
+                    {(show.venue || show.city) && (
+                      <span className="inline-flex items-center gap-1.5"><MapPin className="h-3 w-3 text-gold" />{[show.venue, show.city].filter(Boolean).join(", ")}</span>
                     )}
                   </div>
+                  {show.blurb && (
+                    <p className="mt-3 text-sm text-muted-foreground max-w-2xl leading-relaxed normal-case">{show.blurb}</p>
+                  )}
                 </div>
-                <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4 [perspective:1400px]">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 [perspective:1400px]">
                   {(show.gallery_images ?? []).map((src, i) => {
                     const flatIdx = priorCount + i;
                     const caption = (show.gallery_captions ?? [])[i] ?? "";
@@ -265,26 +243,30 @@ function ExhibitionsPage() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-50px" }}
                         transition={{ duration: 0.5, delay: (i % 8) * 0.05 }}
-                        className="block w-full break-inside-avoid mb-3 md:mb-4"
+                        className="block w-full"
                       >
                         <button
                           type="button"
                           onClick={() => setActive(flatIdx)}
-                          className="block w-full group relative cursor-zoom-in"
+                          className="block w-full group relative cursor-zoom-in overflow-hidden"
                         >
-                          <TiltCard max={18} scale={1.06} glare className="overflow-hidden shadow-elegant">
+                          <TiltCard max={12} scale={1.04} glare className="overflow-hidden shadow-elegant aspect-square">
                             <img
                               src={src}
                               alt={caption || `${show.title} — photo ${i + 1}`}
                               loading="lazy"
-                              className="w-full h-auto"
+                              className="w-full h-full object-cover"
                               style={{ transform: "translateZ(0)" }}
                             />
-                            <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition" style={{ transform: "translateZ(30px)" }} />
+                            {caption && (
+                              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/95 via-background/70 to-transparent p-3 pt-8 opacity-0 group-hover:opacity-100 transition" style={{ transform: "translateZ(30px)" }}>
+                                <p className="text-[11px] md:text-xs text-foreground leading-snug line-clamp-3">{caption}</p>
+                              </div>
+                            )}
                           </TiltCard>
                         </button>
                         {caption && (
-                          <figcaption className="mt-2 text-xs md:text-sm text-muted-foreground italic leading-snug px-0.5">
+                          <figcaption className="mt-2 text-[11px] md:text-xs text-muted-foreground italic leading-snug px-0.5">
                             {caption}
                           </figcaption>
                         )}
@@ -294,83 +276,28 @@ function ExhibitionsPage() {
                 </div>
               </section>
             );
-          })
-        ) : (
-          <section className="mt-24">
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("ex.gallery")}</div>
-                <h2 className="font-display text-5xl">Afro World Expo · 2024</h2>
-              </div>
-            </div>
-            <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4 [perspective:1400px]">
-              {GALLERY.map((src, i) => (
-                <motion.button
-                  key={src + i}
-                  onClick={() => setActive(i)}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.5, delay: (i % 8) * 0.05 }}
-                  className="block w-full break-inside-avoid group relative cursor-zoom-in"
-                >
-                  <TiltCard max={18} scale={1.06} glare className="overflow-hidden shadow-elegant">
-                    <img
-                      src={src}
-                      alt={`Exhibition moment ${i + 1}`}
-                      loading="lazy"
-                      className="w-full h-auto"
-                      style={{ transform: "translateZ(0)" }}
-                    />
-                    <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition" style={{ transform: "translateZ(30px)" }} />
-                  </TiltCard>
-                </motion.button>
-              ))}
-            </div>
-          </section>
+            })}
+          </div>
         )}
       </div>
 
-      <AnimatePresence>
-        {active !== null && (() => {
-          const list = hasCuratedPast ? pastLightboxImages : GALLERY;
-          const caps = hasCuratedPast ? pastLightboxCaptions : [];
-          const clamped = ((active % list.length) + list.length) % list.length;
-          const caption = caps[clamped] ?? "";
-          return (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setActive(null)}
-            className="fixed inset-0 z-[80] bg-background/95 backdrop-blur-xl flex items-center justify-center p-4"
-          >
-            <button
-              onClick={() => setActive(null)}
-              className="absolute top-6 right-6 grid h-12 w-12 place-items-center rounded-full border border-border hover:border-gold"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <div className="flex flex-col items-center max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
-              <motion.img
-                key={clamped}
-                initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                src={list[clamped]}
-                alt={caption}
-                className={`${caption ? "max-h-[78vh]" : "max-h-[86vh]"} max-w-full object-contain shadow-elegant`}
-              />
-              {caption && (
-                <p className="mt-3 max-w-3xl text-center text-sm text-muted-foreground italic px-4">
-                  {caption}
-                </p>
-              )}
-            </div>
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-              <button onClick={(e) => { e.stopPropagation(); setActive((clamped - 1 + list.length) % list.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.prev")}</button>
-              <button onClick={(e) => { e.stopPropagation(); setActive((clamped + 1) % list.length); }} className="px-4 py-2 border border-border hover:border-gold text-xs uppercase tracking-[0.2em]">{t("ex.next")}</button>
-            </div>
-          </motion.div>
-          );
-        })()}
-      </AnimatePresence>
+      {(() => {
+        const list = pastLightboxImages;
+        const caps = pastLightboxCaptions;
+        if (list.length === 0) return null;
+        const clamped = active === null ? 0 : ((active % list.length) + list.length) % list.length;
+        return (
+          <Lightbox
+            open={active !== null}
+            src={active === null ? null : list[clamped]}
+            alt={caps[clamped] || ""}
+            caption={caps[clamped] || undefined}
+            onClose={() => setActive(null)}
+            onPrev={() => setActive((clamped - 1 + list.length) % list.length)}
+            onNext={() => setActive((clamped + 1) % list.length)}
+          />
+        );
+      })()}
     </div>
   );
 }
