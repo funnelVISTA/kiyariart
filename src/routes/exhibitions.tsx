@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { Calendar, MapPin, X } from "lucide-react";
+import { motion } from "motion/react";
+import { Calendar, MapPin } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { Lightbox } from "@/components/site/Lightbox";
 
 export const Route = createFileRoute("/exhibitions")({
   head: () => ({
@@ -18,24 +19,6 @@ export const Route = createFileRoute("/exhibitions")({
   }),
   component: ExhibitionsPage,
 });
-
-const GALLERY = [
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE7.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE20.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE10.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE8.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE2.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE13.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE14.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE12.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE16.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE6.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE4.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE11.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE19.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE17.jpg/:/rs=w:1200",
-  "https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/AWE15.jpg/:/rs=w:1200",
-];
 
 type DbEx = {
   id: string;
