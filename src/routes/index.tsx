@@ -169,7 +169,7 @@ function Home() {
                 {t("hero.cta1")}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
-              <Link to="/exhibitions" className="inline-flex items-center gap-3 border border-border px-8 py-4 text-sm uppercase tracking-[0.2em] hover:border-gold hover:text-gold transition">
+              <Link to="/events" className="inline-flex items-center gap-3 border border-border px-8 py-4 text-sm uppercase tracking-[0.2em] hover:border-gold hover:text-gold transition">
                 {t("hero.cta2")}
               </Link>
             </motion.div>
