@@ -259,7 +259,7 @@ function ArtworkDetailPage() {
                   }}
                   inCart={has(d.slug)}
                   label="Add to cart"
-                  size="lg"
+                  size="md"
                 />
               </div>
             )}
