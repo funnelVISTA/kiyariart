@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Mail, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
+import { absUrl, canonical } from "@/lib/site-config";
 
 export const Route = createFileRoute("/community")({
   validateSearch: (s: Record<string, unknown>): { inquiry?: string } => ({
@@ -12,11 +13,14 @@ export const Route = createFileRoute("/community")({
   }),
   head: () => ({
     meta: [
-      { title: "Community — art by KIYARI" },
-      { name: "description", content: "Connect with Kiyari — newsletter, contact form, and supporters." },
-      { property: "og:title", content: "Community — art by KIYARI" },
-      { property: "og:description", content: "Join the network. Connect with the artist." },
+      { title: "Contact Kiyari | Commissions & Community — Calgary" },
+      { name: "description", content: "Contact Kiyari for commissions, prints, or press. Join the community newsletter for new Afrocentric originals from the Calgary studio." },
+      { property: "og:title", content: "Contact Kiyari | Commissions & Community" },
+      { property: "og:description", content: "Contact Kiyari for commissions, collaborations, and studio news from Calgary." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: absUrl("/community") },
     ],
+    links: [canonical("/community")],
   }),
   component: CommunityPage,
 });
