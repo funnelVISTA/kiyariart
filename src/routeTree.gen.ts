@@ -13,6 +13,7 @@ import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ExportRouteImport } from './routes/export'
 import { Route as ExhibitionsRouteImport } from './routes/exhibitions'
+import { Route as EventsRouteImport } from './routes/events'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -31,6 +32,7 @@ import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminInventoryRouteImport } from './routes/_authenticated/admin.inventory'
 import { Route as AuthenticatedAdminExhibitionsRouteImport } from './routes/_authenticated/admin.exhibitions'
+import { Route as AuthenticatedAdminEventsRouteImport } from './routes/_authenticated/admin.events'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as AuthenticatedAdminActivityRouteImport } from './routes/_authenticated/admin.activity'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -57,6 +59,11 @@ const ExportRoute = ExportRouteImport.update({
 const ExhibitionsRoute = ExhibitionsRouteImport.update({
   id: '/exhibitions',
   path: '/exhibitions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunityRoute = CommunityRouteImport.update({
@@ -153,6 +160,12 @@ const AuthenticatedAdminExhibitionsRoute =
     path: '/exhibitions',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminEventsRoute =
+  AuthenticatedAdminEventsRouteImport.update({
+    id: '/events',
+    path: '/events',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAnalyticsRoute =
   AuthenticatedAdminAnalyticsRouteImport.update({
     id: '/analytics',
@@ -202,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/community': typeof CommunityRoute
+  '/events': typeof EventsRoute
   '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -213,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/admin/activity': typeof AuthenticatedAdminActivityRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/exhibitions': typeof AuthenticatedAdminExhibitionsRoute
   '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRouteWithChildren
@@ -232,6 +247,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/community': typeof CommunityRoute
+  '/events': typeof EventsRoute
   '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -243,6 +259,7 @@ export interface FileRoutesByTo {
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/admin/activity': typeof AuthenticatedAdminActivityRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/exhibitions': typeof AuthenticatedAdminExhibitionsRoute
   '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRouteWithChildren
@@ -264,6 +281,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/community': typeof CommunityRoute
+  '/events': typeof EventsRoute
   '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -275,6 +293,7 @@ export interface FileRoutesById {
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/_authenticated/admin/activity': typeof AuthenticatedAdminActivityRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/_authenticated/admin/events': typeof AuthenticatedAdminEventsRoute
   '/_authenticated/admin/exhibitions': typeof AuthenticatedAdminExhibitionsRoute
   '/_authenticated/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRouteWithChildren
@@ -296,6 +315,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/community'
+    | '/events'
     | '/exhibitions'
     | '/export'
     | '/reset-password'
@@ -307,6 +327,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/admin/activity'
     | '/admin/analytics'
+    | '/admin/events'
     | '/admin/exhibitions'
     | '/admin/inventory'
     | '/admin/orders'
@@ -326,6 +347,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/community'
+    | '/events'
     | '/exhibitions'
     | '/export'
     | '/reset-password'
@@ -337,6 +359,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/admin/activity'
     | '/admin/analytics'
+    | '/admin/events'
     | '/admin/exhibitions'
     | '/admin/inventory'
     | '/admin/orders'
@@ -357,6 +380,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/community'
+    | '/events'
     | '/exhibitions'
     | '/export'
     | '/reset-password'
@@ -368,6 +392,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/_authenticated/admin/activity'
     | '/_authenticated/admin/analytics'
+    | '/_authenticated/admin/events'
     | '/_authenticated/admin/exhibitions'
     | '/_authenticated/admin/inventory'
     | '/_authenticated/admin/orders'
@@ -389,6 +414,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRouteWithChildren
   CommunityRoute: typeof CommunityRoute
+  EventsRoute: typeof EventsRoute
   ExhibitionsRoute: typeof ExhibitionsRoute
   ExportRoute: typeof ExportRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -431,6 +457,13 @@ declare module '@tanstack/react-router' {
       path: '/exhibitions'
       fullPath: '/exhibitions'
       preLoaderRoute: typeof ExhibitionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community': {
@@ -559,6 +592,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminExhibitionsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/events': {
+      id: '/_authenticated/admin/events'
+      path: '/events'
+      fullPath: '/admin/events'
+      preLoaderRoute: typeof AuthenticatedAdminEventsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/analytics': {
       id: '/_authenticated/admin/analytics'
       path: '/analytics'
@@ -628,6 +668,7 @@ const AuthenticatedAdminOrdersRouteWithChildren =
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminActivityRoute: typeof AuthenticatedAdminActivityRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
+  AuthenticatedAdminEventsRoute: typeof AuthenticatedAdminEventsRoute
   AuthenticatedAdminExhibitionsRoute: typeof AuthenticatedAdminExhibitionsRoute
   AuthenticatedAdminInventoryRoute: typeof AuthenticatedAdminInventoryRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRouteWithChildren
@@ -638,6 +679,7 @@ interface AuthenticatedAdminRouteChildren {
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminActivityRoute: AuthenticatedAdminActivityRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
+  AuthenticatedAdminEventsRoute: AuthenticatedAdminEventsRoute,
   AuthenticatedAdminExhibitionsRoute: AuthenticatedAdminExhibitionsRoute,
   AuthenticatedAdminInventoryRoute: AuthenticatedAdminInventoryRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRouteWithChildren,
@@ -680,6 +722,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRouteWithChildren,
   CommunityRoute: CommunityRoute,
+  EventsRoute: EventsRoute,
   ExhibitionsRoute: ExhibitionsRoute,
   ExportRoute: ExportRoute,
   ResetPasswordRoute: ResetPasswordRoute,
