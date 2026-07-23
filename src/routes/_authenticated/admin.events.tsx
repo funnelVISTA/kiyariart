@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Calendar, ImagePlus, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
+import { EventCard } from "@/components/site/EventCard";
 import {
   adminListExhibitions,
   adminUpsertExhibition,
@@ -188,52 +189,74 @@ function Section({
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground border border-dashed border-border p-6">{emptyLabel}</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {rows.map((r) => (
-            <div key={r.id} className="border border-border bg-card/40 overflow-hidden flex">
-              <div className="w-32 sm:w-40 shrink-0 bg-background relative">
-                {kind === "media" && (r.gallery_images?.length ?? 0) > 0 ? (
-                  <img src={r.gallery_images![0]} alt="" className="h-full w-full object-cover" />
-                ) : r.image_url ? (
-                  <img src={r.image_url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="absolute inset-0 grid place-items-center text-muted-foreground">
-                    <Calendar className="h-6 w-6" />
+        kind === "event" ? (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {rows.map((r, i) => (
+              <EventCard
+                key={r.id}
+                index={i}
+                event={{
+                  id: r.id,
+                  title: r.title,
+                  venue: r.venue,
+                  city: r.city,
+                  blurb: r.blurb,
+                  event_date: r.event_date,
+                  end_date: r.end_date,
+                  time_text: r.time_text,
+                  image_url: r.image_url,
+                  link_url: r.link_url,
+                }}
+                admin={{ onEdit: () => onEdit(r), onDelete: () => onDelete(r.id, r.title) }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {rows.map((r) => (
+              <div key={r.id} className="border border-border bg-card/40 overflow-hidden flex">
+                <div className="w-32 sm:w-40 shrink-0 bg-background relative">
+                  {(r.gallery_images?.length ?? 0) > 0 ? (
+                    <img src={r.gallery_images![0]} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 grid place-items-center text-muted-foreground">
+                      <Calendar className="h-6 w-6" />
+                    </div>
+                  )}
+                  {(r.gallery_images?.length ?? 0) > 1 && (
+                    <div className="absolute bottom-1.5 right-1.5 px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] bg-background/80 border border-border">
+                      {r.gallery_images!.length} photos
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 p-4">
+                  <div className="text-[10px] uppercase tracking-[0.25em] text-gold">
+                    {formatDate(r.event_date)}{r.end_date ? ` — ${formatDate(r.end_date)}` : ""}
                   </div>
-                )}
-                {kind === "media" && (r.gallery_images?.length ?? 0) > 1 && (
-                  <div className="absolute bottom-1.5 right-1.5 px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] bg-background/80 border border-border">
-                    {r.gallery_images!.length} photos
+                  <div className="font-display text-xl mt-1">{r.title}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {[r.venue, r.city].filter(Boolean).join(" · ") || "—"}
                   </div>
-                )}
-              </div>
-              <div className="flex-1 p-4">
-                <div className="text-[10px] uppercase tracking-[0.25em] text-gold">
-                  {formatDate(r.event_date)}{r.end_date ? ` — ${formatDate(r.end_date)}` : ""}
-                </div>
-                <div className="font-display text-xl mt-1">{r.title}</div>
-                <div className="text-xs text-muted-foreground">
-                  {[r.venue, r.city].filter(Boolean).join(" · ") || "—"}
-                </div>
-                {r.blurb && <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{r.blurb}</p>}
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => onEdit(r)}
-                    className="inline-flex items-center gap-1.5 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
-                  >
-                    <Pencil className="h-3 w-3" /> Edit
-                  </button>
-                  <button
-                    onClick={() => onDelete(r.id, r.title)}
-                    className="inline-flex items-center gap-1.5 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-accent hover:text-accent transition"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                  {r.blurb && <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{r.blurb}</p>}
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={() => onEdit(r)}
+                      className="inline-flex items-center gap-1.5 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-gold transition"
+                    >
+                      <Pencil className="h-3 w-3" /> Edit
+                    </button>
+                    <button
+                      onClick={() => onDelete(r.id, r.title)}
+                      className="inline-flex items-center gap-1.5 border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] hover:border-accent hover:text-accent transition"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )
       )}
     </div>
   );
