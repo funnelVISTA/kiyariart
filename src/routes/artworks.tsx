@@ -13,17 +13,23 @@ import { listArtworkAvailability } from "@/lib/payments.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsTouch } from "@/hooks/useIsTouch";
 import { useTapSwipe } from "@/hooks/useTapSwipe";
+import { absUrl, canonical } from "@/lib/site-config";
+import { Link } from "@tanstack/react-router";
+import { slugify } from "@/lib/slug";
 
 const thumb = (url: string, w = 700) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 
 export const Route = createFileRoute("/artworks")({
   head: () => ({
     meta: [
-      { title: "Artworks — art by KIYARI" },
-      { name: "description", content: "Shop original mixed-media paintings by Kiyari. One-of-a-kind, culturally guided, textured fine art." },
-      { property: "og:title", content: "Artworks — art by KIYARI" },
-      { property: "og:description", content: "Original mixed-media paintings, one of a kind." },
+      { title: "Original Afrocentric Paintings for Sale | Kiyari — Calgary" },
+      { name: "description", content: "Shop original mixed-media Afrocentric paintings by Kiyari. One-of-a-kind, culturally guided, textured fine art shipped from Calgary." },
+      { property: "og:title", content: "Original Afrocentric Paintings for Sale | Kiyari — Calgary" },
+      { property: "og:description", content: "One-of-a-kind mixed-media Afrocentric paintings from Kiyari's Calgary studio." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: absUrl("/artworks") },
     ],
+    links: [canonical("/artworks")],
   }),
   component: ArtworksPage,
 });
