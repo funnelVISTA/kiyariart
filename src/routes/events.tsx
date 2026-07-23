@@ -7,15 +7,19 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { Lightbox } from "@/components/site/Lightbox";
+import { absUrl, canonical } from "@/lib/site-config";
 
 export const Route = createFileRoute("/events")({
   head: () => ({
     meta: [
-      { title: "Events — art by KIYARI" },
-      { name: "description", content: "Upcoming events, past shows, and a gallery of moments from art by KIYARI." },
-      { property: "og:title", content: "Events — art by KIYARI" },
-      { property: "og:description", content: "Where to see Kiyari's work live." },
+      { title: "Events & Exhibitions | art by Kiyari — Calgary" },
+      { name: "description", content: "Upcoming events, past shows, and a gallery of moments from art by Kiyari — see the Afrocentric originals live in Calgary and beyond." },
+      { property: "og:title", content: "Events & Exhibitions | art by Kiyari" },
+      { property: "og:description", content: "Where to see Kiyari's Afrocentric originals live — upcoming shows, past exhibitions, and gallery moments." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: absUrl("/events") },
     ],
+    links: [canonical("/events")],
   }),
   component: ExhibitionsPage,
 });

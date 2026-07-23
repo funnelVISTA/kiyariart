@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from "motion/react";
 import { useMemo, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { ARTWORKS, HERO_IMAGE, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
+import { absUrl, canonical } from "@/lib/site-config";
 import { useI18n } from "@/lib/i18n";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { Reveal, RevealText } from "@/components/ui/Reveal";
@@ -22,14 +23,17 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Kiyari Art | Bold Afrocentric Textured Originals — Calgary" },
-      { name: "description", content: "Bold Colours, Fearless Textures & Stories You Can Feel. Vibrant, stand-out Afrocentric originals by Kiyari, merging abstract expression with tactile elements — Calgary." },
+      { name: "description", content: "Shop bold Afrocentric textured originals by Kiyari — vibrant, one-of-a-kind mixed-media paintings from Calgary." },
       { property: "og:title", content: "Kiyari Art | Bold Afrocentric Textured Originals — Calgary" },
-      { property: "og:description", content: "Vibrant, stand-out Afrocentric originals that merge abstract expression with tactile elements — to honour the depth and brilliance of our culture." },
+      { property: "og:description", content: "Vibrant, stand-out Afrocentric originals that merge abstract expression with tactile elements." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: absUrl("/") },
       { property: "og:image", content: HERO_IMAGE },
       { name: "twitter:image", content: HERO_IMAGE },
     ],
     links: [
       { rel: "preload", as: "image", href: HERO_IMAGE, fetchpriority: "high" } as any,
+      canonical("/"),
     ],
   }),
   component: Home,

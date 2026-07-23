@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { ORGANIZATION_JSONLD, SITE_NAME } from "@/lib/site-config";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { CartProvider } from "@/lib/cart";
@@ -62,20 +63,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Kiyari Art | Bold Afrocentric Textured Originals — Calgary" },
       { name: "description", content: "Bold Colours, Fearless Textures & Stories You Can Feel. Vibrant, stand-out Afrocentric originals by Kiyari, merging abstract expression with tactile elements — Calgary." },
       { name: "author", content: "Kiyari" },
+      { property: "og:site_name", content: SITE_NAME },
       { property: "og:title", content: "Kiyari Art | Bold Afrocentric Textured Originals — Calgary" },
       { property: "og:description", content: "Vibrant, stand-out Afrocentric originals that merge abstract expression with tactile elements — to honour the depth and brilliance of our culture." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Kiyari Art | Bold Afrocentric Textured Originals — Calgary" },
       { name: "twitter:description", content: "Vibrant, stand-out Afrocentric originals that merge abstract expression with tactile elements — to honour the depth and brilliance of our culture." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/cdc92eec-9a72-4235-993e-450e4b44477e" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/cdc92eec-9a72-4235-993e-450e4b44477e" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(ORGANIZATION_JSONLD),
+      },
     ],
   }),
   shellComponent: RootShell,
