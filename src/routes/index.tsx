@@ -236,12 +236,12 @@ function Home() {
         </div>
       </section>
 
-      {/* EXHIBITIONS */}
+      {/* EVENTS */}
       <section className="py-24 container-page">
         <div className="grid md:grid-cols-12 gap-12">
           <div className="md:col-span-4">
             <Reveal>
-              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">Live shows</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">Events</div>
             </Reveal>
             <RevealText as="h2" text="Events" className="font-display text-5xl md:text-6xl block" />
           </div>
