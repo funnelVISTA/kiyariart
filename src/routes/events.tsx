@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { Lightbox } from "@/components/site/Lightbox";
 
-export const Route = createFileRoute("/exhibitions")({
+export const Route = createFileRoute("/events")({
   head: () => ({
     meta: [
       { title: "Events — art by KIYARI" },

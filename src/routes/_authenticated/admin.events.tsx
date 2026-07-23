@@ -21,7 +21,7 @@ function todayISO() {
   return `${y}-${m}-${day}`;
 }
 
-export const Route = createFileRoute("/_authenticated/admin/exhibitions")({
+export const Route = createFileRoute("/_authenticated/admin/events")({
   head: () => ({ meta: [{ title: "Events — Admin" }, { name: "robots", content: "noindex" }] }),
   component: AdminExhibitionsPage,
 });

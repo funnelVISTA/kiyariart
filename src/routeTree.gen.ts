@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ExportRouteImport } from './routes/export'
-import { Route as ExhibitionsRouteImport } from './routes/exhibitions'
+import { Route as EventsRouteImport } from './routes/events'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -30,7 +30,7 @@ import { Route as AuthenticatedAdminSubscribersRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminInventoryRouteImport } from './routes/_authenticated/admin.inventory'
-import { Route as AuthenticatedAdminExhibitionsRouteImport } from './routes/_authenticated/admin.exhibitions'
+import { Route as AuthenticatedAdminEventsRouteImport } from './routes/_authenticated/admin.events'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as AuthenticatedAdminActivityRouteImport } from './routes/_authenticated/admin.activity'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -54,9 +54,9 @@ const ExportRoute = ExportRouteImport.update({
   path: '/export',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExhibitionsRoute = ExhibitionsRouteImport.update({
-  id: '/exhibitions',
-  path: '/exhibitions',
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunityRoute = CommunityRouteImport.update({
@@ -147,10 +147,10 @@ const AuthenticatedAdminInventoryRoute =
     path: '/inventory',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const AuthenticatedAdminExhibitionsRoute =
-  AuthenticatedAdminExhibitionsRouteImport.update({
-    id: '/exhibitions',
-    path: '/exhibitions',
+const AuthenticatedAdminEventsRoute =
+  AuthenticatedAdminEventsRouteImport.update({
+    id: '/events',
+    path: '/events',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminAnalyticsRoute =
@@ -202,7 +202,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/community': typeof CommunityRoute
-  '/exhibitions': typeof ExhibitionsRoute
+  '/events': typeof EventsRoute
   '/export': typeof ExportRoute
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -213,7 +213,7 @@ export interface FileRoutesByFullPath {
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/admin/activity': typeof AuthenticatedAdminActivityRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
-  '/admin/exhibitions': typeof AuthenticatedAdminExhibitionsRoute
+  '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -232,7 +232,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/community': typeof CommunityRoute
-  '/exhibitions': typeof ExhibitionsRoute
+  '/events': typeof EventsRoute
   '/export': typeof ExportRoute
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -243,7 +243,7 @@ export interface FileRoutesByTo {
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/admin/activity': typeof AuthenticatedAdminActivityRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
-  '/admin/exhibitions': typeof AuthenticatedAdminExhibitionsRoute
+  '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -264,7 +264,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/community': typeof CommunityRoute
-  '/exhibitions': typeof ExhibitionsRoute
+  '/events': typeof EventsRoute
   '/export': typeof ExportRoute
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -275,7 +275,7 @@ export interface FileRoutesById {
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/_authenticated/admin/activity': typeof AuthenticatedAdminActivityRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
-  '/_authenticated/admin/exhibitions': typeof AuthenticatedAdminExhibitionsRoute
+  '/_authenticated/admin/events': typeof AuthenticatedAdminEventsRoute
   '/_authenticated/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRouteWithChildren
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -296,7 +296,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/community'
-    | '/exhibitions'
+    | '/events'
     | '/export'
     | '/reset-password'
     | '/unsubscribe'
@@ -307,7 +307,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/admin/activity'
     | '/admin/analytics'
-    | '/admin/exhibitions'
+    | '/admin/events'
     | '/admin/inventory'
     | '/admin/orders'
     | '/admin/settings'
@@ -326,7 +326,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/community'
-    | '/exhibitions'
+    | '/events'
     | '/export'
     | '/reset-password'
     | '/unsubscribe'
@@ -337,7 +337,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/admin/activity'
     | '/admin/analytics'
-    | '/admin/exhibitions'
+    | '/admin/events'
     | '/admin/inventory'
     | '/admin/orders'
     | '/admin/settings'
@@ -357,7 +357,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/community'
-    | '/exhibitions'
+    | '/events'
     | '/export'
     | '/reset-password'
     | '/unsubscribe'
@@ -368,7 +368,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/_authenticated/admin/activity'
     | '/_authenticated/admin/analytics'
-    | '/_authenticated/admin/exhibitions'
+    | '/_authenticated/admin/events'
     | '/_authenticated/admin/inventory'
     | '/_authenticated/admin/orders'
     | '/_authenticated/admin/settings'
@@ -389,7 +389,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRouteWithChildren
   CommunityRoute: typeof CommunityRoute
-  ExhibitionsRoute: typeof ExhibitionsRoute
+  EventsRoute: typeof EventsRoute
   ExportRoute: typeof ExportRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
@@ -426,11 +426,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/exhibitions': {
-      id: '/exhibitions'
-      path: '/exhibitions'
-      fullPath: '/exhibitions'
-      preLoaderRoute: typeof ExhibitionsRouteImport
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community': {
@@ -552,11 +552,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminInventoryRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/admin/exhibitions': {
-      id: '/_authenticated/admin/exhibitions'
-      path: '/exhibitions'
-      fullPath: '/admin/exhibitions'
-      preLoaderRoute: typeof AuthenticatedAdminExhibitionsRouteImport
+    '/_authenticated/admin/events': {
+      id: '/_authenticated/admin/events'
+      path: '/events'
+      fullPath: '/admin/events'
+      preLoaderRoute: typeof AuthenticatedAdminEventsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/analytics': {
@@ -628,7 +628,7 @@ const AuthenticatedAdminOrdersRouteWithChildren =
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminActivityRoute: typeof AuthenticatedAdminActivityRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
-  AuthenticatedAdminExhibitionsRoute: typeof AuthenticatedAdminExhibitionsRoute
+  AuthenticatedAdminEventsRoute: typeof AuthenticatedAdminEventsRoute
   AuthenticatedAdminInventoryRoute: typeof AuthenticatedAdminInventoryRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRouteWithChildren
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
@@ -638,7 +638,7 @@ interface AuthenticatedAdminRouteChildren {
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminActivityRoute: AuthenticatedAdminActivityRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
-  AuthenticatedAdminExhibitionsRoute: AuthenticatedAdminExhibitionsRoute,
+  AuthenticatedAdminEventsRoute: AuthenticatedAdminEventsRoute,
   AuthenticatedAdminInventoryRoute: AuthenticatedAdminInventoryRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRouteWithChildren,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
@@ -680,7 +680,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRouteWithChildren,
   CommunityRoute: CommunityRoute,
-  ExhibitionsRoute: ExhibitionsRoute,
+  EventsRoute: EventsRoute,
   ExportRoute: ExportRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   UnsubscribeRoute: UnsubscribeRoute,
@@ -696,13 +696,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
