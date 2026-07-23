@@ -194,9 +194,6 @@ function ExhibitionsPage() {
               <p className="mt-2 text-sm text-muted-foreground max-w-2xl">Each show has its own album below. Click any photo to view it full-size.</p>
             </div>
             {dbPastGalleries.map((show, showIdx) => {
-            const priorCount = dbPastGalleries
-              .slice(0, showIdx)
-              .reduce((sum, s) => sum + (s.gallery_images?.length ?? 0), 0);
             return (
               <section key={show.id} className="relative">
                 <div className="mb-6 border-l-2 border-gold/60 pl-4">
@@ -216,7 +213,6 @@ function ExhibitionsPage() {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 [perspective:1400px]">
                   {(show.gallery_images ?? []).map((src, i) => {
-                    const flatIdx = priorCount + i;
                     const caption = (show.gallery_captions ?? [])[i] ?? "";
                     return (
                       <motion.figure
@@ -229,7 +225,7 @@ function ExhibitionsPage() {
                       >
                         <button
                           type="button"
-                          onClick={() => setActive(flatIdx)}
+                          onClick={() => setActive({ albumId: show.id, index: i })}
                           className="block w-full group relative cursor-zoom-in overflow-hidden"
                         >
                           <TiltCard max={12} scale={1.04} glare className="overflow-hidden shadow-elegant aspect-square">
@@ -264,19 +260,18 @@ function ExhibitionsPage() {
       </div>
 
       {(() => {
-        const list = pastLightboxImages;
-        const caps = pastLightboxCaptions;
-        if (list.length === 0) return null;
-        const clamped = active === null ? 0 : ((active % list.length) + list.length) % list.length;
+        if (!active || !activeAlbum || activeImages.length === 0) return null;
         return (
           <Lightbox
-            open={active !== null}
-            src={active === null ? null : list[clamped]}
-            alt={caps[clamped] || ""}
-            caption={caps[clamped] || undefined}
+            open={true}
+            src={activeImages[activeIdx] ?? null}
+            alt={activeCaptions[activeIdx] || ""}
+            caption={activeCaptions[activeIdx] || undefined}
+            prevSrc={hasPrev ? activeImages[activeIdx - 1] : null}
+            nextSrc={hasNext ? activeImages[activeIdx + 1] : null}
             onClose={() => setActive(null)}
-            onPrev={() => setActive((clamped - 1 + list.length) % list.length)}
-            onNext={() => setActive((clamped + 1) % list.length)}
+            onPrev={hasPrev ? () => setActive({ albumId: active.albumId, index: activeIdx - 1 }) : undefined}
+            onNext={hasNext ? () => setActive({ albumId: active.albumId, index: activeIdx + 1 }) : undefined}
           />
         );
       })()}
