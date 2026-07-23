@@ -39,7 +39,7 @@ type DbEx = {
 
 function ExhibitionsPage() {
   const { t, lang } = useI18n();
-  const [active, setActive] = useState<number | null>(null);
+  const [active, setActive] = useState<{ albumId: string; index: number } | null>(null);
 
   const { data: dbRows } = useQuery({
     queryKey: ["public", "exhibitions"],
@@ -100,6 +100,61 @@ function ExhibitionsPage() {
   );
   const hasCuratedPast = dbPastGalleries.length > 0;
 
+  const activeAlbum = active ? dbPastGalleries.find((g) => g.id === active.albumId) : null;
+  const activeImages = activeAlbum?.gallery_images ?? [];
+  const activeCaptions = Array.isArray(activeAlbum?.gallery_captions) ? activeAlbum!.gallery_captions! : [];
+  const activeIdx = active?.index ?? 0;
+  const hasPrev = active !== null && activeIdx > 0;
+  const hasNext = active !== null && activeIdx < activeImages.length - 1;
+
+  const renderEventCard = (e: DbEx, i: number) => {
+    const d = e.event_date ? new Date(e.event_date) : null;
+    const monthShort = d
+      ? d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "short" }).toUpperCase()
+      : "TBA";
+    const day = d ? String(d.getDate()).padStart(2, "0") : "—";
+    const year = d ? String(d.getFullYear()) : "";
+    return (
+      <motion.div
+        key={e.id}
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: i * 0.05 }}
+        className="group relative border border-border hover:border-gold transition-colors overflow-hidden flex flex-col"
+      >
+        {e.image_url && (
+          <div className="relative aspect-[4/3] bg-background overflow-hidden">
+            <img
+              src={e.image_url}
+              alt={`${e.title} poster`}
+              className="absolute inset-0 h-full w-full object-contain"
+            />
+          </div>
+        )}
+        <div className="p-5 flex-1 flex flex-col">
+          <div className="flex items-baseline gap-2">
+            <div className="font-display text-2xl text-gold leading-none">{monthShort} {day}</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{year}</div>
+          </div>
+          <h3 className="mt-2 font-display text-xl leading-tight">{e.title}</h3>
+          <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+            {e.time_text && <div className="inline-flex items-center gap-1.5"><Calendar className="h-3 w-3 text-gold" /> {e.time_text}</div>}
+            {(e.venue || e.city) && (
+              <div className="inline-flex items-center gap-1.5"><MapPin className="h-3 w-3 text-gold" /> {[e.venue, e.city].filter(Boolean).join(", ")}</div>
+            )}
+          </div>
+          {e.blurb && <p className="mt-3 text-xs text-muted-foreground leading-relaxed line-clamp-3">{e.blurb}</p>}
+          {e.link_url && (
+            <a href={e.link_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs link-underline text-gold self-start">
+              {t("ex.details")}
+            </a>
+          )}
+        </div>
+      </motion.div>
+    );
+  };
+
 
   return (
     <div className="pt-32 pb-20">
@@ -116,51 +171,7 @@ function ExhibitionsPage() {
           <section className="mt-20">
             <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">{t("ex.upcoming")}</div>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {dbUpcoming.map((e, i) => {
-                const d = e.event_date ? new Date(e.event_date) : null;
-                const monthShort = d ? d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "short" }).toUpperCase() : "TBA";
-                const day = d ? String(d.getDate()).padStart(2, "0") : "—";
-                const year = d ? String(d.getFullYear()) : "";
-                return (
-                  <motion.div
-                    key={e.id}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: i * 0.05 }}
-                    className="group relative border border-border hover:border-gold transition-colors overflow-hidden flex flex-col"
-                  >
-                    {e.image_url && (
-                      <div className="relative aspect-[4/3] bg-background overflow-hidden">
-                        <img
-                          src={e.image_url}
-                          alt={`${e.title} poster`}
-                          className="absolute inset-0 h-full w-full object-contain"
-                        />
-                      </div>
-                    )}
-                    <div className="p-5 flex-1 flex flex-col">
-                      <div className="flex items-baseline gap-2">
-                        <div className="font-display text-2xl text-gold leading-none">{monthShort} {day}</div>
-                        <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{year}</div>
-                      </div>
-                      <h3 className="mt-2 font-display text-xl leading-tight">{e.title}</h3>
-                      <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                        {e.time_text && <div className="inline-flex items-center gap-1.5"><Calendar className="h-3 w-3 text-gold" /> {e.time_text}</div>}
-                        {(e.venue || e.city) && (
-                          <div className="inline-flex items-center gap-1.5"><MapPin className="h-3 w-3 text-gold" /> {[e.venue, e.city].filter(Boolean).join(", ")}</div>
-                        )}
-                      </div>
-                      {e.blurb && <p className="mt-3 text-xs text-muted-foreground leading-relaxed line-clamp-3">{e.blurb}</p>}
-                      {e.link_url && (
-                        <a href={e.link_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs link-underline text-gold self-start">
-                          {t("ex.details")}
-                        </a>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
+              {dbUpcoming.map((e, i) => renderEventCard(e, i))}
             </div>
           </section>
         )}
@@ -169,36 +180,7 @@ function ExhibitionsPage() {
           <section className="mt-20">
             <div className="text-xs uppercase tracking-[0.3em] text-gold mb-6">Past events</div>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {dbPastEvents.map((e, i) => {
-                const d = e.event_date ? new Date(e.event_date) : null;
-                const dateLabel = d
-                  ? d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "short", day: "numeric", year: "numeric" })
-                  : "";
-                return (
-                  <motion.div
-                    key={e.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: i * 0.05 }}
-                    className="border border-border overflow-hidden flex flex-col"
-                  >
-                    {e.image_url && (
-                      <div className="relative aspect-[4/3] bg-background overflow-hidden">
-                        <img src={e.image_url} alt={`${e.title} poster`} className="absolute inset-0 h-full w-full object-contain" />
-                      </div>
-                    )}
-                    <div className="p-5">
-                      <div className="text-[10px] uppercase tracking-[0.25em] text-gold">{dateLabel}</div>
-                      <h3 className="mt-1 font-display text-xl leading-tight">{e.title}</h3>
-                      {(e.venue || e.city) && (
-                        <div className="mt-1 text-xs text-muted-foreground">{[e.venue, e.city].filter(Boolean).join(", ")}</div>
-                      )}
-                      {e.blurb && <p className="mt-2 text-xs text-muted-foreground leading-relaxed line-clamp-3">{e.blurb}</p>}
-                    </div>
-                  </motion.div>
-                );
-              })}
+              {dbPastEvents.map((e, i) => renderEventCard(e, i))}
             </div>
           </section>
         )}
@@ -212,9 +194,6 @@ function ExhibitionsPage() {
               <p className="mt-2 text-sm text-muted-foreground max-w-2xl">Each show has its own album below. Click any photo to view it full-size.</p>
             </div>
             {dbPastGalleries.map((show, showIdx) => {
-            const priorCount = dbPastGalleries
-              .slice(0, showIdx)
-              .reduce((sum, s) => sum + (s.gallery_images?.length ?? 0), 0);
             return (
               <section key={show.id} className="relative">
                 <div className="mb-6 border-l-2 border-gold/60 pl-4">
@@ -234,7 +213,6 @@ function ExhibitionsPage() {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 [perspective:1400px]">
                   {(show.gallery_images ?? []).map((src, i) => {
-                    const flatIdx = priorCount + i;
                     const caption = (show.gallery_captions ?? [])[i] ?? "";
                     return (
                       <motion.figure
@@ -247,7 +225,7 @@ function ExhibitionsPage() {
                       >
                         <button
                           type="button"
-                          onClick={() => setActive(flatIdx)}
+                          onClick={() => setActive({ albumId: show.id, index: i })}
                           className="block w-full group relative cursor-zoom-in overflow-hidden"
                         >
                           <TiltCard max={12} scale={1.04} glare className="overflow-hidden shadow-elegant aspect-square">
@@ -282,19 +260,18 @@ function ExhibitionsPage() {
       </div>
 
       {(() => {
-        const list = pastLightboxImages;
-        const caps = pastLightboxCaptions;
-        if (list.length === 0) return null;
-        const clamped = active === null ? 0 : ((active % list.length) + list.length) % list.length;
+        if (!active || !activeAlbum || activeImages.length === 0) return null;
         return (
           <Lightbox
-            open={active !== null}
-            src={active === null ? null : list[clamped]}
-            alt={caps[clamped] || ""}
-            caption={caps[clamped] || undefined}
+            open={true}
+            src={activeImages[activeIdx] ?? null}
+            alt={activeCaptions[activeIdx] || ""}
+            caption={activeCaptions[activeIdx] || undefined}
+            prevSrc={hasPrev ? activeImages[activeIdx - 1] : null}
+            nextSrc={hasNext ? activeImages[activeIdx + 1] : null}
             onClose={() => setActive(null)}
-            onPrev={() => setActive((clamped - 1 + list.length) % list.length)}
-            onNext={() => setActive((clamped + 1) % list.length)}
+            onPrev={hasPrev ? () => setActive({ albumId: active.albumId, index: activeIdx - 1 }) : undefined}
+            onNext={hasNext ? () => setActive({ albumId: active.albumId, index: activeIdx + 1 }) : undefined}
           />
         );
       })()}

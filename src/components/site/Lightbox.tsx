@@ -14,9 +14,11 @@ type Props = {
   onClose: () => void;
   onPrev?: () => void;
   onNext?: () => void;
+  prevSrc?: string | null;
+  nextSrc?: string | null;
 };
 
-export function Lightbox({ open, src, alt, caption, title, description, price, onClose, onPrev, onNext }: Props) {
+export function Lightbox({ open, src, alt, caption, title, description, price, onClose, onPrev, onNext, prevSrc, nextSrc }: Props) {
   const swipe = useTapSwipe({
     onSwipe: (dir) => {
       if (dir === "left" && onNext) onNext();
@@ -83,13 +85,52 @@ export function Lightbox({ open, src, alt, caption, title, description, price, o
             {...swipe}
           >
             <div className="relative flex-1 min-h-0 w-full flex items-center justify-center">
+              {prevSrc && (
+                <img
+                  src={prevSrc}
+                  alt=""
+                  aria-hidden
+                  draggable={false}
+                  onClick={(e) => { e.stopPropagation(); onPrev?.(); }}
+                  className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[55%] max-h-[70vh] max-w-[35vw] object-contain opacity-25 hover:opacity-50 transition cursor-pointer pointer-events-auto select-none"
+                />
+              )}
+              {nextSrc && (
+                <img
+                  src={nextSrc}
+                  alt=""
+                  aria-hidden
+                  draggable={false}
+                  onClick={(e) => { e.stopPropagation(); onNext?.(); }}
+                  className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-[55%] max-h-[70vh] max-w-[35vw] object-contain opacity-25 hover:opacity-50 transition cursor-pointer pointer-events-auto select-none"
+                />
+              )}
               <img
                 src={src}
                 alt={alt}
                 draggable={false}
-                className="max-h-[85vh] max-w-full object-contain select-none"
+                className="relative z-10 max-h-[85vh] max-w-full object-contain select-none"
                 style={{ maxHeight: "85vh", maxWidth: "100%" }}
               />
+              {/* Mobile edge peeks */}
+              {prevSrc && (
+                <img
+                  src={prevSrc}
+                  alt=""
+                  aria-hidden
+                  draggable={false}
+                  className="md:hidden absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 h-[40vh] w-auto max-w-[30vw] object-contain opacity-25 pointer-events-none select-none"
+                />
+              )}
+              {nextSrc && (
+                <img
+                  src={nextSrc}
+                  alt=""
+                  aria-hidden
+                  draggable={false}
+                  className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 h-[40vh] w-auto max-w-[30vw] object-contain opacity-25 pointer-events-none select-none"
+                />
+              )}
             </div>
 
             {(title || description || (price ?? 0) > 0) && (
