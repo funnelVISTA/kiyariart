@@ -16,7 +16,7 @@ export function Footer() {
           <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Explore</div>
           <ul className="flex flex-col items-start md:items-center gap-1 text-xs text-muted-foreground">
             <li><Link to="/artworks" className="link-underline text-muted-foreground">{t("nav.artworks")}</Link></li>
-            <li><Link to="/exhibitions" className="link-underline text-muted-foreground">{t("nav.exhibitions")}</Link></li>
+            <li><Link to="/events" className="link-underline text-muted-foreground">{t("nav.exhibitions")}</Link></li>
             <li><Link to="/community" className="link-underline text-muted-foreground">{t("nav.community")}</Link></li>
           </ul>
         </div>
