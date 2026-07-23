@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ExportRouteImport } from './routes/export'
+import { Route as ExhibitionsRouteImport } from './routes/exhibitions'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CheckoutRouteImport } from './routes/checkout'
@@ -52,6 +53,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const ExportRoute = ExportRouteImport.update({
   id: '/export',
   path: '/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExhibitionsRoute = ExhibitionsRouteImport.update({
+  id: '/exhibitions',
+  path: '/exhibitions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRouteWithChildren
   '/community': typeof CommunityRoute
   '/events': typeof EventsRoute
+  '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRouteWithChildren
   '/community': typeof CommunityRoute
   '/events': typeof EventsRoute
+  '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRouteWithChildren
   '/community': typeof CommunityRoute
   '/events': typeof EventsRoute
+  '/exhibitions': typeof ExhibitionsRoute
   '/export': typeof ExportRoute
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -297,6 +306,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/community'
     | '/events'
+    | '/exhibitions'
     | '/export'
     | '/reset-password'
     | '/unsubscribe'
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/community'
     | '/events'
+    | '/exhibitions'
     | '/export'
     | '/reset-password'
     | '/unsubscribe'
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/community'
     | '/events'
+    | '/exhibitions'
     | '/export'
     | '/reset-password'
     | '/unsubscribe'
@@ -390,6 +402,7 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRouteWithChildren
   CommunityRoute: typeof CommunityRoute
   EventsRoute: typeof EventsRoute
+  ExhibitionsRoute: typeof ExhibitionsRoute
   ExportRoute: typeof ExportRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
@@ -424,6 +437,13 @@ declare module '@tanstack/react-router' {
       path: '/export'
       fullPath: '/export'
       preLoaderRoute: typeof ExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exhibitions': {
+      id: '/exhibitions'
+      path: '/exhibitions'
+      fullPath: '/exhibitions'
+      preLoaderRoute: typeof ExhibitionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -681,6 +701,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRouteWithChildren,
   CommunityRoute: CommunityRoute,
   EventsRoute: EventsRoute,
+  ExhibitionsRoute: ExhibitionsRoute,
   ExportRoute: ExportRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   UnsubscribeRoute: UnsubscribeRoute,
