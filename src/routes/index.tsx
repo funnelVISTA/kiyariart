@@ -354,6 +354,27 @@ function Home() {
         title={lightbox?.title}
         description={lightbox?.description}
         price={lightbox?.price}
+        medium={lightbox?.medium}
+        sold={!!lightbox?.sold}
+        canBuy={lightbox ? isArtworkPurchasable(lightbox) : false}
+        inCart={lightbox ? has(lightbox.id) : false}
+        onAdd={
+          lightbox
+            ? () => {
+                const a = lightbox;
+                if (!isArtworkPurchasable(a)) {
+                  toast.error(t("art.soldToast"));
+                  return;
+                }
+                if (has(a.id)) {
+                  toast.info(`${a.title} — already in your cart`);
+                  return;
+                }
+                add(a);
+                toast.success(`${a.title} ${t("art.addedToast")}`);
+              }
+            : undefined
+        }
         caption={lightbox ? lightbox.title : undefined}
         onClose={() => setLightbox(null)}
       />
