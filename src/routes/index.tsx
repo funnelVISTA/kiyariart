@@ -375,7 +375,6 @@ function Home() {
               }
             : undefined
         }
-        caption={lightbox ? lightbox.title : undefined}
         onClose={() => setLightbox(null)}
       />
     </div>
