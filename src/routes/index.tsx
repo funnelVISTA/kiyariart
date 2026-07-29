@@ -146,7 +146,7 @@ function Home() {
             transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1] }}
             className="max-w-3xl"
           >
-            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl leading-[1.02]">
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl leading-[1.05]">
               <span className="block overflow-hidden">
                 <motion.span
                   className="block pr-1 pb-1"
