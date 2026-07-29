@@ -182,6 +182,22 @@ function Home() {
         </motion.div>
 
         <motion.div
+          style={{ opacity }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.1, duration: 0.7 }}
+          className="absolute bottom-16 left-0 right-0 z-10 container-page flex flex-wrap gap-4"
+        >
+          <Link to="/artworks" className="group inline-flex items-center gap-3 bg-gradient-gold px-8 py-4 text-sm uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition">
+            {t("hero.cta1")}
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+          <Link to="/events" className="inline-flex items-center gap-3 border border-border px-8 py-4 text-sm uppercase tracking-[0.2em] hover:border-gold hover:text-gold transition">
+            {t("hero.cta2")}
+          </Link>
+        </motion.div>
+
+        <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 text-[10px] uppercase tracking-[0.4em] text-muted-foreground"
         >
