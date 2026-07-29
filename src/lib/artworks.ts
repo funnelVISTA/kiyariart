@@ -47,8 +47,14 @@ export const ARTWORKS: Artwork[] = [
 ];
 
 import heroAsset from "@/assets/hero-kiyari.png.asset.json";
+import hero640 from "@/assets/hero-kiyari-640.webp.asset.json";
+import hero1024 from "@/assets/hero-kiyari-1024.webp.asset.json";
+import hero1254 from "@/assets/hero-kiyari-1254.webp.asset.json";
 
 export const HERO_IMAGE = heroAsset.url;
+export const HERO_IMAGE_WEBP = hero1254.url;
+export const HERO_IMAGE_SRCSET = `${hero640.url} 640w, ${hero1024.url} 1024w, ${hero1254.url} 1254w`;
+export const HERO_IMAGE_SIZES = "100vw";
 
 export function isArtworkPurchasable(artwork: Pick<Artwork, "sold" | "price">) {
   return !artwork.sold && artwork.price > 0;
