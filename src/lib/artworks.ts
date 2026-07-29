@@ -46,7 +46,9 @@ export const ARTWORKS: Artwork[] = [
   { id: "prince", title: "Prince", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/Madiba.jpeg/:/rs=w:1200,cg:true,m"), price: 2400, sold: false, collection: "Our Essence" },
 ];
 
-export const HERO_IMAGE = ARTWORKS.find((a) => a.id === "unbothered")!.image;
+import heroAsset from "@/assets/hero-kiyari.png.asset.json";
+
+export const HERO_IMAGE = heroAsset.url;
 
 export function isArtworkPurchasable(artwork: Pick<Artwork, "sold" | "price">) {
   return !artwork.sold && artwork.price > 0;

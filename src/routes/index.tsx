@@ -28,8 +28,8 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Vibrant, stand-out Afrocentric originals that merge abstract expression with tactile elements." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: absUrl("/") },
-      { property: "og:image", content: HERO_IMAGE },
-      { name: "twitter:image", content: HERO_IMAGE },
+      { property: "og:image", content: absUrl(HERO_IMAGE) },
+      { name: "twitter:image", content: absUrl(HERO_IMAGE) },
     ],
     links: [
       { rel: "preload", as: "image", href: HERO_IMAGE, fetchpriority: "high" } as any,
@@ -117,7 +117,7 @@ function Home() {
         <motion.div style={{ scale, y }} className="absolute inset-0 z-0">
           <img
             src={HERO_IMAGE}
-            alt="Unbothered — featured painting by Kiyari"
+            alt="Bold Afrocentric painting by Kiyari — woman's face with vibrant purple florals on golden yellow"
             fetchPriority="high"
             decoding="async"
             className="h-full w-full object-cover object-center opacity-70"
