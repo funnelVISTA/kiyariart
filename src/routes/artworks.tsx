@@ -264,7 +264,6 @@ function ArtworksPage() {
         canBuy={active ? isArtworkPurchasable(active) : false}
         inCart={active ? has(active.id) : false}
         onAdd={active ? () => handleAdd(active) : undefined}
-        caption={active ? active.title : undefined}
         onClose={() => setActiveIdx(null)}
         onPrev={activeIdx !== null && items.length > 1 ? () => setActiveIdx((activeIdx - 1 + items.length) % items.length) : undefined}
         onNext={activeIdx !== null && items.length > 1 ? () => setActiveIdx((activeIdx + 1) % items.length) : undefined}
