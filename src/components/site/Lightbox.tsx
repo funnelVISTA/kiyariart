@@ -171,7 +171,7 @@ export function Lightbox({ open, src, alt, caption, title, description, price, m
             )}
           </div>
 
-          {caption && (
+          {(caption || onPrev || onNext) && (
             <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground text-center">
               {caption}
               <div className="mt-1 text-[9px] opacity-60 normal-case tracking-wider">
