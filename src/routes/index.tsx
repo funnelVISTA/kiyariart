@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { listArtworkAvailability } from "@/lib/payments.functions";
+import { AboutArtistSection } from "@/components/site/AboutArtist";
 
 const thumb = (url: string, w = 800) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 
