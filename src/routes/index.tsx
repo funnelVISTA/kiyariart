@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useMemo, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { ARTWORKS, HERO_IMAGE, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
+import { ARTWORKS, HERO_IMAGE, HERO_IMAGE_WEBP, HERO_IMAGE_SRCSET, HERO_IMAGE_SIZES, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
 import { absUrl, canonical } from "@/lib/site-config";
 import { useI18n } from "@/lib/i18n";
 import { TiltCard } from "@/components/ui/TiltCard";
@@ -32,7 +32,14 @@ export const Route = createFileRoute("/")({
       { name: "twitter:image", content: absUrl(HERO_IMAGE) },
     ],
     links: [
-      { rel: "preload", as: "image", href: HERO_IMAGE, fetchpriority: "high" } as any,
+      {
+        rel: "preload",
+        as: "image",
+        href: HERO_IMAGE_WEBP,
+        imagesrcset: HERO_IMAGE_SRCSET,
+        imagesizes: HERO_IMAGE_SIZES,
+        fetchpriority: "high",
+      } as any,
       canonical("/"),
     ],
   }),
@@ -116,14 +123,20 @@ function Home() {
       <section ref={ref} className="relative min-h-screen overflow-hidden bg-gradient-hero noise">
         <motion.div style={{ scale, y }} className="absolute inset-0 z-0">
           <img
-            src={HERO_IMAGE}
+            src={HERO_IMAGE_WEBP}
+            srcSet={HERO_IMAGE_SRCSET}
+            sizes={HERO_IMAGE_SIZES}
+            width={1254}
+            height={1254}
             alt="Bold Afrocentric painting by Kiyari — woman's face with vibrant purple florals on golden yellow"
             fetchPriority="high"
             decoding="async"
-            className="h-full w-full object-cover object-center opacity-70"
+            loading="eager"
+            className="absolute inset-0 h-full w-full object-cover object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-background/60" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/40" />
+          {/* Legibility overlays — kept subtle so the artwork still reads */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/20 to-background/30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-transparent" />
         </motion.div>
 
         <motion.div style={{ opacity }} className="relative z-10 container-page min-h-screen flex flex-col justify-end pb-24 pt-40">
