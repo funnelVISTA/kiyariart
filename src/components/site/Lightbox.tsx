@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect } from "react";
 import { useTapSwipe } from "@/hooks/useTapSwipe";
+import { AddToCartButton } from "@/components/site/AddToCartButton";
 
 type Props = {
   open: boolean;
@@ -11,6 +12,11 @@ type Props = {
   title?: string;
   description?: string;
   price?: number;
+  medium?: string;
+  sold?: boolean;
+  canBuy?: boolean;
+  inCart?: boolean;
+  onAdd?: () => void;
   onClose: () => void;
   onPrev?: () => void;
   onNext?: () => void;
@@ -18,7 +24,7 @@ type Props = {
   nextSrc?: string | null;
 };
 
-export function Lightbox({ open, src, alt, caption, title, description, price, onClose, onPrev, onNext, prevSrc, nextSrc }: Props) {
+export function Lightbox({ open, src, alt, caption, title, description, price, medium, sold, canBuy, inCart, onAdd, onClose, onPrev, onNext, prevSrc, nextSrc }: Props) {
   const swipe = useTapSwipe({
     onSwipe: (dir) => {
       if (dir === "left" && onNext) onNext();
@@ -80,11 +86,11 @@ export function Lightbox({ open, src, alt, caption, title, description, price, o
           )}
 
           <div
-            className="relative w-[92vw] h-[88vh] flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 px-2 md:px-6"
+            className="relative w-[92vw] max-h-[90vh] md:h-[88vh] overflow-y-auto overscroll-contain md:overflow-visible flex flex-col md:flex-row items-center justify-center gap-5 md:gap-8 px-2 md:px-6 py-6 md:py-0"
             onClick={(e) => e.stopPropagation()}
             {...swipe}
           >
-            <div className="relative flex-1 min-h-0 w-full flex items-center justify-center">
+            <div className="relative shrink-0 md:flex-1 md:min-h-0 w-full flex items-center justify-center">
               {prevSrc && (
                 <img
                   src={prevSrc}
@@ -109,8 +115,7 @@ export function Lightbox({ open, src, alt, caption, title, description, price, o
                 src={src}
                 alt={alt}
                 draggable={false}
-                className="relative z-10 max-h-[85vh] max-w-full object-contain select-none"
-                style={{ maxHeight: "85vh", maxWidth: "100%" }}
+                className="relative z-10 max-h-[52vh] md:max-h-[85vh] max-w-full object-contain select-none"
               />
               {/* Mobile edge peeks */}
               {prevSrc && (
@@ -133,21 +138,35 @@ export function Lightbox({ open, src, alt, caption, title, description, price, o
               )}
             </div>
 
-            {(title || description || (price ?? 0) > 0) && (
+            {(title || description || (price ?? 0) > 0 || sold || canBuy) && (
               <div className="w-full md:w-[300px] shrink-0 md:self-start md:pt-16 text-left">
                 {title && (
-                  <div className="font-display text-lg md:text-2xl text-gold leading-tight">{title}</div>
+                  <h2 className="font-display text-xl md:text-2xl text-gold leading-tight mb-2">{title}</h2>
+                )}
+                {medium && (
+                  <div className="mb-2 text-[10px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                    {medium}
+                  </div>
                 )}
                 {(price ?? 0) > 0 && (
-                  <div className="mt-2 text-sm md:text-base text-foreground font-medium">
+                  <div className="mb-3 text-sm md:text-base text-foreground font-medium">
                     ${price!.toLocaleString()} <span className="text-xs opacity-60">CAD</span>
                   </div>
                 )}
                 {description && (
-                  <p className="mt-3 text-xs md:text-sm text-foreground/85 leading-relaxed">
+                  <p className="mt-3 mb-4 text-xs md:text-sm text-foreground/85 leading-relaxed">
                     {description}
                   </p>
                 )}
+                {canBuy && onAdd ? (
+                  <div className="mt-4 pb-2">
+                    <AddToCartButton onAdd={onAdd} inCart={!!inCart} label="Add to cart" size="md" />
+                  </div>
+                ) : sold ? (
+                  <div className="mt-4 inline-block border border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                    Sold
+                  </div>
+                ) : null}
               </div>
             )}
           </div>
