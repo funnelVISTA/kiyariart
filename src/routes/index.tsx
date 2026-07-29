@@ -139,7 +139,7 @@ function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-transparent" />
         </motion.div>
 
-        <motion.div style={{ opacity }} className="relative z-10 container-page min-h-screen flex flex-col justify-end pb-44 pt-40">
+        <motion.div style={{ opacity }} className="relative z-10 container-page min-h-screen flex flex-col justify-end pb-52 pt-40">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
