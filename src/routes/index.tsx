@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useMemo, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { ARTWORKS, HERO_IMAGE, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
+import { ARTWORKS, HERO_IMAGE, HERO_IMAGE_WEBP, HERO_IMAGE_SRCSET, HERO_IMAGE_SIZES, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
 import { absUrl, canonical } from "@/lib/site-config";
 import { useI18n } from "@/lib/i18n";
 import { TiltCard } from "@/components/ui/TiltCard";
