@@ -32,7 +32,14 @@ export const Route = createFileRoute("/")({
       { name: "twitter:image", content: absUrl(HERO_IMAGE) },
     ],
     links: [
-      { rel: "preload", as: "image", href: HERO_IMAGE, fetchpriority: "high" } as any,
+      {
+        rel: "preload",
+        as: "image",
+        href: HERO_IMAGE_WEBP,
+        imagesrcset: HERO_IMAGE_SRCSET,
+        imagesizes: HERO_IMAGE_SIZES,
+        fetchpriority: "high",
+      } as any,
       canonical("/"),
     ],
   }),
