@@ -24,9 +24,6 @@ export function AboutArtistSection() {
                 className="block w-full h-full object-cover"
               />
             </div>
-            <figcaption className="mt-2 italic font-serif text-sm text-muted-foreground text-center">
-              Kiyari, in the studio
-            </figcaption>
           </figure>
 
           <p className="font-display text-2xl md:text-3xl leading-snug text-foreground mb-6">
@@ -47,9 +44,6 @@ export function AboutArtistSection() {
                 className="block w-full h-full object-cover"
               />
             </div>
-            <figcaption className="mt-2 italic font-serif text-sm text-muted-foreground text-center">
-              Layered acrylic & mixed media
-            </figcaption>
           </figure>
 
           <p className="mb-6">
