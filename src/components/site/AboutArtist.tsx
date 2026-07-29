@@ -1,4 +1,4 @@
-import aboutPhoto1 from "@/assets/about-photo-1.png.asset.json";
+import aboutPhoto1 from "@/assets/about-youthful-exuberance.jpg.asset.json";
 import aboutPhoto2 from "@/assets/about-photo-2.png.asset.json";
 
 export function AboutArtistSection() {
@@ -19,7 +19,7 @@ export function AboutArtistSection() {
             <div className="about-photo-frame">
               <img
                 src={aboutPhoto1.url}
-                alt="Kiyari, in the studio"
+                alt="Youthful Exuberance — original artwork by Kiyari"
                 loading="lazy"
                 className="block w-full h-full object-cover"
               />
