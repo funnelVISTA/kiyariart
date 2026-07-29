@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { listArtworkAvailability } from "@/lib/payments.functions";
+import { AboutArtistSection } from "@/components/site/AboutArtist";
 
 const thumb = (url: string, w = 800) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 
@@ -224,34 +225,7 @@ function Home() {
       </section>
 
       {/* ABOUT */}
-      <section className="py-28 container-page grid md:grid-cols-12 gap-12">
-        <div className="md:col-span-4">
-          <Reveal>
-            <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">{t("about.kicker")}</div>
-          </Reveal>
-          <RevealText
-            as="h2"
-            text={t("about.title")}
-            className="font-display text-5xl md:text-6xl block"
-          />
-        </div>
-        <div className="md:col-span-7 md:col-start-6 space-y-6 text-lg text-muted-foreground leading-relaxed">
-          <Reveal delay={0.1}><p>{t("about.p1")}</p></Reveal>
-          <Reveal delay={0.2}><p>{t("about.p2")}</p></Reveal>
-          <Reveal delay={0.25}>
-            <p>
-              {t("about.p3a")}
-              <span className="italic font-semibold text-gradient-gold">{t("about.p3b")}</span>
-              {t("about.p3c")}
-            </p>
-          </Reveal>
-          <Reveal delay={0.3}>
-            <p className="text-foreground italic border-l-2 border-gold pl-5">
-              {t("about.p4")}
-            </p>
-          </Reveal>
-        </div>
-      </section>
+      <AboutArtistSection />
 
       {/* EVENTS */}
       <section className="py-24 container-page">

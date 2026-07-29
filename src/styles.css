@@ -189,3 +189,39 @@
 .js-tilt-glare-inner {
   pointer-events: none !important;
 }
+
+/* About the Artist — magazine wrap layout */
+.about-wrap::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+.about-photo {
+  width: 100%;
+  margin: 1.25rem 0 1.75rem;
+}
+.about-photo-frame {
+  aspect-ratio: 4 / 5;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid color-mix(in oklab, var(--gold) 40%, transparent);
+  box-shadow: 0 20px 40px -20px rgba(0,0,0,0.55);
+  background: var(--card);
+}
+@media (min-width: 820px) {
+  .about-photo-right {
+    float: right;
+    width: 290px;
+    margin: 0.25rem 0 1rem 2rem;
+    transform: rotate(2deg);
+    shape-outside: margin-box;
+  }
+  .about-photo-left {
+    float: left;
+    width: 250px;
+    margin: 0.5rem 2rem 1rem 0;
+    transform: rotate(-2deg);
+    shape-outside: margin-box;
+  }
+}
