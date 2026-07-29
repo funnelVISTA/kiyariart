@@ -174,7 +174,7 @@ function Home() {
             </h1>
             <motion.p
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}
-              className="mt-8 max-w-[60ch] text-lg text-muted-foreground leading-relaxed"
+              className="mt-8 max-w-[60ch] text-lg text-muted-foreground leading-relaxed whitespace-pre-line"
             >
               {t("hero.lede")}
             </motion.p>
