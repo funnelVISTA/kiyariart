@@ -197,9 +197,12 @@
   clear: both;
 }
 .about-photo {
-  width: 100%;
-  margin: 1.25rem 0 1.75rem;
+  width: calc(100% - 1.5rem);
+  margin: 1.25rem auto 1.75rem;
+  transform-origin: center center;
 }
+.about-photo-right { transform: rotate(1.5deg); }
+.about-photo-left { transform: rotate(-1.5deg); }
 .about-photo-frame {
   aspect-ratio: 4 / 5;
   width: 100%;
