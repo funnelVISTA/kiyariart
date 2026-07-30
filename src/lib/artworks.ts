@@ -42,14 +42,15 @@ export const ARTWORKS: Artwork[] = [
   { id: "prince", title: "Prince", image: w("https://img1.wsimg.com/isteam/ip/49f80de6-790e-47c4-a130-9393217b754f/Madiba.jpeg/:/rs=w:1200,cg:true,m"), price: 2400, sold: false, collection: "Our Essence" },
 ];
 
-import hero640 from "@/assets/hero-kiyari-v3-640.webp.asset.json";
-import hero1024 from "@/assets/hero-kiyari-v3-1024.webp.asset.json";
-import hero1400 from "@/assets/hero-kiyari-v3-1400.webp.asset.json";
+import hero640 from "@/assets/hero-kiyari-v4-640.webp.asset.json";
+import hero1024 from "@/assets/hero-kiyari-v4-1024.webp.asset.json";
+import hero1400 from "@/assets/hero-kiyari-v4-1400.webp.asset.json";
 
 export const HERO_IMAGE = hero1400.url;
 export const HERO_IMAGE_WEBP = hero1400.url;
 export const HERO_IMAGE_SRCSET = `${hero640.url} 640w, ${hero1024.url} 1024w, ${hero1400.url} 1400w`;
 export const HERO_IMAGE_SIZES = "100vw";
+
 
 export function isArtworkPurchasable(artwork: Pick<Artwork, "sold" | "price">) {
   return !artwork.sold && artwork.price > 0;
