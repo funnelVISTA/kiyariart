@@ -127,8 +127,8 @@ function Home() {
             src={HERO_IMAGE_WEBP}
             srcSet={HERO_IMAGE_SRCSET}
             sizes={HERO_IMAGE_SIZES}
-            width={760}
-            height={826}
+            width={1254}
+            height={1254}
             alt="Bold Afrocentric painting by Kiyari — woman's face with vibrant purple florals on golden yellow"
             fetchPriority="high"
             decoding="async"
