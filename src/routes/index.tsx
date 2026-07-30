@@ -140,14 +140,14 @@ function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-transparent" />
         </motion.div>
 
-        <motion.div style={{ opacity }} className="relative z-10 container-page min-h-screen flex flex-col justify-end pb-52 pt-40">
+        <motion.div style={{ opacity }} className="relative z-10 container-page min-h-screen flex flex-col justify-between md:justify-end pb-60 md:pb-52 pt-28 md:pt-40">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1] }}
             className="max-w-3xl"
           >
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl leading-[1.05]">
+            <h1 className="font-display text-[1.7rem] sm:text-3xl md:text-5xl lg:text-6xl leading-[1.05]">
               <span className="block overflow-hidden">
                 <motion.span
                   className="block pr-1 pb-1"
@@ -173,13 +173,14 @@ function Home() {
                 </motion.span>
               </span>
             </h1>
-            <motion.p
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}
-              className="mt-8 max-w-[60ch] text-lg text-muted-foreground leading-relaxed whitespace-pre-line"
-            >
-              {t("hero.lede")}
-            </motion.p>
           </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}
+            className="mt-6 md:mt-8 max-w-[60ch] text-[0.8rem] sm:text-sm md:text-lg text-muted-foreground leading-relaxed whitespace-pre-line"
+          >
+            {t("hero.lede")}
+          </motion.p>
         </motion.div>
 
         <motion.div
