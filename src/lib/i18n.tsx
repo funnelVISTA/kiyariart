@@ -20,7 +20,7 @@ export const DICT: Dict = {
     en: "Kiyari creates vibrant, stand-out Afrocentric pieces\nthat merge abstract expression with tactile elements\n— to honour the depth and brilliance of our culture.",
     fr: "Kiyari crée des œuvres afrocentriques vibrantes et remarquables qui fusionnent l'expression abstraite et des éléments tactiles — pour honorer la profondeur et l'éclat de notre culture.",
   },
-  "hero.cta1": { en: "Browse the collection", fr: "Voir la collection" },
+  "hero.cta1": { en: "Shop Collection", fr: "Magasiner la collection" },
   "hero.cta2": { en: "Upcoming events", fr: "Prochains événements" },
   "hero.scroll": { en: "Scroll", fr: "Défiler" },
 
