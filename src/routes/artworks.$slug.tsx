@@ -86,7 +86,7 @@ async function loadArtwork(slug: string): Promise<Detail> {
   };
 }
 
-const detailQuery = (slug: string) => ({
+export const detailQuery = (slug: string) => ({
   queryKey: ["artwork-detail", slug] as const,
   queryFn: () => loadArtwork(slug),
   staleTime: 60_000,

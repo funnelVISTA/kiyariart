@@ -1,13 +1,11 @@
 import fsf from "@/assets/futurestarsfoundation.webp.asset.json";
 import bigRich from "@/assets/Big_Rich.jpg.asset.json";
-import fiveStar from "@/assets/fivestar.jpeg.asset.json";
 import amEnough from "@/assets/amenough_logo.png.asset.json";
 import thrive from "@/assets/Thrive4Black.png.asset.json";
 
 const PARTNERS = [
   { name: "Future Stars Foundation", url: "https://futurestarsfoundation.com/", src: fsf.url },
   { name: "Big Rich Entertainment", url: "https://bigrichentertainment.ca/", src: bigRich.url },
-  { name: "FiveStarKidd Productions", url: "https://ca.linkedin.com/in/keith-best-0a77852b", src: fiveStar.url },
   { name: "Am Enough Society", url: "https://amenoughsociety.org/", src: amEnough.url },
   { name: "Thrive 4 Black", url: "https://thrive4blacks.org/", src: thrive.url },
 ];
