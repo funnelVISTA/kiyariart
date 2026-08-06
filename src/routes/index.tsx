@@ -259,16 +259,7 @@ function Home() {
           <Reveal>
             <div className="text-center text-xs uppercase tracking-[0.3em] text-gold mb-8">Our Supporters</div>
           </Reveal>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 items-center">
-            {["Future Stars Foundation", "Pyoor Entertainment", "Big Rich Entertainment", "L&R Studios"].map((s) => (
-              <div
-                key={s}
-                className="text-center text-[11px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground hover:text-gold transition-colors"
-              >
-                {s}
-              </div>
-            ))}
-          </div>
+          <PartnersStrip />
         </div>
       </section>
 
