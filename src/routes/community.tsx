@@ -6,6 +6,7 @@ import { Mail, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { absUrl, canonical } from "@/lib/site-config";
+import { PartnersStrip } from "@/components/site/PartnersStrip";
 
 export const Route = createFileRoute("/community")({
   validateSearch: (s: Record<string, unknown>): { inquiry?: string } => ({
@@ -161,14 +162,8 @@ function CommunityPage() {
           <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">{t("com.supporters.kicker")}</div>
           <h2 className="font-display text-4xl md:text-5xl">{t("com.supporters.title")}</h2>
           <p className="mt-4 text-muted-foreground max-w-xl mx-auto">{t("com.supporters.lede")}</p>
-          <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6">
-            {["Future Stars Foundation", "Pyoor Entertainment", "Big Rich Entertainment", "L&R Studios"].map((s) => (
-              <div key={s} className="border border-border p-6 hover:border-gold transition">
-                <div className="text-sm uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground">
-                  {s}
-                </div>
-              </div>
-            ))}
+          <div className="mt-10">
+            <PartnersStrip />
           </div>
         </section>
       </div>
