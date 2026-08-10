@@ -120,7 +120,7 @@ function Home() {
   return (
     <div data-cf-page="home">
       {/* HERO */}
-      <section ref={ref} className="relative min-h-screen overflow-hidden bg-gradient-hero noise">
+      <section ref={ref} className="relative min-h-screen overflow-hidden hero-surface noise">
         <div className="absolute inset-0 z-0 flex items-center justify-center p-4 md:p-8">
           <img
             src={HERO_IMAGE_WEBP}
@@ -134,12 +134,12 @@ function Home() {
             loading="eager"
             className="max-h-full max-w-full object-contain"
           />
-          {/* Legibility overlays — kept subtle so the artwork still reads */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-background/35" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-transparent" />
+          {/* Legibility overlays — same near-black as the hero fill so there is no seam */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(5,4,3,0.85),rgba(5,4,3,0.15)_45%,rgba(5,4,3,0.3))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(5,4,3,0.7),rgba(5,4,3,0)_55%)]" />
         </div>
 
-        <motion.div style={{ opacity }} className="relative z-10 container-page min-h-screen flex flex-col justify-between md:justify-end pb-60 md:pb-52 pt-28 md:pt-40">
+        <motion.div style={{ opacity }} className="relative z-10 container-page min-h-screen flex flex-col justify-start pb-60 md:pb-52 hero-text-top">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
