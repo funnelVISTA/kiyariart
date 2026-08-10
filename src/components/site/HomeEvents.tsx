@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { Reveal } from "@/components/ui/Reveal";
-import { EventCard, type EventCardData } from "@/components/site/EventCard";
+import type { EventCardData } from "@/components/site/EventCard";
 
 type DbEx = EventCardData & {
   status: "upcoming" | "past";
@@ -19,7 +19,7 @@ type DbEx = EventCardData & {
  * events when there are none upcoming — never a mix.
  */
 export function HomeEventsSection() {
-  const { t, lang } = useI18n();
+  const { lang } = useI18n();
 
   const { data: dbRows } = useQuery({
     queryKey: ["public", "exhibitions"],
@@ -75,11 +75,41 @@ export function HomeEventsSection() {
           View all events <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((e, i) => (
-          <EventCard key={e.id} event={e} index={i} lang={lang} detailsLabel={t("ex.details")} />
-        ))}
-      </div>
+      <ul className="divide-y divide-border border-y border-border">
+        {items.map((e) => {
+          const dateLabel = e.event_date
+            ? new Date(`${e.event_date}T12:00:00`).toLocaleDateString(
+                lang === "fr" ? "fr-FR" : "en-US",
+                { month: "long", day: "numeric", year: "numeric" },
+              )
+            : "Date to be announced";
+          const place = [e.venue, e.city].filter(Boolean).join(", ");
+          return (
+            <li key={e.id}>
+              <Link
+                to="/events"
+                className="group flex items-center justify-between gap-6 py-6 transition-colors hover:bg-card/40"
+              >
+                <div className="min-w-0">
+                  <div className="font-display text-2xl md:text-3xl leading-tight group-hover:text-gold transition-colors break-words">
+                    {e.title}
+                  </div>
+                  <div className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                    {dateLabel}
+                    {e.time_text ? ` · ${e.time_text}` : ""}
+                  </div>
+                  {place && (
+                    <div className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                      {place}
+                    </div>
+                  )}
+                </div>
+                <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-gold transition-colors" />
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }
