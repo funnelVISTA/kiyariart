@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useMemo, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { ARTWORKS, HERO_IMAGE, HERO_WIDE_SRC, HERO_WIDE_SRCSET, HERO_TALL_SRC, HERO_TALL_SRCSET, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
+import { ARTWORKS, HERO_IMAGE, HERO_WIDE_SRC, HERO_WIDE_SRCSET, HERO_SQUARE_SRC, HERO_SQUARE_SRCSET, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
 import { absUrl, canonical } from "@/lib/site-config";
 import { useI18n } from "@/lib/i18n";
 import { TiltCard } from "@/components/ui/TiltCard";
@@ -38,8 +38,8 @@ export const Route = createFileRoute("/")({
       {
         rel: "preload",
         as: "image",
-        href: HERO_TALL_SRC,
-        imagesrcset: HERO_TALL_SRCSET,
+        href: HERO_SQUARE_SRC,
+        imagesrcset: HERO_SQUARE_SRCSET,
         imagesizes: "100vw",
         media: "(max-width: 767px)",
         fetchpriority: "high",
@@ -130,8 +130,46 @@ function Home() {
 
   return (
     <div data-cf-page="home">
-      {/* HERO */}
-      <section ref={ref} className="relative min-h-screen overflow-hidden hero-surface noise">
+      {/* MOBILE HERO — purpose-built stacked composition: headline → full-width uncropped artwork → subtext → CTA */}
+      <section className="md:hidden hero-surface noise">
+        <div className="container-page pt-24 pb-7">
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
+            className="font-display text-[2rem] leading-[1.12] text-balance"
+          >
+            {t("hero.line1")}{" "}{t("hero.line2")}{" "}{t("hero.line3a")}
+            <span className="italic text-gradient-gold">{t("hero.line3b")}</span>
+          </motion.h1>
+        </div>
+
+        <img
+          src={HERO_SQUARE_SRC}
+          srcSet={HERO_SQUARE_SRCSET}
+          sizes="100vw"
+          alt="Bold painting by Kiyari — woman's face with vibrant purple florals on golden yellow"
+          width={1024}
+          height={1024}
+          fetchPriority="high"
+          decoding="async"
+          loading="eager"
+          className="block w-full h-auto"
+        />
+
+        <div className="container-page pt-8 pb-16 flex flex-col items-start gap-6">
+          <p className="text-[0.95rem] text-muted-foreground leading-relaxed whitespace-pre-line">
+            {t("hero.lede")}
+          </p>
+          <Link to="/artworks" className="group inline-flex items-center gap-2 bg-gradient-gold px-5 py-3 text-xs uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition">
+            Shop Collection
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+      </section>
+
+      {/* DESKTOP HERO — unchanged */}
+      <section ref={ref} className="relative hidden md:block min-h-screen overflow-hidden hero-surface noise">
         <div className="absolute inset-0 z-0">
           {/* The photograph itself fills the hero — its own spotlit wall IS the background, so no seam. */}
           <picture>
