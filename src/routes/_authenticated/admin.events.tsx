@@ -674,7 +674,8 @@ function ExhibitionEditor({
                 disabled={
                   saving ||
                   !form.title ||
-                  (mode === "event" && !form.event_date) ||
+                  (mode === "event" &&
+                    (!form.event_date || !isCompleteTime(parseTimeText(form.time_text).start))) ||
                   (mode === "media" && (!form.event_date || !form.venue?.trim()))
                 }
                 className="bg-gradient-gold text-primary-foreground px-6 py-2.5 text-xs uppercase tracking-[0.2em] hover:shadow-glow transition disabled:opacity-50"
@@ -695,6 +696,80 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</span>
       <div className="mt-1.5">{children}</div>
     </label>
+  );
+}
+
+/**
+ * 12-hour time picker for events. Hour + minutes + a required AM/PM select,
+ * with an optional end time. Stores a display-ready string such as
+ * "7:00 PM" or "6:00 PM — 9:00 PM" — never a bare hour.
+ */
+function TimeRangeField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const parsed = parseTimeText(value);
+  const set = (which: "start" | "end", patch: Partial<TimeParts>) => {
+    const next = { ...parsed, [which]: { ...parsed[which], ...patch } };
+    onChange(buildTimeText(next.start, next.end));
+  };
+  const startIncomplete =
+    !isCompleteTime(parsed.start) &&
+    (parsed.start.hour !== "" || parsed.start.minute !== "" || parsed.start.meridiem !== "");
+  return (
+    <div>
+      <Field label="Start time (required — include AM/PM)">
+        <TimeParked parts={parsed.start} onChange={(p) => set("start", p)} />
+      </Field>
+      <div className="mt-3">
+        <Field label="End time (optional — include AM/PM)">
+          <TimeParked parts={parsed.end} onChange={(p) => set("end", p)} />
+        </Field>
+      </div>
+      {(startIncomplete || !isCompleteTime(parsed.start)) && (
+        <p className="mt-1.5 text-[10px] uppercase tracking-[0.2em] text-accent">
+          Please select a time, including AM or PM
+        </p>
+      )}
+    </div>
+  );
+}
+
+const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
+const MINUTES = ["00", "15", "30", "45"];
+
+function TimeParked({
+  parts,
+  onChange,
+}: {
+  parts: TimeParts;
+  onChange: (p: Partial<TimeParts>) => void;
+}) {
+  const cls =
+    "bg-background border border-border px-3 py-2.5 text-sm focus:border-gold outline-none [color-scheme:dark]";
+  return (
+    <div className="flex items-center gap-2">
+      <select value={parts.hour} onChange={(e) => onChange({ hour: e.target.value })} className={cls} aria-label="Hour">
+        <option value="">Hour</option>
+        {HOURS.map((h) => (
+          <option key={h} value={h}>{h}</option>
+        ))}
+      </select>
+      <span className="text-muted-foreground">:</span>
+      <select value={parts.minute} onChange={(e) => onChange({ minute: e.target.value })} className={cls} aria-label="Minutes">
+        <option value="">Min</option>
+        {MINUTES.map((m) => (
+          <option key={m} value={m}>{m}</option>
+        ))}
+      </select>
+      <select
+        value={parts.meridiem}
+        onChange={(e) => onChange({ meridiem: e.target.value as TimeParts["meridiem"] })}
+        className={cls}
+        aria-label="AM or PM"
+      >
+        <option value="">AM/PM</option>
+        <option value="AM">AM</option>
+        <option value="PM">PM</option>
+      </select>
+    </div>
   );
 }
 
