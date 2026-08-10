@@ -132,7 +132,7 @@ function Home() {
     <div data-cf-page="home">
       {/* MOBILE HERO — purpose-built stacked composition: headline → full-width uncropped artwork → subtext → CTA */}
       <section className="md:hidden hero-surface noise">
-        <div className="container-page pt-10 pb-3">
+        <div className="container-page pt-16 pb-3">
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
