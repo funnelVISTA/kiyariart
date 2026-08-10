@@ -19,6 +19,7 @@ import { listArtworkAvailability } from "@/lib/payments.functions";
 import { AboutArtistSection } from "@/components/site/AboutArtist";
 import { PartnersStrip } from "@/components/site/PartnersStrip";
 import { HomeEventsSection } from "@/components/site/HomeEvents";
+import mobileHero from "@/assets/kiyari-mobile-hero.png.asset.json";
 
 const thumb = (url: string, w = 800) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 
@@ -38,8 +39,7 @@ export const Route = createFileRoute("/")({
       {
         rel: "preload",
         as: "image",
-        href: HERO_SQUARE_SRC,
-        imagesrcset: HERO_SQUARE_SRCSET,
+        href: mobileHero.url,
         imagesizes: "100vw",
         media: "(max-width: 767px)",
         fetchpriority: "high",
@@ -130,44 +130,45 @@ function Home() {
 
   return (
     <div data-cf-page="home">
-      {/* MOBILE HERO — exactly ONE hero image (matches its 1080x1920 ratio so nothing crops or repeats).
-          Text is absolutely positioned on the dark wall just above / below the canvas. */}
-      <section className="md:hidden relative w-full aspect-[1080/1920] overflow-hidden bg-[#0a0807]">
-        <img
-          src={HERO_TALL_SRC}
-          srcSet={HERO_TALL_SRCSET}
-          sizes="100vw"
-          alt="Bold painting by Kiyari — woman's face with vibrant purple florals on golden yellow"
-          fetchPriority="high"
-          decoding="async"
-          loading="eager"
-          className="absolute inset-0 h-full w-full object-cover object-top"
-        />
-        {/* Very subtle darkening behind the header icons only — keeps nav readable, matches desktop */}
-        <div className="absolute inset-x-0 top-0 h-[12%] bg-[linear-gradient(to_bottom,rgba(5,4,3,0.45),rgba(5,4,3,0))]" />
+      {/* MOBILE HERO — one unaltered photograph. Its lighting is baked into the image. */}
+      <section className="md:hidden relative w-full overflow-hidden bg-background">
+        <div className="relative w-full aspect-square">
+          <img
+            src={mobileHero.url}
+            alt="Kiyari painting of a woman with purple flowers over her eyes, displayed on a dark spotlit wall"
+            fetchPriority="high"
+            decoding="async"
+            loading="eager"
+            className="block h-auto w-full"
+          />
 
-        {/* Headline — sits on the flat dark wall just above the canvas top */}
-        <motion.h1
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
-          className="absolute left-0 right-0 bottom-[70.5%] z-10 container-page font-display text-[1.1rem] leading-[1.2] text-balance drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]"
-        >
-          {t("hero.line1")}{" "}{t("hero.line2")}{" "}{t("hero.line3a")}
-          <span className="italic text-gradient-gold pr-[0.12em]">{t("hero.line3b")}</span>
-        </motion.h1>
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
+            className="absolute inset-x-0 bottom-[81%] z-10 container-page font-display text-[0.78rem] leading-tight text-balance"
+          >
+            {t("hero.line1")}{" "}{t("hero.line2")}{" "}{t("hero.line3a")}
+            <span className="italic text-gradient-gold pr-[0.12em]">{t("hero.line3b")}</span>
+          </motion.h1>
 
-        {/* Subtext + CTA — start just below the canvas bottom (~70.5% down) */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45, duration: 0.7 }}
-          className="absolute left-0 right-0 top-[72%] z-10 container-page flex flex-col items-start gap-3"
-        >
-          <p className="text-[0.78rem] text-muted-foreground leading-snug whitespace-pre-line drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45, duration: 0.7 }}
+            className="absolute inset-x-0 top-[85.5%] z-10 container-page text-[0.68rem] text-muted-foreground leading-snug whitespace-pre-line"
+          >
             {t("hero.lede")}
-          </p>
-          <Link to="/artworks" className="group inline-flex items-center gap-2 bg-gradient-gold px-5 py-3 text-xs uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition">
+          </motion.p>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55, duration: 0.7 }}
+          className="container-page pb-5 pt-3"
+        >
+          <Link to="/artworks" className="group inline-flex items-center gap-2 bg-gradient-gold px-5 py-3 text-xs uppercase tracking-[0.2em] text-primary-foreground font-medium transition">
             Shop Collection
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
