@@ -1,5 +1,6 @@
 import { Calendar, MapPin, Pencil, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
+import { parseCalendarDate } from "@/lib/dates";
 
 export type EventCardData = {
   id: string;
@@ -33,7 +34,8 @@ export function EventCard({
   detailsLabel?: string;
   admin?: { onEdit: () => void; onDelete: () => void };
 }) {
-  const d = event.event_date ? new Date(event.event_date) : null;
+  // Parse as a local calendar date (never UTC midnight) so the day never shifts.
+  const d = parseCalendarDate(event.event_date);
   const monthShort = d
     ? d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "short" }).toUpperCase()
     : "TBA";
