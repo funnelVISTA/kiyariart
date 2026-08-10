@@ -1,4 +1,4 @@
-import { formatCalendarDate, parseCalendarDate, todayCalendarDate } from "@/lib/dates";
+import { parseCalendarDate, todayCalendarDate } from "@/lib/dates";
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
