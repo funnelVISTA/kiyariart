@@ -1,3 +1,4 @@
+import { parseCalendarDate, todayCalendarDate } from "@/lib/dates";
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
@@ -37,7 +38,7 @@ export function HomeEventsSection() {
   // Same date rule as the Events page: an event is past once its end date
   // (fallback: start date) is before today. Plain string compare on the
   // YYYY-MM-DD values avoids timezone off-by-one.
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = todayCalendarDate();
   const { items, heading } = useMemo(() => {
     const rows = dbRows ?? [];
     const isPastByDate = (r: DbEx) => {
@@ -78,7 +79,7 @@ export function HomeEventsSection() {
       <ul className="divide-y divide-border border-y border-border">
         {items.map((e) => {
           const dateLabel = e.event_date
-            ? new Date(`${e.event_date}T12:00:00`).toLocaleDateString(
+            ? parseCalendarDate(e.event_date)!.toLocaleDateString(
                 lang === "fr" ? "fr-FR" : "en-US",
                 { month: "long", day: "numeric", year: "numeric" },
               )

@@ -10,17 +10,12 @@ import {
   adminDeleteExhibition,
   adminUploadImage,
 } from "@/lib/admin-content.functions";
+import { formatCalendarDate, todayCalendarDate } from "@/lib/dates";
 import { compressImage, blobToBase64 } from "@/lib/image-upload";
 
 const MAX_GALLERY_BATCH = 20;
 
-function todayISO() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
+const todayISO = todayCalendarDate;
 
 export const Route = createFileRoute("/_authenticated/admin/events")({
   head: () => ({ meta: [{ title: "Events — Admin" }, { name: "robots", content: "noindex" }] }),
@@ -263,10 +258,7 @@ function Section({
 }
 
 function formatDate(d?: string | null) {
-  if (!d) return "TBD";
-  const dt = new Date(d);
-  if (isNaN(dt.getTime())) return d;
-  return dt.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return formatCalendarDate(d);
 }
 
 function ExhibitionEditor({
@@ -449,13 +441,11 @@ function ExhibitionEditor({
 
                 <div className="grid grid-cols-2 gap-3">
                   <Field label={mode === "event" ? "Date (required)" : "Date of event (required)"}>
-                    <input
-                      type="date"
+                    <DateInput
                       value={form.event_date ?? ""}
                       min={mode === "event" && !form.id ? todayISO() : undefined}
                       max={mode === "media" ? todayISO() : undefined}
-                      onChange={(e) => setForm((f) => ({ ...f, event_date: e.target.value }))}
-                      className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                      onChange={(v) => setForm((f) => ({ ...f, event_date: v }))}
                     />
                     <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
                       {mode === "event" ? "Start date" : "Date the event happened"} · click for calendar or type YYYY-MM-DD
@@ -463,12 +453,10 @@ function ExhibitionEditor({
                   </Field>
                   {mode === "event" && (
                     <Field label="End date (optional)">
-                      <input
-                        type="date"
+                      <DateInput
                         value={form.end_date ?? ""}
                         min={form.event_date || undefined}
-                        onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
-                        className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                        onChange={(v) => setForm((f) => ({ ...f, end_date: v }))}
                       />
                       <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
                         Auto-moves to Past after this date
@@ -691,5 +679,53 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</span>
       <div className="mt-1.5">{children}</div>
     </label>
+  );
+}
+
+/**
+ * Calendar date input: native date field (typable) plus an always-visible
+ * calendar button that opens the browser's picker. The value is the raw
+ * "YYYY-MM-DD" string, so no timezone conversion ever happens.
+ */
+function DateInput({
+  value,
+  onChange,
+  min,
+  max,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  min?: string;
+  max?: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const openPicker = () => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof (el as any).showPicker === "function") {
+      try { (el as any).showPicker(); return; } catch { /* fall through */ }
+    }
+    el.focus();
+  };
+  return (
+    <div className="relative">
+      <input
+        ref={ref}
+        type="date"
+        value={value}
+        min={min}
+        max={max}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-background border border-border pl-3 pr-11 py-2.5 text-sm focus:border-gold outline-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0"
+      />
+      <button
+        type="button"
+        onClick={openPicker}
+        aria-label="Open calendar"
+        className="absolute right-1 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center text-gold hover:bg-gold/10 transition"
+      >
+        <Calendar className="h-4 w-4" />
+      </button>
+    </div>
   );
 }

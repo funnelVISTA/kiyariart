@@ -1,3 +1,4 @@
+import { formatCalendarDate, todayCalendarDate } from "@/lib/dates";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion } from "motion/react";
@@ -61,7 +62,7 @@ function ExhibitionsPage() {
 
   // Auto-move upcoming events to past once their END date (fallback: start
   // date) is before today.
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = todayCalendarDate();
   const isPastByDate = (r: DbEx) => {
     const cmp = r.end_date || r.event_date;
     return !!cmp && cmp < todayStr;
@@ -161,7 +162,7 @@ function ExhibitionsPage() {
                   <h3 className="font-display text-2xl md:text-3xl leading-tight">{show.title}</h3>
                   <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                     {show.event_date && (
-                      <span className="inline-flex items-center gap-1.5"><Calendar className="h-3 w-3 text-gold" />{new Date(show.event_date).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+                      <span className="inline-flex items-center gap-1.5"><Calendar className="h-3 w-3 text-gold" />{formatCalendarDate(show.event_date, { month: "long", day: "numeric", year: "numeric" }, lang === "fr" ? "fr-FR" : "en-US")}</span>
                     )}
                     {show.time_text && <span className="normal-case tracking-normal text-muted-foreground">· {show.time_text}</span>}
                     {(show.venue || show.city) && (
