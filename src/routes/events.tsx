@@ -14,9 +14,9 @@ export const Route = createFileRoute("/events")({
   head: () => ({
     meta: [
       { title: "Events & Exhibitions | art by Kiyari — Calgary" },
-      { name: "description", content: "Upcoming events, past shows, and a gallery of moments from art by Kiyari — see the Afrocentric originals live in Calgary and beyond." },
+      { name: "description", content: "Upcoming events, past shows, and a gallery of moments from art by Kiyari — see the originals live in Calgary and beyond." },
       { property: "og:title", content: "Events & Exhibitions | art by Kiyari" },
-      { property: "og:description", content: "Where to see Kiyari's Afrocentric originals live — upcoming shows, past exhibitions, and gallery moments." },
+      { property: "og:description", content: "Where to see Kiyari's originals live — upcoming shows, past exhibitions, and gallery moments." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: absUrl("/events") },
     ],

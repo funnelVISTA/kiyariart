@@ -24,10 +24,10 @@ const thumb = (url: string, w = 800) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Kiyari Art | Bold Afrocentric Textured Originals — Calgary" },
-      { name: "description", content: "Shop bold Afrocentric textured originals by Kiyari — vibrant, one-of-a-kind mixed-media paintings from Calgary." },
-      { property: "og:title", content: "Kiyari Art | Bold Afrocentric Textured Originals — Calgary" },
-      { property: "og:description", content: "Vibrant, stand-out Afrocentric originals that merge abstract expression with tactile elements." },
+      { title: "Kiyari Art | Bold Textured Originals — Calgary" },
+      { name: "description", content: "Shop bold textured originals by Kiyari — vibrant, one-of-a-kind mixed-media paintings from Calgary." },
+      { property: "og:title", content: "Kiyari Art | Bold Textured Originals — Calgary" },
+      { property: "og:description", content: "Vibrant, stand-out originals that merge abstract expression with tactile elements." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: absUrl("/") },
       { property: "og:image", content: absUrl(HERO_IMAGE) },
@@ -138,7 +138,7 @@ function Home() {
             <source media="(max-width: 767px)" srcSet={HERO_TALL_SRCSET} sizes="100vw" />
             <img
               src={HERO_WIDE_SRC}
-              alt="Bold Afrocentric painting by Kiyari — woman's face with vibrant purple florals on golden yellow"
+              alt="Bold painting by Kiyari — woman's face with vibrant purple florals on golden yellow"
               fetchPriority="high"
               decoding="async"
               loading="eager"

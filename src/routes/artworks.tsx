@@ -22,10 +22,10 @@ const thumb = (url: string, w = 700) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 export const Route = createFileRoute("/artworks")({
   head: () => ({
     meta: [
-      { title: "Original Afrocentric Paintings for Sale | Kiyari — Calgary" },
-      { name: "description", content: "Shop original mixed-media Afrocentric paintings by Kiyari. One-of-a-kind, culturally guided, textured fine art shipped from Calgary." },
-      { property: "og:title", content: "Original Afrocentric Paintings for Sale | Kiyari — Calgary" },
-      { property: "og:description", content: "One-of-a-kind mixed-media Afrocentric paintings from Kiyari's Calgary studio." },
+      { title: "Original Paintings for Sale | Kiyari — Calgary" },
+      { name: "description", content: "Shop original mixed-media paintings by Kiyari. One-of-a-kind, culturally guided, textured fine art shipped from Calgary." },
+      { property: "og:title", content: "Original Paintings for Sale | Kiyari — Calgary" },
+      { property: "og:description", content: "One-of-a-kind mixed-media paintings from Kiyari's Calgary studio." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: absUrl("/artworks") },
     ],

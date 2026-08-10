@@ -111,7 +111,7 @@ export const Route = createFileRoute("/artworks/$slug")({
       d.seoDescription ||
       d.title +
         (d.medium ? ", " + d.medium : "") +
-        " — a one-of-a-kind Afrocentric original by Kiyari (Calgary)." +
+        " — a one-of-a-kind original by Kiyari (Calgary)." +
         (d.sold ? " Sold." : d.price > 0 ? " CAD $" + d.price.toLocaleString() + "." : "");
     const description =
       rawDesc.length > 160 ? rawDesc.slice(0, 157).trimEnd() + "…" : rawDesc;
