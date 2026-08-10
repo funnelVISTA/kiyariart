@@ -135,15 +135,15 @@ function Home() {
             className="max-h-full max-w-full object-contain"
             style={{
               maskImage:
-                "linear-gradient(to right, transparent 0%, #000 4%, #000 96%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 4%, #000 96%, transparent 100%)",
+                "linear-gradient(to right, transparent 0%, #000 9%, #000 91%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%)",
               WebkitMaskImage:
-                "linear-gradient(to right, transparent 0%, #000 4%, #000 96%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 4%, #000 96%, transparent 100%)",
+                "linear-gradient(to right, transparent 0%, #000 9%, #000 91%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%)",
               maskComposite: "intersect",
               WebkitMaskComposite: "source-in",
             }}
           />
           {/* Legibility overlays — same near-black as the hero fill so there is no seam */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(5,4,3,0.85),rgba(5,4,3,0.15)_45%,rgba(5,4,3,0.3))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(5,4,3,0.88),rgba(5,4,3,0.12)_45%,rgba(5,4,3,0.25))]" />
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(5,4,3,0.7),rgba(5,4,3,0)_55%)]" />
           {/* Mobile-only scrim so the headline/lede stay readable over the artwork */}
           <div className="absolute inset-0 md:hidden bg-[linear-gradient(to_bottom,rgba(5,4,3,0.75),rgba(5,4,3,0.55)_45%,rgba(5,4,3,0)_65%)]" />
@@ -184,12 +184,6 @@ function Home() {
             </h1>
           </motion.div>
 
-          <motion.p
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}
-            className="mt-6 md:mt-8 max-w-[52ch] text-[0.95rem] sm:text-base md:text-lg lg:text-xl text-muted-foreground leading-relaxed whitespace-pre-line"
-          >
-            {t("hero.lede")}
-          </motion.p>
         </motion.div>
 
         <motion.div
@@ -197,8 +191,11 @@ function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.1, duration: 0.7 }}
-          className="absolute bottom-16 left-0 right-0 z-10 container-page flex"
+          className="absolute bottom-16 left-0 right-0 z-10 container-page flex flex-col items-start gap-5 md:gap-6"
         >
+          <p className="max-w-[46ch] text-[0.9rem] sm:text-base md:text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
+            {t("hero.lede")}
+          </p>
           <Link to="/artworks" className="group inline-flex items-center gap-2 bg-gradient-gold px-5 py-2.5 text-xs uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition">
             Shop Collection
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
