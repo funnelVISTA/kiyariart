@@ -19,7 +19,7 @@ type DbEx = EventCardData & {
  * events when there are none upcoming — never a mix.
  */
 export function HomeEventsSection() {
-  const { t, lang } = useI18n();
+  const { lang } = useI18n();
 
   const { data: dbRows } = useQuery({
     queryKey: ["public", "exhibitions"],
