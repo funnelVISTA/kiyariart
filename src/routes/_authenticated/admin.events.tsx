@@ -502,14 +502,10 @@ function ExhibitionEditor({
                         />
                       </Field>
                     </div>
-                    <Field label="Time (free text, optional)">
-                      <input
-                        value={form.time_text ?? ""}
-                        onChange={(e) => setForm((f) => ({ ...f, time_text: e.target.value }))}
-                        placeholder="e.g. 6 — 9 PM"
-                        className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
-                      />
-                    </Field>
+                    <TimeRangeField
+                      value={form.time_text ?? ""}
+                      onChange={(v) => setForm((f) => ({ ...f, time_text: v }))}
+                    />
                     <Field label="Link (optional)">
                       <input
                         value={form.link_url ?? ""}
