@@ -145,6 +145,8 @@ function Home() {
           {/* Legibility overlays — same near-black as the hero fill so there is no seam */}
           <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(5,4,3,0.85),rgba(5,4,3,0.15)_45%,rgba(5,4,3,0.3))]" />
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(5,4,3,0.7),rgba(5,4,3,0)_55%)]" />
+          {/* Mobile-only scrim so the headline/lede stay readable over the artwork */}
+          <div className="absolute inset-0 md:hidden bg-[linear-gradient(to_bottom,rgba(5,4,3,0.75),rgba(5,4,3,0.55)_45%,rgba(5,4,3,0)_65%)]" />
         </div>
 
         <motion.div style={{ opacity }} className="relative z-10 container-page min-h-screen flex flex-col justify-start pb-60 md:pb-52 hero-text-top">
