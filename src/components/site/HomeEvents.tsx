@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
+import { formatEventTime } from "@/lib/event-time";
 import { Reveal } from "@/components/ui/Reveal";
 import type { EventCardData } from "@/components/site/EventCard";
 
@@ -97,7 +98,7 @@ export function HomeEventsSection() {
                   </div>
                   <div className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                     {dateLabel}
-                    {e.time_text ? ` · ${e.time_text}` : ""}
+                    {e.time_text ? `  ·  ${formatEventTime(e.time_text)}` : ""}
                   </div>
                   {place && (
                     <div className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">

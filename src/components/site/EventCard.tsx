@@ -1,6 +1,7 @@
-import { Calendar, MapPin, Pencil, Trash2 } from "lucide-react";
+import { Clock, MapPin, Pencil, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
 import { parseCalendarDate } from "@/lib/dates";
+import { formatEventTime } from "@/lib/event-time";
 
 export type EventCardData = {
   id: string;
@@ -67,17 +68,18 @@ export function EventCard({
           <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{year}</div>
         </div>
         <h3 className="mt-2 font-display text-xl leading-tight">{event.title}</h3>
-        <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+        <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
           {event.time_text && (
-            <div className="inline-flex items-center gap-1.5">
-              <Calendar className="h-3 w-3 text-gold" /> {event.time_text}
-            </div>
+            <span className="inline-flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5 shrink-0 text-gold" />
+              {formatEventTime(event.time_text)}
+            </span>
           )}
           {(event.venue || event.city) && (
-            <div className="inline-flex items-center gap-1.5">
-              <MapPin className="h-3 w-3 text-gold" />{" "}
+            <span className="inline-flex items-center gap-2">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-gold" />
               {[event.venue, event.city].filter(Boolean).join(", ")}
-            </div>
+            </span>
           )}
         </div>
         {event.blurb && (
