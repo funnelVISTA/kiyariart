@@ -133,6 +133,14 @@ function Home() {
             decoding="async"
             loading="eager"
             className="max-h-full max-w-full object-contain"
+            style={{
+              maskImage:
+                "linear-gradient(to right, transparent 0%, #000 4%, #000 96%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 4%, #000 96%, transparent 100%)",
+              WebkitMaskImage:
+                "linear-gradient(to right, transparent 0%, #000 4%, #000 96%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 4%, #000 96%, transparent 100%)",
+              maskComposite: "intersect",
+              WebkitMaskComposite: "source-in",
+            }}
           />
           {/* Legibility overlays — same near-black as the hero fill so there is no seam */}
           <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(5,4,3,0.85),rgba(5,4,3,0.15)_45%,rgba(5,4,3,0.3))]" />
