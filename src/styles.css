@@ -76,6 +76,13 @@
 
   html { scroll-behavior: smooth; }
 
+  /* Mobile reading comfort: bump the root size so every rem-based type
+     scale (body copy, small labels, buttons) grows proportionally on
+     phones without touching desktop sizing. */
+  @media (max-width: 767px) {
+    html { font-size: 17.5px; }
+  }
+
   body {
     background: var(--color-background);
     color: var(--color-foreground);
