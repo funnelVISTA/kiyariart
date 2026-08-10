@@ -135,9 +135,9 @@ function Home() {
             className="max-h-full max-w-full object-contain"
             style={{
               maskImage:
-                "linear-gradient(to right, transparent 0%, #000 9%, #000 91%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%)",
+                "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%)",
               WebkitMaskImage:
-                "linear-gradient(to right, transparent 0%, #000 9%, #000 91%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%)",
+                "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%)",
               maskComposite: "intersect",
               WebkitMaskComposite: "source-in",
             }}
