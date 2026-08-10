@@ -130,49 +130,46 @@ function Home() {
 
   return (
     <div data-cf-page="home">
-      {/* MOBILE HERO — image fills the section; text overlays the photo's dark wall above/below the canvas */}
-      <section className="md:hidden relative min-h-[100svh] overflow-hidden hero-surface noise">
-        <div className="absolute inset-0 z-0">
-          <img
-            src={HERO_TALL_SRC}
-            srcSet={HERO_TALL_SRCSET}
-            sizes="100vw"
-            alt="Bold painting by Kiyari — woman's face with vibrant purple florals on golden yellow"
-            fetchPriority="high"
-            decoding="async"
-            loading="eager"
-            className="h-full w-full object-cover object-center"
-          />
-          <div className="absolute inset-x-0 top-0 h-[34%] bg-[linear-gradient(to_bottom,rgba(5,4,3,0.78),rgba(5,4,3,0.15))]" />
-          <div className="absolute inset-x-0 bottom-0 h-[32%] bg-[linear-gradient(to_top,rgba(5,4,3,0.85),rgba(5,4,3,0))]" />
-        </div>
+      {/* MOBILE HERO — exactly ONE hero image (matches its 1080x1920 ratio so nothing crops or repeats).
+          Text is absolutely positioned on the dark wall just above / below the canvas. */}
+      <section className="md:hidden relative w-full aspect-[1080/1920] overflow-hidden bg-[#0a0807]">
+        <img
+          src={HERO_TALL_SRC}
+          srcSet={HERO_TALL_SRCSET}
+          sizes="100vw"
+          alt="Bold painting by Kiyari — woman's face with vibrant purple florals on golden yellow"
+          fetchPriority="high"
+          decoding="async"
+          loading="eager"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
 
-        <div className="relative z-10 min-h-[100svh] flex flex-col justify-between container-page pt-[8.5rem] pb-10">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
-            className="font-display text-[1.35rem] leading-[1.14] text-balance"
-          >
-            {t("hero.line1")}{" "}{t("hero.line2")}{" "}{t("hero.line3a")}
-            <span className="italic text-gradient-gold pr-[0.12em]">{t("hero.line3b")}</span>
-          </motion.h1>
+        {/* Headline — sits on the wall, bottom edge just above the canvas top (~32% down) */}
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
+          className="absolute left-0 right-0 bottom-[69.5%] z-10 container-page font-display text-[1.15rem] leading-[1.18] text-balance drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]"
+        >
+          {t("hero.line1")}{" "}{t("hero.line2")}{" "}{t("hero.line3a")}
+          <span className="italic text-gradient-gold pr-[0.12em]">{t("hero.line3b")}</span>
+        </motion.h1>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.7 }}
-            className="flex flex-col items-start gap-4 mt-auto"
-          >
-            <p className="text-[0.8rem] text-muted-foreground leading-snug whitespace-pre-line">
-              {t("hero.lede")}
-            </p>
-            <Link to="/artworks" className="group inline-flex items-center gap-2 bg-gradient-gold px-5 py-3 text-xs uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition">
-              Shop Collection
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </motion.div>
-        </div>
+        {/* Subtext + CTA — start just below the canvas bottom (~70.5% down) */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.7 }}
+          className="absolute left-0 right-0 top-[72%] z-10 container-page flex flex-col items-start gap-3"
+        >
+          <p className="text-[0.78rem] text-muted-foreground leading-snug whitespace-pre-line drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
+            {t("hero.lede")}
+          </p>
+          <Link to="/artworks" className="group inline-flex items-center gap-2 bg-gradient-gold px-5 py-3 text-xs uppercase tracking-[0.2em] text-primary-foreground font-medium hover:shadow-glow transition">
+            Shop Collection
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </motion.div>
       </section>
 
       {/* DESKTOP HERO — unchanged */}
