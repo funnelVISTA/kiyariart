@@ -162,7 +162,7 @@ function Home() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.7 }}
-            className="flex flex-col items-start gap-4"
+            className="flex flex-col items-start gap-4 mt-auto"
           >
             <p className="text-[0.8rem] text-muted-foreground leading-snug whitespace-pre-line">
               {t("hero.lede")}
