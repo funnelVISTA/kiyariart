@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
-import { Reveal, RevealText } from "@/components/ui/Reveal";
+import { Reveal } from "@/components/ui/Reveal";
 import { EventCard, type EventCardData } from "@/components/site/EventCard";
 
 type DbEx = EventCardData & {
