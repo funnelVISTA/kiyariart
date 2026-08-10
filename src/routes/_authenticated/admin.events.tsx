@@ -441,13 +441,11 @@ function ExhibitionEditor({
 
                 <div className="grid grid-cols-2 gap-3">
                   <Field label={mode === "event" ? "Date (required)" : "Date of event (required)"}>
-                    <input
-                      type="date"
+                    <DateInput
                       value={form.event_date ?? ""}
                       min={mode === "event" && !form.id ? todayISO() : undefined}
                       max={mode === "media" ? todayISO() : undefined}
-                      onChange={(e) => setForm((f) => ({ ...f, event_date: e.target.value }))}
-                      className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                      onChange={(v) => setForm((f) => ({ ...f, event_date: v }))}
                     />
                     <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
                       {mode === "event" ? "Start date" : "Date the event happened"} · click for calendar or type YYYY-MM-DD
@@ -455,12 +453,10 @@ function ExhibitionEditor({
                   </Field>
                   {mode === "event" && (
                     <Field label="End date (optional)">
-                      <input
-                        type="date"
+                      <DateInput
                         value={form.end_date ?? ""}
                         min={form.event_date || undefined}
-                        onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
-                        className="w-full bg-background border border-border px-3 py-2 text-sm focus:border-gold outline-none"
+                        onChange={(v) => setForm((f) => ({ ...f, end_date: v }))}
                       />
                       <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
                         Auto-moves to Past after this date
