@@ -67,7 +67,9 @@ export function HomeEventsSection() {
           <Reveal>
             <div className="text-xs uppercase tracking-[0.3em] text-gold mb-3">Events</div>
           </Reveal>
-          <RevealText as="h2" text={heading} className="font-display text-4xl md:text-6xl block" />
+          <Reveal>
+            <h2 className="font-display text-4xl md:text-6xl">{heading}</h2>
+          </Reveal>
         </div>
         <Link to="/events" className="inline-flex items-center gap-2 text-sm link-underline">
           View all events <ArrowRight className="h-4 w-4" />
