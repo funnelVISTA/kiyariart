@@ -120,6 +120,25 @@
   .shadow-elegant { box-shadow: var(--shadow-elegant); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
   .container-page { @apply mx-auto w-full max-w-7xl px-6 md:px-10; }
+
+  /* Hero surface: one continuous dark field matching the artwork photo's wall,
+     plus a soft spotlight glow that extends the photo's own light. */
+  .hero-surface {
+    background-color: #050403;
+    background-image: radial-gradient(120% 65% at 50% 0%, rgba(255, 238, 209, 0.12), rgba(5, 4, 3, 0) 62%);
+  }
+  /* Align the headline's top with the top edge of the canvas inside the photo.
+     The photo renders as a centred square (object-contain); the canvas begins
+     ~19% down that square. */
+  .hero-text-top {
+    /* Mobile: the artwork square sits low and small — keep the headline above it. */
+    padding-top: 7rem;
+  }
+  @media (min-width: 768px) {
+    .hero-text-top {
+      padding-top: max(8rem, calc(2rem + 0.19 * (100svh - 4rem)));
+    }
+  }
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
 
