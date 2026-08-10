@@ -2,7 +2,8 @@ import { formatCalendarDate, todayCalendarDate } from "@/lib/dates";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, Clock, MapPin } from "lucide-react";
+import { formatEventTime } from "@/lib/event-time";
 import { useI18n } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -160,13 +161,15 @@ function ExhibitionsPage() {
               <section key={show.id} className="relative">
                 <div className="mb-6 border-l-2 border-gold/60 pl-4">
                   <h3 className="font-display text-2xl md:text-3xl leading-tight">{show.title}</h3>
-                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                     {show.event_date && (
-                      <span className="inline-flex items-center gap-1.5"><Calendar className="h-3 w-3 text-gold" />{formatCalendarDate(show.event_date, { month: "long", day: "numeric", year: "numeric" }, lang === "fr" ? "fr-FR" : "en-US")}</span>
+                      <span className="inline-flex items-center gap-2"><Calendar className="h-3.5 w-3.5 shrink-0 text-gold" />{formatCalendarDate(show.event_date, { month: "long", day: "numeric", year: "numeric" }, lang === "fr" ? "fr-FR" : "en-US")}</span>
                     )}
-                    {show.time_text && <span className="normal-case tracking-normal text-muted-foreground">· {show.time_text}</span>}
+                    {show.time_text && (
+                      <span className="inline-flex items-center gap-2 normal-case tracking-normal"><Clock className="h-3.5 w-3.5 shrink-0 text-gold" />{formatEventTime(show.time_text)}</span>
+                    )}
                     {(show.venue || show.city) && (
-                      <span className="inline-flex items-center gap-1.5"><MapPin className="h-3 w-3 text-gold" />{[show.venue, show.city].filter(Boolean).join(", ")}</span>
+                      <span className="inline-flex items-center gap-2"><MapPin className="h-3.5 w-3.5 shrink-0 text-gold" />{[show.venue, show.city].filter(Boolean).join(", ")}</span>
                     )}
                   </div>
                   {show.blurb && (
