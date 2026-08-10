@@ -147,12 +147,12 @@ function Home() {
           <div className="absolute inset-x-0 bottom-0 h-[32%] bg-[linear-gradient(to_top,rgba(5,4,3,0.85),rgba(5,4,3,0))]" />
         </div>
 
-        <div className="relative z-10 min-h-[100svh] flex flex-col justify-between container-page pt-[5.5rem] pb-10">
+        <div className="relative z-10 min-h-[100svh] flex flex-col justify-between container-page pt-[6.5rem] pb-10">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
-            className="font-display text-[1.6rem] leading-[1.14] text-balance"
+            className="font-display text-[1.35rem] leading-[1.14] text-balance"
           >
             {t("hero.line1")}{" "}{t("hero.line2")}{" "}{t("hero.line3a")}
             <span className="italic text-gradient-gold pr-[0.12em]">{t("hero.line3b")}</span>
