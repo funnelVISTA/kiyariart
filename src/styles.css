@@ -124,8 +124,25 @@
   /* Hero surface: one continuous dark field matching the artwork photo's wall,
      plus a soft spotlight glow that extends the photo's own light. */
   .hero-surface {
-    background-color: #050403;
-    background-image: radial-gradient(120% 65% at 50% 0%, rgba(255, 238, 209, 0.12), rgba(5, 4, 3, 0) 62%);
+    /* Matches the photo's wall falloff sampled from the artwork edges:
+       near-black at the very top, warm lift through the middle where the
+       spotlight lands, darkening again toward the bottom. */
+    background-color: #131010;
+    background-image:
+      radial-gradient(90% 55% at 50% 38%, rgba(255, 238, 209, 0.06), rgba(19, 16, 16, 0) 70%),
+      linear-gradient(
+        to bottom,
+        #010101 0%,
+        #0a0807 10%,
+        #16120f 20%,
+        #191410 30%,
+        #1b1712 45%,
+        #191510 60%,
+        #130f0c 72%,
+        #0b0908 85%,
+        #050404 95%,
+        #050403 100%
+      );
   }
   /* Align the headline's top with the top edge of the canvas inside the photo.
      The photo renders as a centred square (object-contain); the canvas begins
