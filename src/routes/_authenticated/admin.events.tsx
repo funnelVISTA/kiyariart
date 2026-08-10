@@ -681,3 +681,51 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </label>
   );
 }
+
+/**
+ * Calendar date input: native date field (typable) plus an always-visible
+ * calendar button that opens the browser's picker. The value is the raw
+ * "YYYY-MM-DD" string, so no timezone conversion ever happens.
+ */
+function DateInput({
+  value,
+  onChange,
+  min,
+  max,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  min?: string;
+  max?: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const openPicker = () => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof (el as any).showPicker === "function") {
+      try { (el as any).showPicker(); return; } catch { /* fall through */ }
+    }
+    el.focus();
+  };
+  return (
+    <div className="relative">
+      <input
+        ref={ref}
+        type="date"
+        value={value}
+        min={min}
+        max={max}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-background border border-border pl-3 pr-11 py-2.5 text-sm focus:border-gold outline-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0"
+      />
+      <button
+        type="button"
+        onClick={openPicker}
+        aria-label="Open calendar"
+        className="absolute right-1 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center text-gold hover:bg-gold/10 transition"
+      >
+        <Calendar className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
