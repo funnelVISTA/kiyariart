@@ -10,17 +10,12 @@ import {
   adminDeleteExhibition,
   adminUploadImage,
 } from "@/lib/admin-content.functions";
+import { formatCalendarDate, todayCalendarDate } from "@/lib/dates";
 import { compressImage, blobToBase64 } from "@/lib/image-upload";
 
 const MAX_GALLERY_BATCH = 20;
 
-function todayISO() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
+const todayISO = todayCalendarDate;
 
 export const Route = createFileRoute("/_authenticated/admin/events")({
   head: () => ({ meta: [{ title: "Events — Admin" }, { name: "robots", content: "noindex" }] }),
@@ -263,10 +258,7 @@ function Section({
 }
 
 function formatDate(d?: string | null) {
-  if (!d) return "TBD";
-  const dt = new Date(d);
-  if (isNaN(dt.getTime())) return d;
-  return dt.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return formatCalendarDate(d);
 }
 
 function ExhibitionEditor({
