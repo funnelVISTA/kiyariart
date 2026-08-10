@@ -131,7 +131,8 @@
      The photo renders as a centred square (object-contain); the canvas begins
      ~19% down that square. */
   .hero-text-top {
-    padding-top: max(7rem, calc((100svh - (100vw - 2rem)) / 2 + 0.19 * (100vw - 2rem)));
+    /* Mobile: the artwork square sits low and small — keep the headline above it. */
+    padding-top: 7rem;
   }
   @media (min-width: 768px) {
     .hero-text-top {
