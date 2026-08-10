@@ -359,54 +359,6 @@ function AdminArtworksPage() {
           </SortableContext>
         </DndContext>
 
-        {/* Catalog originals — hardcoded pieces from the store catalog */}
-        <section className="mt-16">
-          <div className="flex items-end justify-between border-b border-border pb-3">
-            <div>
-              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-1">Catalog</div>
-              <h2 className="font-display text-2xl sm:text-3xl">Catalog originals</h2>
-              <p className="mt-1 text-xs text-muted-foreground max-w-xl">
-                Founding pieces from the store catalog. Toggle availability to control
-                whether they appear as purchasable on the public store.
-              </p>
-            </div>
-            <div className="text-[11px] text-muted-foreground">{catalogRows.length} pieces</div>
-          </div>
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {catalogRows.map((a) => (
-              <CatalogCard
-                key={a.id}
-                a={a}
-                selected={selected.has(a.id)}
-                onToggle={() => toggleSel(a.id)}
-                onToggleSold={() => toggleCatalog(a.id, a.sold /* was sold → make available */)}
-                onEdit={() =>
-                  setEditingCatalog({
-                    artworkId: a.id,
-                    originalPrice: a.originalPrice,
-                    originalSold: a.sold,
-                    onSale: a.onSale,
-                    salePrice: a.salePrice,
-                    initial: {
-                      id: a.id,
-                      title: a.title,
-                      description: a.description ?? null,
-                      medium: a.medium ?? null,
-                      price: a.priceListing ?? a.price,
-                      image_url: a.image,
-                      collection: "Our Essence",
-                      sold: a.sold,
-                      alt_text: a.altText ?? null,
-                      seo_title: a.seoTitle ?? null,
-                      seo_description: a.seoDescription ?? null,
-                      ...( { on_sale: a.onSale, sale_price: a.salePrice } as any ),
-                    },
-                  })
-                }
-              />
-            ))}
-          </div>
-        </section>
       </div>
 
       {editing && (
