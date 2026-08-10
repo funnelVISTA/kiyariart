@@ -140,7 +140,7 @@ function Home() {
             className="font-display text-[2rem] leading-[1.12] text-balance"
           >
             {t("hero.line1")}{" "}{t("hero.line2")}{" "}{t("hero.line3a")}
-            <span className="italic text-gradient-gold">{t("hero.line3b")}</span>
+            <span className="italic text-gradient-gold pr-[0.12em]">{t("hero.line3b")}</span>
           </motion.h1>
         </div>
 
