@@ -28,13 +28,13 @@ export function Header() {
 
   return (
     <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${scrolled ? "backdrop-blur-xl bg-background/80 border-b border-border" : "bg-transparent"}`}>
-      <div className="container-page flex items-center justify-between gap-4 md:gap-8 lg:gap-12 py-5">
-        <Link to="/" className="group flex items-center gap-3 shrink-0">
-          <span className="grid h-10 w-10 shrink-0 place-items-center border border-gold text-gold font-display text-lg transition-transform group-hover:rotate-3">K</span>
+      <div className="container-page flex items-center justify-between gap-3 md:gap-8 lg:gap-12 py-4 md:py-5">
+        <Link to="/" className="group flex items-center gap-2.5 md:gap-3 shrink-0">
+          <span className="grid h-12 w-12 md:h-10 md:w-10 shrink-0 place-items-center border border-gold text-gold font-display text-2xl md:text-lg transition-transform group-hover:rotate-3">K</span>
           {/* Two-line stack on tablet where horizontal room is tight; single line on desktop */}
           <span className="font-display tracking-wide leading-tight whitespace-nowrap flex flex-col md:leading-[1.05] lg:flex-row lg:gap-1 lg:leading-none">
-            <span className="text-sm md:text-[13px] lg:text-xl">art by</span>
-            <span className="text-sm md:text-base lg:text-xl text-gradient-gold">KIYARI</span>
+            <span className="text-base md:text-[13px] lg:text-xl">art by</span>
+            <span className="text-base md:text-base lg:text-xl text-gradient-gold">KIYARI</span>
           </span>
         </Link>
 
@@ -51,14 +51,14 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2.5 md:gap-2 shrink-0">
           <LangToggle lang={lang} setLang={setLang} />
           <button
             onClick={() => setCartOpen(true)}
             aria-label="Cart"
-            className="relative grid h-10 w-10 place-items-center rounded-full border border-border hover:border-gold transition-colors"
+            className="relative grid h-11 w-11 md:h-10 md:w-10 place-items-center rounded-full border border-border hover:border-gold transition-colors"
           >
-            <ShoppingBag className="h-4 w-4" />
+            <ShoppingBag className="h-5 w-5 md:h-4 md:w-4" />
             <AnimatePresence>
               {count > 0 && (
                 <motion.span
@@ -73,9 +73,9 @@ export function Header() {
           <button
             onClick={() => setOpen((v) => !v)}
             aria-label="Menu"
-            className="md:hidden grid h-10 w-10 place-items-center rounded-full border border-border hover:border-gold"
+            className="md:hidden grid h-11 w-11 place-items-center rounded-full border border-border hover:border-gold"
           >
-            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
@@ -97,7 +97,7 @@ export function Header() {
                 >
                   <Link
                     to={n.to}
-                    className="block py-4 font-display text-3xl text-foreground/90 hover:text-gold transition-colors"
+                    className="block py-4 font-display text-4xl md:text-3xl text-foreground/90 hover:text-gold transition-colors"
                     activeOptions={{ exact: n.to === "/" }}
                   >
                     {t(n.key)}
@@ -114,12 +114,12 @@ export function Header() {
 
 function LangToggle({ lang, setLang }: { lang: "en" | "fr"; setLang: (l: "en" | "fr") => void }) {
   return (
-    <div className="relative flex h-10 items-center rounded-full border border-border p-0.5 text-[10px] uppercase tracking-[0.2em]">
+    <div className="relative flex h-11 md:h-10 items-center rounded-full border border-border p-0.5 text-[11px] md:text-[10px] uppercase tracking-[0.2em]">
       {(["en", "fr"] as const).map((l) => (
         <button
           key={l}
           onClick={() => setLang(l)}
-          className="relative grid h-8 w-9 place-items-center"
+          className="relative grid h-10 w-10 md:h-8 md:w-9 place-items-center"
           aria-pressed={lang === l}
         >
           {lang === l && (
