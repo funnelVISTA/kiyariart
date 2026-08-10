@@ -337,17 +337,11 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
               </span>
             </div>
           )}
-          {/* Status badge — top-right (SOLD) or top-left (Available). Sold artworks show ONLY this indicator. */}
+          {/* Status badge — SOLD only. Available pieces intentionally show no badge. */}
           {a.sold ? (
             <div className="absolute top-3 right-3 z-10">
               <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-background/85 backdrop-blur border border-border">
                 {t("art.sold")}
-              </span>
-            </div>
-          ) : !a.onSale ? (
-            <div className="absolute top-3 left-3 z-10">
-              <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-gold/95 text-primary-foreground font-medium shadow-glow">
-                {t("art.available")}
               </span>
             </div>
           ) : null}
