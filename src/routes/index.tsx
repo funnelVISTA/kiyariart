@@ -132,7 +132,7 @@ function Home() {
     <div data-cf-page="home">
       {/* MOBILE HERO — exactly ONE hero image (matches its 1080x1920 ratio so nothing crops or repeats).
           Text is absolutely positioned on the dark wall just above / below the canvas. */}
-      <section className="md:hidden relative w-full aspect-[1080/1920] overflow-hidden bg-[#0a0807]">
+      <section className="md:hidden relative w-full aspect-[1080/1700] overflow-hidden bg-[#0a0807]">
         <img
           src={HERO_TALL_SRC}
           srcSet={HERO_TALL_SRCSET}
@@ -141,15 +141,17 @@ function Home() {
           fetchPriority="high"
           decoding="async"
           loading="eager"
-          className="absolute inset-0 h-full w-full object-cover object-center"
+          className="absolute inset-0 h-full w-full object-cover object-bottom"
         />
+        {/* Fade the top of the photo (its overhead spotlight cone) into flat dark so nothing reads as a second image */}
+        <div className="absolute inset-x-0 top-0 h-[26%] bg-[linear-gradient(to_bottom,#0a0807_0%,#0a0807_55%,rgba(10,8,7,0.85)_78%,rgba(10,8,7,0)_100%)]" />
 
-        {/* Headline — sits on the wall, bottom edge just above the canvas top (~32% down) */}
+        {/* Headline — sits on the flat dark wall just above the canvas top */}
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
-          className="absolute left-0 right-0 bottom-[69.5%] z-10 container-page font-display text-[1.15rem] leading-[1.18] text-balance drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]"
+          className="absolute left-0 right-0 bottom-[78.5%] z-10 container-page font-display text-[1.1rem] leading-[1.2] text-balance drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]"
         >
           {t("hero.line1")}{" "}{t("hero.line2")}{" "}{t("hero.line3a")}
           <span className="italic text-gradient-gold pr-[0.12em]">{t("hero.line3b")}</span>
@@ -160,7 +162,7 @@ function Home() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45, duration: 0.7 }}
-          className="absolute left-0 right-0 top-[72%] z-10 container-page flex flex-col items-start gap-3"
+          className="absolute left-0 right-0 top-[70%] z-10 container-page flex flex-col items-start gap-3"
         >
           <p className="text-[0.78rem] text-muted-foreground leading-snug whitespace-pre-line drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
             {t("hero.lede")}
