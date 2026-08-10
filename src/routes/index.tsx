@@ -149,7 +149,6 @@ function Home() {
           {/* Text-column contrast only — a soft left-side and bottom falloff, artwork untouched */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(5,4,3,0.72),rgba(5,4,3,0.25)_38%,rgba(5,4,3,0)_62%)]" />
           <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(5,4,3,0.8),rgba(5,4,3,0)_45%)]" />
-          <div className="absolute inset-x-0 top-0 h-1/3 md:hidden bg-[linear-gradient(to_bottom,rgba(5,4,3,0.8),rgba(5,4,3,0))]" />
         </div>
 
         <motion.div style={{ opacity }} className="relative z-10 container-page min-h-screen flex flex-col justify-start pb-60 md:pb-52 hero-text-top">
