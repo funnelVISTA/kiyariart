@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useMemo, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { ARTWORKS, HERO_IMAGE, HERO_IMAGE_WEBP, HERO_IMAGE_SRCSET, HERO_IMAGE_SIZES, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
+import { ARTWORKS, HERO_IMAGE, HERO_WIDE_SRC, HERO_WIDE_SRCSET, HERO_TALL_SRC, HERO_TALL_SRCSET, isArtworkPurchasable, type Artwork } from "@/lib/artworks";
 import { absUrl, canonical } from "@/lib/site-config";
 import { useI18n } from "@/lib/i18n";
 import { TiltCard } from "@/components/ui/TiltCard";
@@ -37,9 +37,19 @@ export const Route = createFileRoute("/")({
       {
         rel: "preload",
         as: "image",
-        href: HERO_IMAGE_WEBP,
-        imagesrcset: HERO_IMAGE_SRCSET,
-        imagesizes: HERO_IMAGE_SIZES,
+        href: HERO_TALL_SRC,
+        imagesrcset: HERO_TALL_SRCSET,
+        imagesizes: "100vw",
+        media: "(max-width: 767px)",
+        fetchpriority: "high",
+      } as any,
+      {
+        rel: "preload",
+        as: "image",
+        href: HERO_WIDE_SRC,
+        imagesrcset: HERO_WIDE_SRCSET,
+        imagesizes: "100vw",
+        media: "(min-width: 768px)",
         fetchpriority: "high",
       } as any,
       canonical("/"),
@@ -121,32 +131,24 @@ function Home() {
     <div data-cf-page="home">
       {/* HERO */}
       <section ref={ref} className="relative min-h-screen overflow-hidden hero-surface noise">
-        <div className="absolute inset-0 z-0 flex items-center justify-center p-0 md:p-8">
-          <img
-            src={HERO_IMAGE_WEBP}
-            srcSet={HERO_IMAGE_SRCSET}
-            sizes={HERO_IMAGE_SIZES}
-            width={1254}
-            height={1254}
-            alt="Bold Afrocentric painting by Kiyari — woman's face with vibrant purple florals on golden yellow"
-            fetchPriority="high"
-            decoding="async"
-            loading="eager"
-            className="max-h-full max-w-full object-contain"
-            style={{
-              maskImage:
-                "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%)",
-              WebkitMaskImage:
-                "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%)",
-              maskComposite: "intersect",
-              WebkitMaskComposite: "source-in",
-            }}
-          />
-          {/* Legibility overlays — same near-black as the hero fill so there is no seam */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(5,4,3,0.88),rgba(5,4,3,0.12)_45%,rgba(5,4,3,0.25))]" />
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(5,4,3,0.7),rgba(5,4,3,0)_55%)]" />
-          {/* Mobile-only scrim so the headline/lede stay readable over the artwork */}
-          <div className="absolute inset-0 md:hidden bg-[linear-gradient(to_bottom,rgba(5,4,3,0.75),rgba(5,4,3,0.55)_45%,rgba(5,4,3,0)_65%)]" />
+        <div className="absolute inset-0 z-0">
+          {/* The photograph itself fills the hero — its own spotlit wall IS the background, so no seam. */}
+          <picture>
+            <source media="(min-width: 768px)" srcSet={HERO_WIDE_SRCSET} sizes="100vw" />
+            <source media="(max-width: 767px)" srcSet={HERO_TALL_SRCSET} sizes="100vw" />
+            <img
+              src={HERO_WIDE_SRC}
+              alt="Bold Afrocentric painting by Kiyari — woman's face with vibrant purple florals on golden yellow"
+              fetchPriority="high"
+              decoding="async"
+              loading="eager"
+              className="h-full w-full object-cover object-center"
+            />
+          </picture>
+          {/* Text-column contrast only — a soft left-side and bottom falloff, artwork untouched */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(5,4,3,0.72),rgba(5,4,3,0.25)_38%,rgba(5,4,3,0)_62%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(5,4,3,0.8),rgba(5,4,3,0)_45%)]" />
+          <div className="absolute inset-x-0 top-0 h-1/3 md:hidden bg-[linear-gradient(to_bottom,rgba(5,4,3,0.8),rgba(5,4,3,0))]" />
         </div>
 
         <motion.div style={{ opacity }} className="relative z-10 container-page min-h-screen flex flex-col justify-start pb-60 md:pb-52 hero-text-top">
