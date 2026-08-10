@@ -47,12 +47,11 @@ export function AboutArtistSection() {
           </figure>
 
           <p className="mb-6">
-            Her process is intuitive and fearless, with a refusal to colour inside the lines. Kiyari's artworks welcome you closer. You are encouraged to run your fingers across the textures, to experience the emotion, and{" "}
-            <span className="italic font-semibold text-gradient-gold">feel</span> the story.
+            Her process is intuitive and fearless, with a refusal to colour inside the lines. Kiyari's artworks welcome you closer. You are encouraged to run your fingers across the textures, to experience the emotion, and feel the story.
           </p>
 
           <p className="mb-8">
-            Each piece carries its own weight and rhythm — a conversation between the hand that made it and the eye that meets it.
+            More than art, each work is an experience. It leaves behind not just an image, but a feeling that lingers long after you've walked away.
           </p>
 
           <p className="italic font-display text-2xl md:text-3xl text-gradient-gold clear-both">
