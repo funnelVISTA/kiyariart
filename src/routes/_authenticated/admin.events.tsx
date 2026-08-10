@@ -705,26 +705,29 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
  * "7:00 PM" or "6:00 PM — 9:00 PM" — never a bare hour.
  */
 function TimeRangeField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const parsed = parseTimeText(value);
+  // Local parts state so partial selections (hour picked, AM/PM not yet)
+  // survive; the parent only ever receives complete, unambiguous strings.
+  const [parts, setParts] = useState(() => parseTimeText(value));
   const set = (which: "start" | "end", patch: Partial<TimeParts>) => {
-    const next = { ...parsed, [which]: { ...parsed[which], ...patch } };
+    const next = { ...parts, [which]: { ...parts[which], ...patch } };
+    setParts(next);
     onChange(buildTimeText(next.start, next.end));
   };
-  const startIncomplete =
-    !isCompleteTime(parsed.start) &&
-    (parsed.start.hour !== "" || parsed.start.minute !== "" || parsed.start.meridiem !== "");
+  const touched = (p: TimeParts) => p.hour !== "" || p.minute !== "" || p.meridiem !== "";
+  const startInvalid = !isCompleteTime(parts.start);
+  const endInvalid = touched(parts.end) && !isCompleteTime(parts.end);
   return (
     <div>
       <Field label="Start time (required — include AM/PM)">
-        <TimeParked parts={parsed.start} onChange={(p) => set("start", p)} />
+        <TimeParts3 parts={parts.start} onChange={(p) => set("start", p)} />
       </Field>
       <div className="mt-3">
         <Field label="End time (optional — include AM/PM)">
-          <TimeParked parts={parsed.end} onChange={(p) => set("end", p)} />
+          <TimeParts3 parts={parts.end} onChange={(p) => set("end", p)} />
         </Field>
       </div>
-      {(startIncomplete || !isCompleteTime(parsed.start)) && (
-        <p className="mt-1.5 text-[10px] uppercase tracking-[0.2em] text-accent">
+      {(startInvalid || endInvalid) && (
+        <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-accent">
           Please select a time, including AM or PM
         </p>
       )}
@@ -735,7 +738,7 @@ function TimeRangeField({ value, onChange }: { value: string; onChange: (v: stri
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const MINUTES = ["00", "15", "30", "45"];
 
-function TimeParked({
+function TimeParts3({
   parts,
   onChange,
 }: {
