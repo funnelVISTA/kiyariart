@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { listArtworkAvailability } from "@/lib/payments.functions";
 import { AboutArtistSection } from "@/components/site/AboutArtist";
 import { PartnersStrip } from "@/components/site/PartnersStrip";
+import { HomeEventsSection } from "@/components/site/HomeEvents";
 
 const thumb = (url: string, w = 800) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 
@@ -234,32 +235,7 @@ function Home() {
       <AboutArtistSection />
 
       {/* EVENTS */}
-      <section className="py-24 container-page">
-        <div className="grid md:grid-cols-12 gap-12">
-          <div className="md:col-span-4">
-            <Reveal>
-              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-4">Events</div>
-            </Reveal>
-            <RevealText as="h2" text="Events" className="font-display text-5xl md:text-6xl block" />
-          </div>
-          <div className="md:col-span-7 md:col-start-6">
-            <ul className="divide-y divide-border border-y border-border">
-              {[
-                { title: "Future Stars Foundation", date: "June 2026" },
-                { title: "Essence of a Butterfly", date: "May 2023" },
-                { title: "Our Essence: Beautiful in Black", date: "Feb 2023" },
-              ].map((ex) => (
-                <li key={ex.title} className="flex items-center justify-between gap-6 py-6">
-                  <div className="min-w-0">
-                    <div className="font-display text-2xl md:text-3xl leading-tight">{ex.title}</div>
-                    <div className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">{ex.date}</div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
+      <HomeEventsSection />
 
       {/* SUPPORTERS */}
       <section className="py-20 border-y border-border bg-card/30">
