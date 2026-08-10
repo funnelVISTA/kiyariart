@@ -132,7 +132,7 @@ function Home() {
     <div data-cf-page="home">
       {/* MOBILE HERO — purpose-built stacked composition: headline → full-width uncropped artwork → subtext → CTA */}
       <section className="md:hidden hero-surface noise">
-        <div className="container-page pt-24 pb-7">
+        <div className="container-page pt-10 pb-3">
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -157,7 +157,7 @@ function Home() {
           className="block w-full h-auto"
         />
 
-        <div className="container-page pt-8 pb-16 flex flex-col items-start gap-6">
+        <div className="container-page pt-4 pb-10 flex flex-col items-start gap-6">
           <p className="text-[0.95rem] text-muted-foreground leading-relaxed whitespace-pre-line">
             {t("hero.lede")}
           </p>
