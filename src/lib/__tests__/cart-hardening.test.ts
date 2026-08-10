@@ -1,4 +1,14 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// The live catalog lives in the database now, so the pure-logic tests below use
+// a fixed in-memory catalog fixture instead of real listings.
+vi.mock("@/lib/artworks", () => ({
+  ARTWORKS: [
+    { id: "fixture-for-sale", title: "Fixture For Sale", image: "https://cdn.example/a.jpg", price: 1200, sold: false, collection: "Our Essence" },
+    { id: "fixture-sold", title: "Fixture Sold", image: "https://cdn.example/b.jpg", price: 0, sold: true, collection: "Our Essence" },
+  ],
+  isArtworkPurchasable: (a: any) => !a.sold && a.price > 0,
+}));
 import {
   validateCartInput,
   resolveCartItems,

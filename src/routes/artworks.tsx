@@ -22,10 +22,10 @@ const thumb = (url: string, w = 700) => url.replace(/rs=w:\d+/, `rs=w:${w}`);
 export const Route = createFileRoute("/artworks")({
   head: () => ({
     meta: [
-      { title: "Original Afrocentric Paintings for Sale | Kiyari — Calgary" },
-      { name: "description", content: "Shop original mixed-media Afrocentric paintings by Kiyari. One-of-a-kind, culturally guided, textured fine art shipped from Calgary." },
-      { property: "og:title", content: "Original Afrocentric Paintings for Sale | Kiyari — Calgary" },
-      { property: "og:description", content: "One-of-a-kind mixed-media Afrocentric paintings from Kiyari's Calgary studio." },
+      { title: "Original Paintings for Sale | Kiyari — Calgary" },
+      { name: "description", content: "Shop original mixed-media paintings by Kiyari. One-of-a-kind, culturally guided, textured fine art shipped from Calgary." },
+      { property: "og:title", content: "Original Paintings for Sale | Kiyari — Calgary" },
+      { property: "og:description", content: "One-of-a-kind mixed-media paintings from Kiyari's Calgary studio." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: absUrl("/artworks") },
     ],
@@ -337,17 +337,11 @@ function ArtCard({ a, index, isTouch, revealed, inCart, onToggleReveal, onOpen, 
               </span>
             </div>
           )}
-          {/* Status badge — top-right (SOLD) or top-left (Available). Sold artworks show ONLY this indicator. */}
+          {/* Status badge — SOLD only. Available pieces intentionally show no badge. */}
           {a.sold ? (
             <div className="absolute top-3 right-3 z-10">
               <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-background/85 backdrop-blur border border-border">
                 {t("art.sold")}
-              </span>
-            </div>
-          ) : !a.onSale ? (
-            <div className="absolute top-3 left-3 z-10">
-              <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.25em] bg-gold/95 text-primary-foreground font-medium shadow-glow">
-                {t("art.available")}
               </span>
             </div>
           ) : null}

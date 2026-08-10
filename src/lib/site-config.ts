@@ -11,7 +11,7 @@ export const SITE_URL = (RAW && RAW.trim().length > 0 ? RAW.trim() : "https://ki
 );
 
 export const SITE_NAME = "art by Kiyari";
-export const SITE_TAGLINE = "Bold Afrocentric Textured Originals — Calgary";
+export const SITE_TAGLINE = "Bold Textured Originals — Calgary";
 
 /** Absolute URL for a path. */
 export const absUrl = (path = "/") =>
@@ -31,7 +31,7 @@ export const ORGANIZATION_JSONLD = {
   image:
     "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/cdc92eec-9a72-4235-993e-450e4b44477e",
   description:
-    "Vibrant, stand-out Afrocentric originals by Kiyari, merging abstract expression with tactile elements — Calgary.",
+    "Vibrant, stand-out originals by Kiyari, merging abstract expression with tactile elements — Calgary.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Calgary",

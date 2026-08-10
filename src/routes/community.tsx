@@ -15,7 +15,7 @@ export const Route = createFileRoute("/community")({
   head: () => ({
     meta: [
       { title: "Contact Kiyari | Commissions & Community — Calgary" },
-      { name: "description", content: "Contact Kiyari for commissions, prints, or press. Join the community newsletter for new Afrocentric originals from the Calgary studio." },
+      { name: "description", content: "Contact Kiyari for commissions, prints, or press. Join the community newsletter for new originals from the Calgary studio." },
       { property: "og:title", content: "Contact Kiyari | Commissions & Community" },
       { property: "og:description", content: "Contact Kiyari for commissions, collaborations, and studio news from Calgary." },
       { property: "og:type", content: "website" },
