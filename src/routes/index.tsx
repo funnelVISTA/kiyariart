@@ -121,7 +121,7 @@ function Home() {
     <div data-cf-page="home">
       {/* HERO */}
       <section ref={ref} className="relative min-h-screen overflow-hidden hero-surface noise">
-        <div className="absolute inset-0 z-0 flex items-center justify-center p-4 md:p-8">
+        <div className="absolute inset-0 z-0 flex items-center justify-center p-0 md:p-8">
           <img
             src={HERO_IMAGE_WEBP}
             srcSet={HERO_IMAGE_SRCSET}
