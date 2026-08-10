@@ -43,6 +43,9 @@ export const HERO_WIDE_SRCSET = `${heroWide1600.url} 1600w, ${heroWide2560.url} 
 /** Portrait (9:16) hero — same photo, wall extended vertically for phones. */
 export const HERO_TALL_SRC = heroTall720.url;
 export const HERO_TALL_SRCSET = `${heroTall720.url} 720w, ${heroTall1080.url} 1080w`;
+/** Natural square (1:1) photo — used uncropped, full-width, on mobile. */
+export const HERO_SQUARE_SRC = hero1024.url;
+export const HERO_SQUARE_SRCSET = HERO_IMAGE_SRCSET;
 
 
 export function isArtworkPurchasable(artwork: Pick<Artwork, "sold" | "price">) {
