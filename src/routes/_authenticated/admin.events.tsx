@@ -11,6 +11,12 @@ import {
   adminUploadImage,
 } from "@/lib/admin-content.functions";
 import { formatCalendarDate, todayCalendarDate } from "@/lib/dates";
+import {
+  buildTimeText,
+  isCompleteTime,
+  parseTimeText,
+  type TimeParts,
+} from "@/lib/event-time";
 import { compressImage, blobToBase64 } from "@/lib/image-upload";
 
 const MAX_GALLERY_BATCH = 20;
@@ -371,6 +377,20 @@ function ExhibitionEditor({
     if (mode === "event" && !form.event_date) {
       toast.error("Date is required");
       return;
+    }
+    // Event times must always be a complete 12-hour time with AM/PM so
+    // visitors never see an ambiguous bare "7".
+    if (mode === "event") {
+      const { start, end } = parseTimeText(form.time_text);
+      if (!isCompleteTime(start)) {
+        toast.error("Please select a time, including AM or PM");
+        return;
+      }
+      const endTouched = end.hour !== "" || end.minute !== "" || end.meridiem !== "";
+      if (endTouched && !isCompleteTime(end)) {
+        toast.error("Please complete the end time, including AM or PM");
+        return;
+      }
     }
     if (mode === "media" && form.event_date && form.event_date > todayISO()) {
       toast.error("Past events can't have a future date.");
