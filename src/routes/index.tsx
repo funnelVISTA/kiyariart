@@ -51,9 +51,7 @@ export const Route = createFileRoute("/")({
 function Home() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [0, 200]);
   const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
   const { t } = useI18n();
   const isTouch = useIsTouch();
   const { add, has } = useCart();
@@ -123,7 +121,7 @@ function Home() {
     <div data-cf-page="home">
       {/* HERO */}
       <section ref={ref} className="relative min-h-screen overflow-hidden bg-gradient-hero noise">
-        <motion.div style={{ scale, y }} className="absolute inset-0 z-0">
+        <div className="absolute inset-0 z-0 flex items-center justify-center p-4 md:p-8">
           <img
             src={HERO_IMAGE_WEBP}
             srcSet={HERO_IMAGE_SRCSET}
@@ -134,12 +132,12 @@ function Home() {
             fetchPriority="high"
             decoding="async"
             loading="eager"
-            className="absolute inset-0 h-full w-full object-cover object-center"
+            className="max-h-full max-w-full object-contain"
           />
           {/* Legibility overlays — kept subtle so the artwork still reads */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/20 to-background/30" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-transparent" />
-        </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-background/35" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-transparent" />
+        </div>
 
         <motion.div style={{ opacity }} className="relative z-10 container-page min-h-screen flex flex-col justify-between md:justify-end pb-60 md:pb-52 pt-28 md:pt-40">
           <motion.div
@@ -148,7 +146,7 @@ function Home() {
             transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1] }}
             className="max-w-3xl"
           >
-            <h1 className="font-display text-[1.7rem] sm:text-3xl md:text-5xl lg:text-6xl leading-[1.05]">
+            <h1 className="font-display text-[1.85rem] sm:text-[2.25rem] md:text-4xl lg:text-5xl leading-[1.1] text-balance">
               <span className="block overflow-hidden">
                 <motion.span
                   className="block pr-1 pb-1"
@@ -178,7 +176,7 @@ function Home() {
 
           <motion.p
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}
-            className="mt-6 md:mt-8 max-w-[60ch] text-[0.8rem] sm:text-sm md:text-lg text-muted-foreground leading-relaxed whitespace-pre-line"
+            className="mt-6 md:mt-8 max-w-[52ch] text-[0.95rem] sm:text-base md:text-lg lg:text-xl text-muted-foreground leading-relaxed whitespace-pre-line"
           >
             {t("hero.lede")}
           </motion.p>
